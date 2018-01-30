@@ -29,7 +29,18 @@ func (api ReCapAPI) CreatePhotoScene(name string, formats []string) (scene Photo
 	return
 }
 
-func (api ReCapAPI) AddFilesToScene(scene *PhotoScene, files []string) (uploads []FileUploadingReply, err error) {
+func (api ReCapAPI) AddFilesToSceneUsingLinks(scene *PhotoScene, links []string) (result FilesUploadingReply, err error) {
+	bearer, err := api.Authenticate("data:write")
+	if err != nil {
+		return
+	}
+	path := api.Host + api.ReCapPath
+	result, err = AddFilesToSceneUsingLinks(path,scene.ID, links, bearer.AccessToken)
+
+	return
+}
+
+func (api ReCapAPI) AddFileToSceneUsingFilePath(scene *PhotoScene, files []string) (uploads []FilesUploadingReply, err error) {
 	bearer, err := api.Authenticate("data:write")
 	if err != nil {
 		return
@@ -52,13 +63,13 @@ func (api ReCapAPI) AddFilesToScene(scene *PhotoScene, files []string) (uploads 
 		workers = len(scene.Files)
 	}
 
-	successChan := make(chan *FileUploadingReply, len(scene.Files))
+	successChan := make(chan *FilesUploadingReply, len(scene.Files))
 	errChan := make(chan error, 1)
 
 	for workerID := 0; workerID < workers; workerID++ {
 		go func() {
 			for file := range workChan {
-				reply, err := AddFileToScene(path, scene.ID, file, bearer.AccessToken)
+				reply, err := AddFileToSceneUsingFilePath(path, scene.ID, file, bearer.AccessToken)
 				if err != nil {
 					errChan <- err
 					return
@@ -75,7 +86,7 @@ func (api ReCapAPI) AddFilesToScene(scene *PhotoScene, files []string) (uploads 
 			log.Printf("[%d/%d] SUCCESS uploading image: %s\n",
 				i+1,
 				len(scene.Files),
-				result.Files.File.FileName)
+				result.Files.File[0].FileName)
 		case err = <-errChan:
 			return
 		}

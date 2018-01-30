@@ -11,7 +11,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 )
@@ -63,13 +62,124 @@ func CreatePhotoScene(path string, name string, formats []string, token string) 
 
 }
 
-func AddFileToScene(path string, photoSceneId string, filename string, token string) (result FileUploadingReply, err error) {
+func AddFilesToSceneUsingLinks(path string, photoSceneId string, links []string, token string) (result FilesUploadingReply, err error) {
+	task := http.Client{}
 
-	if result, err = readFileAndUpload(path, photoSceneId, filename, token); err != nil {
-		// Warning: Assuming that if failed to read from localfile, then it is a link
-		// TODO: fix this bug for case when local file has wrong path or filename
-		result, err = readLinkAndUpload(path, photoSceneId, filename, token)
+	params := `photosceneid=` + photoSceneId + `&type=image`
+
+	for idx, link := range links {
+		params += `&file[` + strconv.Itoa(idx) + `]=` + link
 	}
+
+	body := strings.NewReader(params)
+
+	req, err := http.NewRequest("POST",
+		path+"/file",
+		body,
+	)
+
+	if err != nil {
+		return
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("Authorization", "Bearer "+token)
+	response, err := task.Do(req)
+	if err != nil {
+		return
+	}
+
+	content, _ := ioutil.ReadAll(response.Body)
+	defer response.Body.Close()
+
+	if response.StatusCode != 200 {
+		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
+		return
+	}
+
+	if err = checkMessageForErrors(content); err != nil {
+		return
+	}
+
+	err = json.Unmarshal(content, &result)
+
+	return
+
+}
+
+func AddFileToSceneUsingFilePath(path string, photoSceneId string, filename string, token string) (result FilesUploadingReply, err error) {
+
+	file, err := os.Open(filename)
+	defer file.Close()
+	if err != nil {
+		return
+	}
+
+	return AddFileToSceneUsingBinaryData(path, photoSceneId, file, token)
+}
+
+func AddFileToSceneUsingBinaryData(path string, photoSceneId string, data io.Reader, token string) (result FilesUploadingReply, err error) {
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	formFile, err := writer.CreateFormFile("file[0]", "some_file")
+	if err != nil {
+		log.Println(err.Error())
+		return
+	}
+
+	if _, err = io.Copy(formFile, data); err != nil {
+		log.Println(err.Error())
+		return
+	}
+
+	writer.WriteField("photosceneid", photoSceneId)
+	writer.WriteField("type", "image")
+	writer.Close()
+
+	task := http.Client{}
+
+	req, err := http.NewRequest("POST",
+		path+"/file",
+		body)
+
+	if err != nil {
+		return
+	}
+
+	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	response, err := task.Do(req)
+
+	if err != nil {
+		return
+	}
+	defer response.Body.Close()
+	content, _ := ioutil.ReadAll(response.Body)
+
+	if response.StatusCode != 200 {
+		err = errors.New(response.Request.URL.String() + " => [" + strconv.Itoa(response.StatusCode) + "] " + string(content))
+		log.Println(err.Error())
+		return
+	}
+
+	if err = checkMessageForErrors(content); err != nil {
+		return
+	}
+
+	// TODO: this is a hack: Unfortunatelly there is a difference between one file uploading and multiple file uploading
+	unconsistent := &FileUploadingReply{}
+
+	err = json.Unmarshal(content, unconsistent)
+
+	result = FilesUploadingReply{
+		Usage:    unconsistent.Usage,
+		Resource: unconsistent.Resource,
+	}
+	result.Files = UploadedFiles{
+		File: []File{unconsistent.Files.File}
+	}
+
+	//TODO: when it will be fixed, should be replaced with
+	// err = json.Unmarshal(content, result)
 
 	return
 }
@@ -223,104 +333,6 @@ func DeleteScene(path string, photoSceneId string, token string) (result SceneDe
 }
 
 /******************* AUX FUNCTIONS *******************************/
-
-func readFileAndUpload(path string, photoSceneId string, filename string, token string) (result FileUploadingReply, err error) {
-
-	file, err := os.Open(filename)
-	defer file.Close()
-	if err != nil {
-		return
-	}
-
-	body := &bytes.Buffer{}
-	writer := multipart.NewWriter(body)
-	formFile, err := writer.CreateFormFile("file[0]", filepath.Base(filename))
-	if err != nil {
-		log.Println(err.Error())
-		return
-	}
-
-	if _, err = io.Copy(formFile, file); err != nil {
-		log.Println(err.Error())
-		return
-	}
-
-	writer.WriteField("photosceneid", photoSceneId)
-	writer.WriteField("type", "image")
-	writer.Close()
-
-	task := http.Client{}
-
-	req, err := http.NewRequest("POST",
-		path+"/file",
-		body)
-
-	if err != nil {
-		return
-	}
-
-	req.Header.Set("Authorization", "Bearer "+token)
-	req.Header.Set("Content-Type", writer.FormDataContentType())
-	response, err := task.Do(req)
-
-	if err != nil {
-		return
-	}
-	defer response.Body.Close()
-	content, _ := ioutil.ReadAll(response.Body)
-
-	if response.StatusCode != 200 {
-		err = errors.New(response.Request.URL.String() + " => [" + strconv.Itoa(response.StatusCode) + "] " + string(content))
-		log.Println(err.Error())
-		return
-	}
-
-	if err = checkMessageForErrors(content); err != nil {
-		return
-	}
-
-	err = json.Unmarshal(content, &result)
-
-	return
-}
-
-func readLinkAndUpload(path string, photoSceneId string, filename string, token string) (result FileUploadingReply, err error) {
-	task := http.Client{}
-
-	body := strings.NewReader(`photosceneid=` + photoSceneId + `&type=image&file[0]=` + filename)
-
-	req, err := http.NewRequest("POST",
-		path+"/file",
-		body,
-	)
-
-	if err != nil {
-		return
-	}
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Set("Authorization", "Bearer "+token)
-	response, err := task.Do(req)
-	if err != nil {
-		return
-	}
-
-	content, _ := ioutil.ReadAll(response.Body)
-	defer response.Body.Close()
-
-	if response.StatusCode != 200 {
-		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
-		return
-	}
-
-	if err = checkMessageForErrors(content); err != nil {
-		return
-	}
-
-	err = json.Unmarshal(content, &result)
-
-	return
-
-}
 
 // Check if the body is not containing an error message
 func checkMessageForErrors(content []byte) (err error) {

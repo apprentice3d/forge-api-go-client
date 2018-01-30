@@ -35,13 +35,13 @@ func TestTheEntireWorkflow(t *testing.T) {
 	}
 
 	t.Log("Uploading sample images ...")
-	uploadResults, err := recapAPI.AddFilesToScene(&scene, fileSamples)
+	uploadResults, err := recapAPI.AddFilesToSceneUsingLinks(&scene, fileSamples)
 	if err != nil {
 		t.Fatal(err.Error())
 	}
-	for idx, result := range uploadResults {
-		t.Logf("[%d] Successfully uploaded: %s\n", idx, result.Files.File.FileName)
-	}
+
+	t.Logf("Successfully uploaded: %s\n", uploadResults.Files.File[0].FileName)
+
 
 	t.Log("Starting scene processing ...")
 	if _, err := recapAPI.StartSceneProcessing(scene); err != nil {

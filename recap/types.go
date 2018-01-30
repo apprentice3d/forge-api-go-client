@@ -34,18 +34,40 @@ type SceneDeletionReply struct {
 	Message  string `json:"msg"`
 }
 
-type FileUploadingReply struct {
+
+
+type File struct {
+	FileName string `json:"filename"`
+	FileID   string `json:"fileid"`
+	FileSize string `json:"filesize"`
+	Message  string `json:"msg"`
+}
+
+
+// TODO: Unfortunatelly there is a difference between one file uploading and multiple file uploading
+type FilesUploadingReply struct {
 	Usage    string `json:",omitempty"`
 	Resource string `json:",omitempty"`
-	Files    *struct {
-		File struct {
-			FileName string `json:"filename"`
-			FileID   string `json:"fileid"`
-			FileSize string `json:"filesize"`
-			Message  string `json:"msg"`
-		} `json:"file"`
-	} `json:"Files"`
+	Files UploadedFiles `json:"Files"`
 }
+
+type UploadedFiles *struct {
+	File []File `json:"file"`
+}
+
+
+// TODO: Unfortunatelly there is a difference between one file uploading and multiple file uploading
+type FileUploadingReply struct {
+	Usage    string        `json:",omitempty"`
+	Resource string        `json:",omitempty"`
+	Files    UploadedFile `json:"Files"`
+}
+
+type UploadedFile *struct {
+	File File `json:"file"`
+}
+
+
 
 type SceneStartProcessingReply struct {
 	Message    string     `json:"msg"`
@@ -53,8 +75,8 @@ type SceneStartProcessingReply struct {
 }
 
 type SceneProgressReply struct {
-	Usage      string `json:",omitempty"`
-	Resource   string `json:",omitempty"`
+	Usage    string `json:",omitempty"`
+	Resource string `json:",omitempty"`
 	PhotoScene struct {
 		ID       string `json:"photosceneid"`
 		Message  string `json:"progressmsg"`
@@ -94,7 +116,7 @@ type SceneResultReply struct {
 type ErrorMessage struct {
 	Usage    string `json:",omitempty"`
 	Resource string `json:",omitempty"`
-	Error    *struct {
+	Error *struct {
 		Code    string `json:"code"`
 		Message string `json:"msg"`
 	} `json:"Error"`
