@@ -20,13 +20,18 @@ import (
 //	basePath = "https://developer.api.autodesk.com/photo-to-3d/v1"
 //)
 
-func CreatePhotoScene(path string, name string, formats []string, token string) (scene PhotoScene, err error) {
+func CreatePhotoScene(path string, name string, formats []string, sceneType string, token string) (scene PhotoScene, err error) {
 
+	if sceneType != "object" && sceneType != "aerial" {
+		err = errors.New("the scene type is not supported. Expecting 'object' or 'aerial', got " + sceneType)
+		return
+	}
 	task := http.Client{}
 
 	body := url.Values{}
 	body.Add("scenename", name)
 	body.Add("format", strings.Join(formats, " "))
+	body.Add("scenetype", sceneType)
 
 	req, err := http.NewRequest("POST",
 		path+"/photoscene",
@@ -63,16 +68,54 @@ func CreatePhotoScene(path string, name string, formats []string, token string) 
 
 }
 
-func AddFileToScene(path string, photoSceneId string, filename string, token string) (result FileUploadingReply, err error) {
 
-	if result, err = readFileAndUpload(path, photoSceneId, filename, token); err != nil {
-		// Warning: Assuming that if failed to read from localfile, then it is a link
-		// TODO: fix this bug for case when local file has wrong path or filename
-		result, err = readLinkAndUpload(path, photoSceneId, filename, token)
+func AddFileToSceneUsingLinks(path string, photoSceneId string, links []string, token string) (result LinksUploadingReply, err error) {
+
+	task := http.Client{}
+
+	params := `photosceneid=` + photoSceneId + `&type=image`
+	for idx, link := range links {
+		params += `&file[` + strconv.Itoa(idx) +`]=` + link
+	}
+	body := strings.NewReader(params)
+
+	req, err := http.NewRequest("POST",
+		path+"/file",
+		body,
+	)
+	if err != nil {
+		log.Println("could not prepare the request to send links: ", err.Error())
+		return
+	}
+
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("Authorization", "Bearer "+token)
+	response, err := task.Do(req)
+	if err != nil {
+		log.Println("could not send image links: ", err.Error())
+		return
+	}
+	defer response.Body.Close()
+
+
+	if response.StatusCode != 200 {
+		content, _ := ioutil.ReadAll(response.Body)
+		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
+		return
+	}
+	decoder := json.NewDecoder(response.Body)
+
+	if err = decoder.Decode(&result); err != nil {
+		return
+	}
+
+	if result.Error != nil {
+		err = errors.New("[" + result.Error.Code + "] " + result.Error.Message)
 	}
 
 	return
 }
+
 
 func StartSceneProcessing(path string, photoSceneId string, token string) (sceneID string, err error) {
 	task := http.Client{}
@@ -282,44 +325,6 @@ func readFileAndUpload(path string, photoSceneId string, filename string, token 
 	err = json.Unmarshal(content, &result)
 
 	return
-}
-
-func readLinkAndUpload(path string, photoSceneId string, filename string, token string) (result FileUploadingReply, err error) {
-	task := http.Client{}
-
-	body := strings.NewReader(`photosceneid=` + photoSceneId + `&type=image&file[0]=` + filename)
-
-	req, err := http.NewRequest("POST",
-		path+"/file",
-		body,
-	)
-
-	if err != nil {
-		return
-	}
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Set("Authorization", "Bearer "+token)
-	response, err := task.Do(req)
-	if err != nil {
-		return
-	}
-
-	content, _ := ioutil.ReadAll(response.Body)
-	defer response.Body.Close()
-
-	if response.StatusCode != 200 {
-		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
-		return
-	}
-
-	if err = checkMessageForErrors(content); err != nil {
-		return
-	}
-
-	err = json.Unmarshal(content, &result)
-
-	return
-
 }
 
 // Check if the body is not containing an error message

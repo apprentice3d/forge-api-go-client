@@ -28,7 +28,7 @@ func TestGeneralUseCase(t *testing.T) {
 	formats := []string{"rcm", "obj"}
 
 	t.Run("Create a scene", func(t *testing.T) {
-		photoScene, err := CreatePhotoScene(path, "test_scene", formats, token.AccessToken)
+		photoScene, err := CreatePhotoScene(path, "test_scene", formats, "object", token.AccessToken)
 
 		if err != nil {
 			t.Fatalf("Failed to create a photoscene: %s\n", err.Error())
@@ -49,15 +49,15 @@ func TestGeneralUseCase(t *testing.T) {
 			"https://s3.amazonaws.com/adsk-recap-public/forge/lion/DSC_1165.JPG",
 		}
 
-		for _, file := range filesToUpload {
-			result, err := AddFileToScene(path, photoSceneID, file, token.AccessToken)
+
+			result, err := AddFileToSceneUsingLinks(path, photoSceneID, filesToUpload, token.AccessToken)
 			if err != nil {
-				t.Fatalf("Could not upload file %s: %s\n", file, err.Error())
+				t.Fatalf("Could not upload files: %s\n",  err.Error())
 			}
 			if result.Files == nil {
-				t.Fatalf("Could not upload file %s: %s\n", file, err.Error())
+				t.Fatalf("Could not upload files: %s\n", err.Error())
 			}
-		}
+
 	})
 
 	t.Run("Start the PhotoScene processing", func(t *testing.T) {
@@ -159,7 +159,7 @@ func TestReCapFreeFunctions(t *testing.T) {
 	}
 
 	t.Run("Create a scene using a free function", func(t *testing.T) {
-		photoScene, err := CreatePhotoScene(path, "testare", nil, token.AccessToken)
+		photoScene, err := CreatePhotoScene(path, "testare", nil, "object", token.AccessToken)
 
 		if err != nil {
 			t.Fatalf("Failed to create a photoscene: %s\n", err.Error())
@@ -168,7 +168,7 @@ func TestReCapFreeFunctions(t *testing.T) {
 	})
 
 	t.Run("Check fail on create a scene with empty name", func(t *testing.T) {
-		_, err := CreatePhotoScene(path, "", nil, token.AccessToken)
+		_, err := CreatePhotoScene(path, "", nil, "object", token.AccessToken)
 
 		if err == nil {
 			t.Fatalf("Should fail creating a scene with empty name\n")
@@ -186,22 +186,125 @@ func TestReCapFreeFunctions(t *testing.T) {
 			"https://s3.amazonaws.com/adsk-recap-public/forge/lion/DSC_1165.JPG",
 		}
 
-		for _, file := range filesToUpload {
-			result, err := AddFileToScene(path, photosceneID, file, token.AccessToken)
+
+			result, err := AddFileToSceneUsingLinks(path, photosceneID, filesToUpload, token.AccessToken)
 			if err != nil {
-				t.Fatalf("Could not upload file %s: %s\n", file, err.Error())
+				t.Fatalf("Could not upload files: %s\n",  err.Error())
 			}
 			if result.Files == nil {
-				t.Fatalf("Could not upload file %s: %s\n", file, err.Error())
+				t.Fatalf("Could not upload files: %s\n",  err.Error())
 			}
-		}
+
 	})
 
 	t.Run("Check loading a wrong remote file to created photoscene", func(t *testing.T) {
-		fileToUpload := "https://s3.amazonaws.com/adsk-recap-public/forge/lion/DSC_2000.JPG"
+		fileToUpload := []string{"https://s3.amazonaws.com/adsk-recap-public/forge/lion/DSC_2000.JPG"}
 
-		result, err := AddFileToScene(path, photosceneID, fileToUpload, token.AccessToken)
+		result, err := AddFileToSceneUsingLinks(path, photosceneID, fileToUpload, token.AccessToken)
 		if err == nil {
+			t.Fatalf("Uploading a wrong file %s should fail, but it is not!\n", fileToUpload)
+		}
+		if result.Files != nil {
+			t.Fatalf("Uploading a wrong file %s should return an empty content, but it is not!\n", fileToUpload)
+		}
+
+	})
+
+	t.Run("Check deleting a photoscene", func(t *testing.T) {
+		_, err := DeleteScene(path, photosceneID, token.AccessToken)
+
+		if err != nil {
+			t.Fatalf("Failed to delete the photoscene: %s\n", err.Error())
+		}
+	})
+}
+
+
+func TestAddFileToSceneUsingLinks(t *testing.T) {
+	// prepare the credentials
+	clientID := os.Getenv("FORGE_CLIENT_ID")
+	clientSecret := os.Getenv("FORGE_CLIENT_SECRET")
+	recapAPI := NewReCapAPIWithCredentials(clientID, clientSecret)
+
+	//get a token
+	token, err := recapAPI.Authenticate("data:write data:read")
+	if err != nil {
+		t.Fatalf("Coud not authorize with provided credentials: %s\n",
+			err.Error())
+	}
+
+	path := recapAPI.Host + recapAPI.ReCapPath
+
+	var photosceneID string
+
+	if err != nil {
+		t.Fatalf("Coud not authorize with provided credentials: %s\n",
+			err.Error())
+	}
+
+	t.Run("Create a scene using a free function", func(t *testing.T) {
+		photoScene, err := CreatePhotoScene(path, "testare", nil, "object", token.AccessToken)
+
+		if err != nil {
+			t.Fatalf("Failed to create a photoscene: %s\n", err.Error())
+		}
+		photosceneID = photoScene.ID
+	})
+
+	t.Run("Check loading a remote file to created PhotoScene", func(t *testing.T) {
+		filesToUpload := []string{
+			"https://s3.amazonaws.com/adsk-recap-public/forge/lion/DSC_1158.JPG",
+			"https://s3.amazonaws.com/adsk-recap-public/forge/lion/DSC_1159.JPG",
+			"https://s3.amazonaws.com/adsk-recap-public/forge/lion/DSC_1160.JPG",
+			"https://s3.amazonaws.com/adsk-recap-public/forge/lion/DSC_1162.JPG",
+			"https://s3.amazonaws.com/adsk-recap-public/forge/lion/DSC_1163.JPG",
+			"https://s3.amazonaws.com/adsk-recap-public/forge/lion/DSC_1164.JPG",
+			"https://s3.amazonaws.com/adsk-recap-public/forge/lion/DSC_1165.JPG",
+		}
+
+
+		result, err := AddFileToSceneUsingLinks(path, photosceneID, filesToUpload, token.AccessToken)
+		if err != nil {
+			t.Fatalf("Could not upload files: %s\n",  err.Error())
+		}
+		if result.Files == nil {
+			t.Fatalf("Could not upload files: %s\n",  err.Error())
+		}
+
+		t.Logf("[SUCCESS]: Received result: %+v\n", result)
+
+	})
+
+	t.Run("Check loading a remote file to with an non-existing file", func(t *testing.T) {
+		filesToUpload := []string{
+			"https://s3.amazonaws.com/adsk-recap-public/forge/lion/DSC_1158.JPG",
+			"https://s3.amazonaws.com/adsk-recap-public/forge/lion/DSC_1159.JPG",
+			"https://s3.amazonaws.com/adsk-recap-public/forge/lion/DSC_1160.JPG",
+			"https://s3.amazonaws.com/adsk-recap-public/forge/lion/DSC_2000.JPG",
+			"https://s3.amazonaws.com/adsk-recap-public/forge/lion/DSC_1163.JPG",
+			"https://s3.amazonaws.com/adsk-recap-public/forge/lion/DSC_1164.JPG",
+			"https://s3.amazonaws.com/adsk-recap-public/forge/lion/DSC_1165.JPG",
+		}
+
+
+		result, err := AddFileToSceneUsingLinks(path, photosceneID, filesToUpload, token.AccessToken)
+		if err == nil {
+			t.Fatalf("Should fail as it contains a wrong file: %s\n",  err.Error())
+		}
+		if result.Error == nil {
+			t.Fatalf("Should contain an error, but it does not: %s\n",  err.Error())
+		}
+
+		t.Logf("[SUCCESS]: Received an error as expected: %v\n", result.Error)
+
+	})
+
+	t.Run("Check loading a wrong remote file to created photoscene", func(t *testing.T) {
+		fileToUpload := []string{"https://s3.amazonaws.com/adsk-recap-public/forge/lion/DSC_2000.JPG"}
+
+		result, err := AddFileToSceneUsingLinks(path, photosceneID, fileToUpload, token.AccessToken)
+		if err == nil {
+			t.Logf("[SHOULD FAIL]: Received result: %+v\n", result)
 			t.Fatalf("Uploading a wrong file %s should fail, but it is not!\n", fileToUpload)
 		}
 		if result.Files != nil {

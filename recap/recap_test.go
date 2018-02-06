@@ -19,7 +19,7 @@ func TestTheEntireWorkflow(t *testing.T) {
 	format := "obj"
 
 	t.Log("Creating a scene ...")
-	scene, err := recapAPI.CreatePhotoScene("example", []string{format})
+	scene, err := recapAPI.CreatePhotoScene("example", []string{format}, "object")
 	if err != nil {
 		t.Fatal(err.Error())
 	}
@@ -92,7 +92,7 @@ func TestCreatePhotoSceneReCap(t *testing.T) {
 	recapAPI := NewReCapAPIWithCredentials(clientID, clientSecret)
 
 	t.Run("Create a scene", func(t *testing.T) {
-		_, err := recapAPI.CreatePhotoScene("testare", nil)
+		_, err := recapAPI.CreatePhotoScene("testare", nil, "object")
 
 		if err != nil {
 			t.Fatalf("Failed to create a photoscene: %s\n", err.Error())
@@ -100,7 +100,7 @@ func TestCreatePhotoSceneReCap(t *testing.T) {
 	})
 
 	t.Run("Check fail on create a scene with empty name", func(t *testing.T) {
-		_, err := recapAPI.CreatePhotoScene("", nil)
+		_, err := recapAPI.CreatePhotoScene("", nil, "object")
 
 		if err == nil {
 			t.Fatalf("Should fail creating a scene with empty name\n")
@@ -114,7 +114,7 @@ func ExampleReCapAPI_CreatePhotoScene() {
 	clientSecret := os.Getenv("FORGE_CLIENT_SECRET")
 	recapAPI := NewReCapAPIWithCredentials(clientID, clientSecret)
 
-	photoscene, err := recapAPI.CreatePhotoScene("test_scene", nil)
+	photoscene, err := recapAPI.CreatePhotoScene("test_scene", nil, "object")
 	if err != nil {
 		log.Fatal(err.Error())
 	}

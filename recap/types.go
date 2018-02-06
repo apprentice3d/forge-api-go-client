@@ -47,6 +47,23 @@ type FileUploadingReply struct {
 	} `json:"Files"`
 }
 
+type LinksUploadingReply struct {
+	Usage    string `json:",omitempty"`
+	Resource string `json:",omitempty"`
+	Files    *struct {
+		File []struct {
+			FileName string `json:"filename"`
+			FileID   string `json:"fileid"`
+			FileSize string `json:"filesize"`
+			Message  string `json:"msg"`
+		} `json:"file"`
+	} `json:"Files"`
+	Error    *struct {
+		Code    string `json:"code"`
+		Message string `json:"msg"`
+	} `json:"Error"`
+}
+
 type SceneStartProcessingReply struct {
 	Message    string     `json:"msg"`
 	PhotoScene PhotoScene `json:"Photoscene"`

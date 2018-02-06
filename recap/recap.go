@@ -2,7 +2,6 @@ package recap
 
 import (
 	"errors"
-	"log"
 
 	"github.com/apprentice3d/forge-api-go-client/oauth"
 )
@@ -16,70 +15,85 @@ func NewReCapAPIWithCredentials(ClientID string, ClientSecret string) ReCapAPI {
 	}
 }
 
-// CreatePhotoScene is used to prepare a scene with a given name and expected output formats
-func (api ReCapAPI) CreatePhotoScene(name string, formats []string) (scene PhotoScene, err error) {
+// CreatePhotoScene is used to prepare a scene with a given name, expected output formats and sceneType
+// 	name - should not be empty
+// 	formats - should be of type rcm, rcs, obj, ortho or report
+// 	sceneType - should be either "aerial" or "object"
+func (api ReCapAPI) CreatePhotoScene(name string, formats []string, sceneType string) (scene PhotoScene, err error) {
 
 	bearer, err := api.Authenticate("data:write")
 	if err != nil {
 		return
 	}
 	path := api.Host + api.ReCapPath
-	scene, err = CreatePhotoScene(path, name, formats, bearer.AccessToken)
+	scene, err = CreatePhotoScene(path, name, formats, sceneType, bearer.AccessToken)
 
 	return
 }
 
-func (api ReCapAPI) AddFilesToScene(scene *PhotoScene, files []string) (uploads []FileUploadingReply, err error) {
+func (api ReCapAPI) AddFileToSceneUsingLinks(sceneID string, links []string) (uploads LinksUploadingReply, err error) {
 	bearer, err := api.Authenticate("data:write")
 	if err != nil {
 		return
 	}
-	scene.Files = append(scene.Files, files...)
 	path := api.Host + api.ReCapPath
 
-	/******** Parallel way ***************/
-	//create a channel from which workers will consume
-	workChan := make(chan string, len(files))
-	for _, filename := range scene.Files {
-		workChan <- filename
-	}
-	close(workChan)
+	uploads, err = AddFileToSceneUsingLinks(path, sceneID, links, bearer.AccessToken)
+	return
+}
 
-	// since some OS have limits on open file descriptor
-	// we have to limit the number of goroutines opening files
-	workers := 16
-	if len(scene.Files) < workers {
-		workers = len(scene.Files)
-	}
 
-	successChan := make(chan *FileUploadingReply, len(scene.Files))
-	errChan := make(chan error, 1)
-
-	for workerID := 0; workerID < workers; workerID++ {
-		go func() {
-			for file := range workChan {
-				reply, err := AddFileToScene(path, scene.ID, file, bearer.AccessToken)
-				if err != nil {
-					errChan <- err
-					return
-				}
-				successChan <- &reply
-			}
-		}()
-	}
-
-	for i := 0; i < len(scene.Files); i++ {
-		select {
-		case result := <-successChan:
-			uploads = append(uploads, *result)
-			log.Printf("[%d/%d] SUCCESS uploading image: %s\n",
-				i+1,
-				len(scene.Files),
-				result.Files.File.FileName)
-		case err = <-errChan:
-			return
-		}
-	}
+func (api ReCapAPI) AddFilesToScene(scene *PhotoScene, files []string) (uploads []FileUploadingReply, err error) {
+	//bearer, err := api.Authenticate("data:write")
+	//if err != nil {
+	//	return
+	//}
+	//scene.Files = append(scene.Files, files...)
+	//path := api.Host + api.ReCapPath
+	//
+	///******** Parallel way ***************/
+	////create a channel from which workers will consume
+	//workChan := make(chan string, len(files))
+	//for _, filename := range scene.Files {
+	//	workChan <- filename
+	//}
+	//close(workChan)
+	//
+	//// since some OS have limits on open file descriptor
+	//// we have to limit the number of goroutines opening files
+	//workers := 16
+	//if len(scene.Files) < workers {
+	//	workers = len(scene.Files)
+	//}
+	//
+	//successChan := make(chan *FileUploadingReply, len(scene.Files))
+	//errChan := make(chan error, 1)
+	//
+	//for workerID := 0; workerID < workers; workerID++ {
+	//	go func() {
+	//		for file := range workChan {
+	//			reply, err := AddFileToSceneUsingLinks(path, scene.ID, []string{file}, bearer.AccessToken)
+	//			if err != nil {
+	//				errChan <- err
+	//				return
+	//			}
+	//			successChan <- &reply
+	//		}
+	//	}()
+	//}
+	//
+	//for i := 0; i < len(scene.Files); i++ {
+	//	select {
+	//	case result := <-successChan:
+	//		uploads = append(uploads, *result)
+	//		log.Printf("[%d/%d] SUCCESS uploading image: %s\n",
+	//			i+1,
+	//			len(scene.Files),
+	//			result.Files.File.FileName)
+	//	case err = <-errChan:
+	//		return
+	//	}
+	//}
 	/******** END of Parallel way ***************/
 
 	/******** Sequential way ***************/
@@ -95,33 +109,33 @@ func (api ReCapAPI) AddFilesToScene(scene *PhotoScene, files []string) (uploads 
 	return
 }
 
-func (api ReCapAPI) StartSceneProcessing(scene PhotoScene) (sceneID string, err error) {
+func (api ReCapAPI) StartSceneProcessing(sceneID string) (result string, err error) {
 	bearer, err := api.Authenticate("data:write")
 	if err != nil {
 		return
 	}
 	path := api.Host + api.ReCapPath
-	sceneID, err = StartSceneProcessing(path, scene.ID, bearer.AccessToken)
+	result, err = StartSceneProcessing(path, sceneID, bearer.AccessToken)
 	return
 }
 
-func (api ReCapAPI) GetSceneProgress(scene PhotoScene) (progress SceneProgressReply, err error) {
+func (api ReCapAPI) GetSceneProgress(sceneID string) (progress SceneProgressReply, err error) {
 	bearer, err := api.Authenticate("data:read")
 	if err != nil {
 		return
 	}
 	path := api.Host + api.ReCapPath
-	progress, err = GetSceneProgress(path, scene.ID, bearer.AccessToken)
+	progress, err = GetSceneProgress(path, sceneID, bearer.AccessToken)
 	return
 }
 
-func (api ReCapAPI) GetSceneResults(scene PhotoScene, format string) (result SceneResultReply, err error) {
+func (api ReCapAPI) GetSceneResults(sceneID string, format string) (result SceneResultReply, err error) {
 	bearer, err := api.Authenticate("data:read")
 	if err != nil {
 		return
 	}
 	path := api.Host + api.ReCapPath
-	result, err = GetScene(path, scene.ID, bearer.AccessToken, format)
+	result, err = GetScene(path, sceneID, bearer.AccessToken, format)
 	return
 }
 
