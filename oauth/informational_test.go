@@ -29,9 +29,9 @@ func TestInformation_AboutMe(t *testing.T) {
 		"EmailVerified: %t\n"+
 		"Var2FaEnabled: %t\n"+
 		"ProfileImages: %v",
-		profile.UserId,
+		profile.UserID,
 		profile.UserName,
-		profile.EmailId,
+		profile.EmailID,
 		profile.FirstName,
 		profile.LastName,
 		profile.EmailVerified,
@@ -62,9 +62,9 @@ func ExampleInformation_AboutMe() {
 		"EmailVerified: %t\n"+
 		"Var2FaEnabled: %t\n"+
 		"ProfileImages: %v",
-		profile.UserId,
+		profile.UserID,
 		profile.UserName,
-		profile.EmailId,
+		profile.EmailID,
 		profile.FirstName,
 		profile.LastName,
 		profile.EmailVerified,

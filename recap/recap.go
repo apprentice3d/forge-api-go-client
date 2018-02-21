@@ -9,8 +9,6 @@
 package recap
 
 import (
-	"errors"
-
 	"github.com/apprentice3d/forge-api-go-client/oauth"
 )
 
@@ -62,7 +60,7 @@ func (api API) AddFileToSceneUsingLink(sceneID string, link string) (uploads Fil
 
 // AddFileToSceneUsingData can be used when the image is already available as a byte slice,
 // be it read from a local file or as a result/body of a POST request
-func (api API) AddFilesToSceneUsingData(sceneID string, data []byte) (uploads FileUploadingReply, err error) {
+func (api API) AddFileToSceneUsingData(sceneID string, data []byte) (uploads FileUploadingReply, err error) {
 	bearer, err := api.Authenticate("data:write")
 	if err != nil {
 		return
@@ -75,7 +73,7 @@ func (api API) AddFilesToSceneUsingData(sceneID string, data []byte) (uploads Fi
 }
 
 // StartSceneProcessing will trigger the processing of a specified scene that can be canceled any time
-func (api API) StartSceneProcessing(sceneID string) (result string, err error) {
+func (api API) StartSceneProcessing(sceneID string) (result SceneStartProcessingReply, err error) {
 	bearer, err := api.Authenticate("data:write")
 	if err != nil {
 		return
@@ -84,6 +82,7 @@ func (api API) StartSceneProcessing(sceneID string) (result string, err error) {
 	result, err = startSceneProcessing(path, sceneID, bearer.AccessToken)
 	return
 }
+
 
 // GetSceneProgress polls the scene processing status and progress
 //	Note: instead of polling, consider using the callback parameter that can be specified upon scene creation
@@ -106,14 +105,20 @@ func (api API) GetSceneResults(sceneID string, format string) (result SceneResul
 		return
 	}
 	path := api.Host + api.ReCapPath
-	result, err = getScene(path, sceneID, bearer.AccessToken, format)
+	result, err = getSceneResult(path, sceneID, bearer.AccessToken, format)
 	return
 }
 
 // CancelSceneProcessing stops the scene processing, without affecting the already uploaded resources
 func (api API) CancelSceneProcessing(sceneID string) (ID string, err error) {
-	err = errors.New("method not implemented")
-	return
+	bearer, err := api.Authenticate("data:write")
+	if err != nil {
+		return
+	}
+	path := api.Host + api.ReCapPath
+	_, err = cancelSceneProcessing(path, sceneID, bearer.AccessToken)
+
+	return sceneID, err
 }
 
 // DeleteScene removes all the resources associated with given scene.

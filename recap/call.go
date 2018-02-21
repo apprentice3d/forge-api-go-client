@@ -10,12 +10,9 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/url"
-	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 )
-
 
 func createPhotoScene(path string, name string, formats []string, sceneType string, token string) (scene PhotoScene, err error) {
 
@@ -44,7 +41,6 @@ func createPhotoScene(path string, name string, formats []string, sceneType stri
 	if err != nil {
 		return
 	}
-
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
@@ -74,12 +70,11 @@ func createPhotoScene(path string, name string, formats []string, sceneType stri
 	return
 }
 
-
-func addFileToSceneUsingLink(path string, photoSceneId string, link string, token string) (result FileUploadingReply, err error) {
+func addFileToSceneUsingLink(path string, photoSceneID string, link string, token string) (result FileUploadingReply, err error) {
 
 	task := http.Client{}
 
-	params := `photosceneid=` + photoSceneId + `&type=image`
+	params := `photosceneid=` + photoSceneID + `&type=image`
 	params += `&file[0]=` + link
 
 	body := strings.NewReader(params)
@@ -102,83 +97,31 @@ func addFileToSceneUsingLink(path string, photoSceneId string, link string, toke
 	}
 	defer response.Body.Close()
 
-
-	if response.StatusCode != 200 {
+	if response.StatusCode != http.StatusOK {
 		content, _ := ioutil.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}
-	decoder := json.NewDecoder(response.Body)
 
+	decoder := json.NewDecoder(response.Body)
 	err = decoder.Decode(&result)
 
-	return
-}
-
-
-func addFileToSceneUsingFilePath(path string, photoSceneId string, filename string, token string) (result FileUploadingReply, err error) {
-
-	file, err := os.Open(filename)
-	defer file.Close()
 	if err != nil {
+		err = errors.New("[JSON DECODING ERROR] " + err.Error())
 		return
 	}
 
-	body := &bytes.Buffer{}
-	writer := multipart.NewWriter(body)
-	formFile, err := writer.CreateFormFile("file[0]", filepath.Base(filename))
-	if err != nil {
-		log.Println(err.Error())
+	// This check is necessary, as there are cases when server returns status OK, but contains an error message
+	if bodyError := result.Error; bodyError != nil {
+		err = errors.New("[" + bodyError.Code + "] " + bodyError.Message)
 		return
 	}
-
-	if _, err = io.Copy(formFile, file); err != nil {
-		log.Println(err.Error())
-		return
-	}
-
-	writer.WriteField("photosceneid", photoSceneId)
-	writer.WriteField("type", "image")
-	writer.Close()
-
-	task := http.Client{}
-
-	req, err := http.NewRequest("POST",
-		path+"/file",
-		body)
-
-	if err != nil {
-		return
-	}
-
-	req.Header.Set("Authorization", "Bearer "+token)
-	req.Header.Set("Content-Type", writer.FormDataContentType())
-	response, err := task.Do(req)
-
-	if err != nil {
-		return
-	}
-	defer response.Body.Close()
-	content, _ := ioutil.ReadAll(response.Body)
-
-	if response.StatusCode != 200 {
-		err = errors.New(response.Request.URL.String() + " => [" + strconv.Itoa(response.StatusCode) + "] " + string(content))
-		log.Println(err.Error())
-		return
-	}
-
-	if err = checkMessageForErrors(content); err != nil {
-		return
-	}
-
-	err = json.Unmarshal(content, &result)
 
 	return
 }
 
+func addFileToSceneUsingFileData(path string, photoSceneID string, data []byte, token string) (result FileUploadingReply, err error) {
 
-func addFileToSceneUsingFileData(path string, photoSceneId string, data []byte, token string) (result FileUploadingReply, err error) {
-	
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
 	formFile, err := writer.CreateFormFile("file[0]", "datafile")
@@ -188,14 +131,12 @@ func addFileToSceneUsingFileData(path string, photoSceneId string, data []byte, 
 	}
 
 	dataContent := bytes.NewReader(data);
-
-
 	if _, err = io.Copy(formFile, dataContent); err != nil {
 		log.Println(err.Error())
 		return
 	}
 
-	writer.WriteField("photosceneid", photoSceneId)
+	writer.WriteField("photosceneid", photoSceneID)
 	writer.WriteField("type", "image")
 	writer.Close()
 
@@ -217,31 +158,35 @@ func addFileToSceneUsingFileData(path string, photoSceneId string, data []byte, 
 		return
 	}
 	defer response.Body.Close()
-	content, _ := ioutil.ReadAll(response.Body)
 
-	if response.StatusCode != 200 {
-		err = errors.New(response.Request.URL.String() + " => [" + strconv.Itoa(response.StatusCode) + "] " + string(content))
-		log.Println(err.Error())
+	if response.StatusCode != http.StatusOK {
+		content, _ := ioutil.ReadAll(response.Body)
+		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}
 
-	if err = checkMessageForErrors(content); err != nil {
+	decoder := json.NewDecoder(response.Body)
+	err = decoder.Decode(&result)
+
+	if err != nil {
+		err = errors.New("[JSON DECODING ERROR] " + err.Error())
 		return
 	}
 
-	err = json.Unmarshal(content, &result)
+	// This check is necessary, as there are cases when server returns status OK, but contains an error message
+	if bodyError := result.Error; bodyError != nil {
+		err = errors.New("[" + bodyError.Code + "] " + bodyError.Message)
+		return
+	}
 
 	return
 }
 
-
-
-
-func startSceneProcessing(path string, photoSceneId string, token string) (sceneID string, err error) {
+func startSceneProcessing(path string, photoSceneID string, token string) (result SceneStartProcessingReply, err error) {
 	task := http.Client{}
 
 	req, err := http.NewRequest("POST",
-		path+"/photoscene/"+photoSceneId,
+		path+"/photoscene/"+photoSceneID,
 		nil,
 	)
 
@@ -254,31 +199,37 @@ func startSceneProcessing(path string, photoSceneId string, token string) (scene
 	if err != nil {
 		return
 	}
-
-	content, _ := ioutil.ReadAll(response.Body)
 	defer response.Body.Close()
 
-	if response.StatusCode != 200 {
+	if response.StatusCode != http.StatusOK {
+		content, _ := ioutil.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}
 
-	if err = checkMessageForErrors(content); err != nil {
+
+	decoder := json.NewDecoder(response.Body)
+	err = decoder.Decode(&result)
+
+	if err != nil {
+		err = errors.New("[JSON DECODING ERROR] " + err.Error())
 		return
 	}
 
-	sceneStartProcessingReply := SceneStartProcessingReply{}
-	err = json.Unmarshal(content, &sceneStartProcessingReply)
-	sceneID = sceneStartProcessingReply.PhotoScene.ID
+	// This check is necessary, as there are cases when server returns status OK, but contains an error message
+	if bodyError := result.Error; bodyError != nil {
+		err = errors.New("[" + bodyError.Code + "] " + bodyError.Message)
+		return
+	}
 
 	return
 }
 
-func getSceneProgress(path string, photoSceneId string, token string) (progress SceneProgressReply, err error) {
+func getSceneProgress(path string, photoSceneID string, token string) (result SceneProgressReply, err error) {
 	task := http.Client{}
 
 	req, err := http.NewRequest("GET",
-		path+"/photoscene/"+photoSceneId+"/progress",
+		path+"/photoscene/"+photoSceneID+"/progress",
 		nil,
 	)
 
@@ -291,30 +242,39 @@ func getSceneProgress(path string, photoSceneId string, token string) (progress 
 	if err != nil {
 		return
 	}
-
-	content, _ := ioutil.ReadAll(response.Body)
 	defer response.Body.Close()
 
-	if response.StatusCode != 200 {
+	if response.StatusCode != http.StatusOK {
+		content, _ := ioutil.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}
 
-	if err = checkMessageForErrors(content); err != nil {
+
+	decoder := json.NewDecoder(response.Body)
+	err = decoder.Decode(&result)
+
+	if err != nil {
+		err = errors.New("[JSON DECODING ERROR] " + err.Error())
 		return
 	}
-	err = json.Unmarshal(content, &progress)
+
+	// This check is necessary, as there are cases when server returns status OK, but contains an error message
+	if bodyError := result.Error; bodyError != nil {
+		err = errors.New("[" + bodyError.Code + "] " + bodyError.Message)
+		return
+	}
 
 	return
 }
 
-func getScene(path string, photoSceneId string, token string, format string) (result SceneResultReply, err error) {
+func getSceneResult(path string, photoSceneID string, token string, format string) (result SceneResultReply, err error) {
 	task := http.Client{}
 
 	body := strings.NewReader("format=" + format)
 
 	req, err := http.NewRequest("GET",
-		path+"/photoscene/"+photoSceneId,
+		path+"/photoscene/"+photoSceneID,
 		body,
 	)
 
@@ -327,34 +287,82 @@ func getScene(path string, photoSceneId string, token string, format string) (re
 	if err != nil {
 		return
 	}
-
-	content, _ := ioutil.ReadAll(response.Body)
 	defer response.Body.Close()
 
-	if response.StatusCode != 200 {
+	if response.StatusCode != http.StatusOK {
+		content, _ := ioutil.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}
 
-	if err = checkMessageForErrors(content); err != nil {
+
+	decoder := json.NewDecoder(response.Body)
+	err = decoder.Decode(&result)
+
+	if err != nil {
+		err = errors.New("[JSON DECODING ERROR] " + err.Error())
 		return
 	}
 
-	err = json.Unmarshal(content, &result)
+	// This check is necessary, as there are cases when server returns status OK, but contains an error message
+	if bodyError := result.Error; bodyError != nil {
+		err = errors.New("[" + bodyError.Code + "] " + bodyError.Message)
+		return
+	}
 
 	return
 }
 
-func cancelSceneProcessing(path string, photoSceneId string, token string) (scene PhotoScene, err error) {
-	err = errors.New("method not implemented")
+func cancelSceneProcessing(path string, photoSceneID string, token string) (result SceneCancelReply, err error) {
+	task := http.Client{}
+
+	req, err := http.NewRequest("POST",
+		path+"/photoscene/"+photoSceneID + "/cancel",
+		nil,
+	)
+
+	if err != nil {
+		return
+	}
+
+	req.Header.Set("Authorization", "Bearer "+token)
+	response, err := task.Do(req)
+	if err != nil {
+		return
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusOK {
+		content, _ := ioutil.ReadAll(response.Body)
+		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
+		return
+	}
+
+
+	decoder := json.NewDecoder(response.Body)
+
+	err = decoder.Decode(&result)
+
+	if err != nil {
+		err = errors.New("[JSON DECODING ERROR] " + err.Error())
+		return
+	}
+
+	// This check is necessary, as there are cases when server returns status OK, but contains an error message
+	if bodyError := result.Error; bodyError != nil {
+		err = errors.New("[" + bodyError.Code + "] " + bodyError.Message)
+		return
+	}
+
 	return
+
 }
 
-func deleteScene(path string, photoSceneId string, token string) (result SceneDeletionReply, err error) {
+func deleteScene(path string, photoSceneID string, token string) (result SceneDeletionReply, err error) {
 	task := http.Client{}
 
 	req, err := http.NewRequest("DELETE",
-		path+"/photoscene/"+photoSceneId,
+		path+"/photoscene/"+photoSceneID,
 		nil,
 	)
 
@@ -367,40 +375,27 @@ func deleteScene(path string, photoSceneId string, token string) (result SceneDe
 	if err != nil {
 		return
 	}
+	defer req.Body.Close()
 
-	content, _ := ioutil.ReadAll(response.Body)
-	defer response.Body.Close()
-
-	if response.StatusCode != 200 {
+	if response.StatusCode != http.StatusOK {
+		content, _ := ioutil.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}
 
-	if err = checkMessageForErrors(content); err != nil {
+	decoder := json.NewDecoder(response.Body)
+	err = decoder.Decode(&result)
+
+	if err != nil {
+		err = errors.New("[JSON DECODING ERROR] " + err.Error())
 		return
 	}
 
-	err = json.Unmarshal(content, &result)
-
-	return
-}
-
-/******************* AUX FUNCTIONS *******************************/
-
-
-
-// Check if the body is not containing an error message
-func checkMessageForErrors(content []byte) (err error) {
-
-	error_checker := ErrorMessage{}
-	err = json.Unmarshal(content, &error_checker)
-
-	if error_checker.Error != nil {
-		// Got a message containing an error
-		err = errors.New("Error " +
-			error_checker.Error.Code +
-			": " +
-			error_checker.Error.Message)
+	// This check is necessary, as there are cases when server returns status OK, but contains an error message
+	if bodyError := result.Error; bodyError != nil {
+		err = errors.New("[" + bodyError.Code + "] " + bodyError.Message)
+		return
 	}
+
 	return
 }

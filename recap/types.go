@@ -27,6 +27,15 @@ type SceneDeletionReply struct {
 	Usage    string `json:",omitempty"`
 	Resource string `json:",omitempty"`
 	Message  string `json:"msg"`
+	Error *Error `json:"Error,omitempty"`
+}
+
+// SceneCancelReply reflects the response content upon scene cancel processing
+type SceneCancelReply struct {
+	Usage    string `json:",omitempty"`
+	Resource string `json:",omitempty"`
+	Message  string `json:"msg"`
+	Error *Error `json:"Error,omitempty"`
 }
 
 // FileUploadingReply reflects the response content upon uploading a file,
@@ -42,6 +51,8 @@ type FileUploadingReply struct {
 			Message  string `json:"msg"`
 		} `json:"file"`
 	} `json:"Files"`
+
+	Error *Error `json:"Error,omitempty"`
 }
 
 //type LinksUploadingReply struct {
@@ -65,6 +76,7 @@ type FileUploadingReply struct {
 type SceneStartProcessingReply struct {
 	Message    string     `json:"msg"`
 	PhotoScene PhotoScene `json:"Photoscene"`
+	Error *Error `json:"Error,omitempty"`
 }
 
 // SceneProgressReply reflects the response content upon polling for scene status
@@ -76,6 +88,8 @@ type SceneProgressReply struct {
 		Message  string `json:"progressmsg"`
 		Progress string `json:"progress"`
 	} `json:"Photoscene"`
+
+	Error *Error `json:"Error,omitempty"`
 }
 
 // SceneResultReply reflects the response content upon requesting the scene results in a certain format
@@ -87,6 +101,8 @@ type SceneResultReply struct {
 		SceneLink string `json:"scenelink"`
 		FileSize  string `json:"filesize"`
 	} `json:"Photoscene"`
+
+	Error *Error `json:"Error,omitempty"`
 }
 
 

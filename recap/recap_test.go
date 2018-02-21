@@ -151,7 +151,7 @@ func TestReCapAPIWorkflowUsingLocalFiles(t *testing.T) {
 				t.Fatal(err.Error())
 			}
 
-			_, err = recapAPI.AddFilesToSceneUsingData(scene.ID, data)
+			_, err = recapAPI.AddFileToSceneUsingData(scene.ID, data)
 			if err != nil {
 				t.Fatal(err.Error())
 			}
@@ -240,7 +240,8 @@ func TestCreatePhotoScene(t *testing.T) {
 
 }
 
-func ExampleReCapAPI_CreatePhotoScene() {
+func ExampleAPI_CreatePhotoScene() {
+
 	clientID := os.Getenv("FORGE_CLIENT_ID")
 	clientSecret := os.Getenv("FORGE_CLIENT_SECRET")
 	recapAPI := recap.NewAPIWithCredentials(clientID, clientSecret)

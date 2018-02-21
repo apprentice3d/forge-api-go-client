@@ -10,9 +10,9 @@ import (
 
 // UserProfile reflects the response received when query the profile of an authorizing end user in a 3-legged context
 type UserProfile struct {
-	UserId    string `json:"userId"`    // The backend user ID of the profile
+	UserID    string `json:"userId"`    // The backend user ID of the profile
 	UserName  string `json:"userName"`  // The username chosen by the user
-	EmailId   string `json:"emailId"`   // The user’s email address
+	EmailID   string `json:"emailId"`   // The user’s email address
 	FirstName string `json:"firstName"` // The user’s first name
 	LastName  string `json:"lastName"`  // The user’s last name
 	// true if the user’s email address has been verified false if the user’s email address has not been verified
