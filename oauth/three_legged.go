@@ -24,7 +24,7 @@ type ThreeLeggedAuthenticator interface {
 }
 
 // NewThreeLeggedClient returns a 3-legged authenticator with default host and authPath
-func NewThreeLeggedClient(clientID, clientSecret, redirectUri string) ThreeLeggedAuth {
+func NewThreeLeggedClient(clientID, clientSecret, redirectURI string) ThreeLeggedAuth {
 	return ThreeLeggedAuth{
 		AuthData{
 			clientID,
@@ -32,7 +32,7 @@ func NewThreeLeggedClient(clientID, clientSecret, redirectUri string) ThreeLegge
 			"https://developer.api.autodesk.com",
 			"/authentication/v1",
 		},
-		redirectUri,
+		redirectURI,
 	}
 }
 
@@ -102,7 +102,7 @@ func (a ThreeLeggedAuth) GetToken(code string) (bearer Bearer, err error) {
 		return
 	}
 
-	decoder := json.NewDecoder(response.Body);
+	decoder := json.NewDecoder(response.Body)
 	err = decoder.Decode(&bearer)
 
 	return

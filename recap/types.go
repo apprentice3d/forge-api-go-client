@@ -1,17 +1,15 @@
 package recap
 
-type MetaData struct {
-	Name   string
-	Values string
-}
-
 // PhotoScene holds data encountered in replies like creation of photoScene
 type PhotoScene struct {
 	ID       string     `json:"photosceneid"`
 	Name     string     `json:"name,omitempty"`
 	Files    []string   `json:",omitempty"`
 	Formats  []string   `json:",omitempty"`
-	Metadata []MetaData `json:",omitempty"`
+	Metadata []struct {
+		Name   string
+		Values string
+	} `json:",omitempty"`
 }
 
 // SceneCreationReply reflects the response content upon scene creation
