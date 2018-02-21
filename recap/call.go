@@ -375,7 +375,7 @@ func deleteScene(path string, photoSceneID string, token string) (result SceneDe
 	if err != nil {
 		return
 	}
-	defer req.Body.Close()
+	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
 		content, _ := ioutil.ReadAll(response.Body)
