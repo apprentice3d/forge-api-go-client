@@ -16,11 +16,8 @@ import (
 	"strings"
 )
 
-//const (
-//	basePath = "https://developer.api.autodesk.com/photo-to-3d/v1"
-//)
 
-func CreatePhotoScene(path string, name string, formats []string, sceneType string, token string) (scene PhotoScene, err error) {
+func createPhotoScene(path string, name string, formats []string, sceneType string, token string) (scene PhotoScene, err error) {
 
 	if sceneType != "object" && sceneType != "aerial" {
 		err = errors.New("the scene type is not supported. Expecting 'object' or 'aerial', got " + sceneType)
@@ -48,35 +45,43 @@ func CreatePhotoScene(path string, name string, formats []string, sceneType stri
 		return
 	}
 
-	content, _ := ioutil.ReadAll(response.Body)
 	defer response.Body.Close()
 
-	if response.StatusCode != 200 {
+	if response.StatusCode != http.StatusOK {
+		content, _ := ioutil.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}
 
-	if err = checkMessageForErrors(content); err != nil {
+	decoder := json.NewDecoder(response.Body)
+
+	sceneCreationReply := SceneCreationReply{}
+	err = decoder.Decode(&sceneCreationReply)
+
+	if err != nil {
+		err = errors.New("[JSON DECODING ERROR] " + err.Error())
 		return
 	}
 
-	sceneCreationReply := SceneCreationReply{}
-	err = json.Unmarshal(content, &sceneCreationReply)
-	scene.ID = sceneCreationReply.PhotoScene.ID
+	// This check is necessary, as there are cases when server returns status OK, but contains an error message
+	if bodyError := sceneCreationReply.Error; bodyError != nil {
+		err = errors.New("[" + bodyError.Code + "] " + bodyError.Message)
+		return
+	}
+
+	scene = sceneCreationReply.PhotoScene
 
 	return
-
 }
 
 
-func AddFileToSceneUsingLinks(path string, photoSceneId string, links []string, token string) (result LinksUploadingReply, err error) {
+func addFileToSceneUsingLink(path string, photoSceneId string, link string, token string) (result FileUploadingReply, err error) {
 
 	task := http.Client{}
 
 	params := `photosceneid=` + photoSceneId + `&type=image`
-	for idx, link := range links {
-		params += `&file[` + strconv.Itoa(idx) +`]=` + link
-	}
+	params += `&file[0]=` + link
+
 	body := strings.NewReader(params)
 
 	req, err := http.NewRequest("POST",
@@ -105,19 +110,13 @@ func AddFileToSceneUsingLinks(path string, photoSceneId string, links []string, 
 	}
 	decoder := json.NewDecoder(response.Body)
 
-	if err = decoder.Decode(&result); err != nil {
-		return
-	}
-
-	if result.Error != nil {
-		err = errors.New("[" + result.Error.Code + "] " + result.Error.Message)
-	}
+	err = decoder.Decode(&result)
 
 	return
 }
 
 
-func AddFileToSceneUsingFilePath(path string, photoSceneId string, filename string, token string) (result FileUploadingReply, err error) {
+func addFileToSceneUsingFilePath(path string, photoSceneId string, filename string, token string) (result FileUploadingReply, err error) {
 
 	file, err := os.Open(filename)
 	defer file.Close()
@@ -178,7 +177,7 @@ func AddFileToSceneUsingFilePath(path string, photoSceneId string, filename stri
 }
 
 
-func AddFileToSceneUsingFileData(path string, photoSceneId string, data []byte, token string) (result FileUploadingReply, err error) {
+func addFileToSceneUsingFileData(path string, photoSceneId string, data []byte, token string) (result FileUploadingReply, err error) {
 	
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
@@ -238,7 +237,7 @@ func AddFileToSceneUsingFileData(path string, photoSceneId string, data []byte, 
 
 
 
-func StartSceneProcessing(path string, photoSceneId string, token string) (sceneID string, err error) {
+func startSceneProcessing(path string, photoSceneId string, token string) (sceneID string, err error) {
 	task := http.Client{}
 
 	req, err := http.NewRequest("POST",
@@ -275,7 +274,7 @@ func StartSceneProcessing(path string, photoSceneId string, token string) (scene
 	return
 }
 
-func GetSceneProgress(path string, photoSceneId string, token string) (progress SceneProgressReply, err error) {
+func getSceneProgress(path string, photoSceneId string, token string) (progress SceneProgressReply, err error) {
 	task := http.Client{}
 
 	req, err := http.NewRequest("GET",
@@ -309,7 +308,7 @@ func GetSceneProgress(path string, photoSceneId string, token string) (progress 
 	return
 }
 
-func GetScene(path string, photoSceneId string, token string, format string) (result SceneResultReply, err error) {
+func getScene(path string, photoSceneId string, token string, format string) (result SceneResultReply, err error) {
 	task := http.Client{}
 
 	body := strings.NewReader("format=" + format)
@@ -346,12 +345,12 @@ func GetScene(path string, photoSceneId string, token string, format string) (re
 	return
 }
 
-func CancelSceneProcessing(path string, photoSceneId string, token string) (scene PhotoScene, err error) {
+func cancelSceneProcessing(path string, photoSceneId string, token string) (scene PhotoScene, err error) {
 	err = errors.New("method not implemented")
 	return
 }
 
-func DeleteScene(path string, photoSceneId string, token string) (result SceneDeletionReply, err error) {
+func deleteScene(path string, photoSceneId string, token string) (result SceneDeletionReply, err error) {
 	task := http.Client{}
 
 	req, err := http.NewRequest("DELETE",

@@ -1,4 +1,4 @@
-package recap
+package recap_test
 
 import (
 	"fmt"
@@ -7,24 +7,14 @@ import (
 	"strconv"
 	"testing"
 	"time"
+	"github.com/apprentice3d/forge-api-go-client/recap"
+	"net/http"
+	"io/ioutil"
 )
 
-func TestTheEntireWorkflow(t *testing.T) {
+func TestReCapAPIWorkflowUsingRemoteLinks(t *testing.T) {
 
-	clientID := os.Getenv("FORGE_CLIENT_ID")
-	clientSecret := os.Getenv("FORGE_CLIENT_SECRET")
-
-	recapAPI := NewReCapAPIWithCredentials(clientID, clientSecret)
-
-	format := "obj"
-
-	t.Log("Creating a scene ...")
-	scene, err := recapAPI.CreatePhotoScene("example", []string{format}, "object")
-	if err != nil {
-		t.Fatal(err.Error())
-	}
-
-	fileSamples := []string{
+	linkSamples := []string{
 		"https://s3.amazonaws.com/adsk-recap-public/forge/lion/DSC_1158.JPG",
 		"https://s3.amazonaws.com/adsk-recap-public/forge/lion/DSC_1159.JPG",
 		"https://s3.amazonaws.com/adsk-recap-public/forge/lion/DSC_1160.JPG",
@@ -34,62 +24,203 @@ func TestTheEntireWorkflow(t *testing.T) {
 		"https://s3.amazonaws.com/adsk-recap-public/forge/lion/DSC_1165.JPG",
 	}
 
-	t.Log("Uploading sample images ...")
-	uploadResults, err := recapAPI.AddFilesToScene(&scene, fileSamples)
-	if err != nil {
-		t.Fatal(err.Error())
-	}
-	for idx, result := range uploadResults {
-		t.Logf("[%d] Successfully uploaded: %s\n", idx, result.Files.File.FileName)
-	}
+	var scene recap.PhotoScene
 
-	t.Log("Starting scene processing ...")
-	if _, err := recapAPI.StartSceneProcessing(scene); err != nil {
-		t.Error(err.Error())
-	}
-
-	t.Log("Checking scene status ...")
-	var progressResult SceneProgressReply
-	for {
-		if progressResult, err = recapAPI.GetSceneProgress(scene); err != nil {
-			t.Errorf("Failed to get the PhotoScene progress: %s\n", err.Error())
-		}
-
-		ratio, err := strconv.ParseFloat(progressResult.PhotoScene.Progress, 64)
-
-		if err != nil {
-			t.Fatalf("Failed to parse progress results: %s\n", err.Error())
-		}
-
-		if ratio == float64(100.0) {
-			break
-		}
-		t.Logf("Scene progress = %.2f%%\n", ratio)
-		time.Sleep(5 * time.Second)
-	}
-
-	t.Log("Finished processing the scene, now getting the results ...")
-	result, err := recapAPI.GetSceneResults(scene, format)
-	if err != nil {
-		t.Error(err.Error())
-	}
-	t.Logf("Received the following link %s\n", result.PhotoScene.SceneLink)
-
-	t.Log("Deleting the scene ...")
-
-	_, err = recapAPI.DeleteScene(scene)
-	if err != nil {
-		t.Fatal(err.Error())
-	}
-	t.Log("Scene deleted successfully!")
-}
-
-func TestCreatePhotoSceneReCap(t *testing.T) {
+	testingFormat := "obj"
 
 	// prepare the credentials
 	clientID := os.Getenv("FORGE_CLIENT_ID")
 	clientSecret := os.Getenv("FORGE_CLIENT_SECRET")
-	recapAPI := NewReCapAPIWithCredentials(clientID, clientSecret)
+
+	recapAPI := recap.NewAPIWithCredentials(clientID, clientSecret)
+
+	t.Run("Creating a new photoScene", func(t *testing.T) {
+		var err error
+		scene, err = recapAPI.CreatePhotoScene("example", []string{testingFormat}, "object")
+		if err != nil {
+			t.Fatal(err.Error())
+		}
+	})
+
+
+	t.Run("Uploading sample images using links", func(t *testing.T) {
+		for _, link := range linkSamples {
+			_, err := recapAPI.AddFileToSceneUsingLink(scene.ID, link)
+			if err != nil {
+				t.Fatal(err.Error())
+			}
+		}
+	})
+
+	t.Run("Starting photoScene processing", func(t *testing.T) {
+		if _, err := recapAPI.StartSceneProcessing(scene.ID); err != nil {
+			t.Error(err.Error())
+		}
+	})
+
+
+	t.Run("Checking scene status each 30 sec", func(t *testing.T) {
+		var progressResult recap.SceneProgressReply
+		var err error
+		for {
+			if progressResult, err = recapAPI.GetSceneProgress(scene.ID); err != nil {
+				t.Errorf("Failed to get the PhotoScene progress: %s\n", err.Error())
+			}
+
+			ratio, err := strconv.ParseFloat(progressResult.PhotoScene.Progress, 64)
+
+			if err != nil {
+				t.Fatalf("Failed to parse progress results: %s\n", err.Error())
+			}
+
+			if ratio == float64(100.0) {
+				break
+			}
+			time.Sleep(5 * time.Second)
+		}
+	})
+
+
+	t.Run("Get the available result", func(t *testing.T) {
+		result, err := recapAPI.GetSceneResults(scene.ID, testingFormat)
+		if err != nil {
+			t.Error(err.Error())
+		}
+		if len(result.PhotoScene.SceneLink) == 0 {
+			t.Error("The received link is empty")
+		}
+	})
+
+
+	t.Run("Delete the scene", func(t *testing.T) {
+		_, err := recapAPI.DeleteScene(scene.ID)
+		if err != nil {
+			t.Fatal(err.Error())
+		}
+	})
+
+
+
+}
+
+
+func TestReCapAPIWorkflowUsingLocalFiles(t *testing.T) {
+
+	// these files are remotely located, to make them available on remote test servers,
+	// so we will have to download them locally, to test the file uploading part
+	linkSamples := []string{
+		"https://s3.amazonaws.com/adsk-recap-public/forge/lion/DSC_1158.JPG",
+		"https://s3.amazonaws.com/adsk-recap-public/forge/lion/DSC_1159.JPG",
+		"https://s3.amazonaws.com/adsk-recap-public/forge/lion/DSC_1160.JPG",
+		"https://s3.amazonaws.com/adsk-recap-public/forge/lion/DSC_1162.JPG",
+		"https://s3.amazonaws.com/adsk-recap-public/forge/lion/DSC_1163.JPG",
+		"https://s3.amazonaws.com/adsk-recap-public/forge/lion/DSC_1164.JPG",
+		"https://s3.amazonaws.com/adsk-recap-public/forge/lion/DSC_1165.JPG",
+	}
+
+	var scene recap.PhotoScene
+
+	testingFormat := "obj"
+
+	// prepare the credentials
+	clientID := os.Getenv("FORGE_CLIENT_ID")
+	clientSecret := os.Getenv("FORGE_CLIENT_SECRET")
+
+	recapAPI := recap.NewAPIWithCredentials(clientID, clientSecret)
+
+	t.Run("Creating a new photoScene", func(t *testing.T) {
+		var err error
+		scene, err = recapAPI.CreatePhotoScene("example", []string{testingFormat}, "object")
+		if err != nil {
+			t.Fatal(err.Error())
+		}
+	})
+
+	t.Run("Uploading sample images using data", func(t *testing.T) {
+
+		//download each link locally and then upload the data
+		for _, link := range linkSamples {
+			response, err := http.Get(link)
+			if err != nil {
+				t.Fatal(err.Error())
+			}
+
+			data, err := ioutil.ReadAll(response.Body)
+			response.Body.Close()
+			if err != nil {
+				t.Fatal(err.Error())
+			}
+
+			_, err = recapAPI.AddFilesToSceneUsingData(scene.ID, data)
+			if err != nil {
+				t.Fatal(err.Error())
+			}
+
+		}
+	})
+
+	t.Run("Starting photoScene processing", func(t *testing.T) {
+		if _, err := recapAPI.StartSceneProcessing(scene.ID); err != nil {
+			t.Error(err.Error())
+		}
+	})
+
+
+	t.Run("Checking scene status each 30 sec", func(t *testing.T) {
+		var progressResult recap.SceneProgressReply
+		var err error
+		for {
+			if progressResult, err = recapAPI.GetSceneProgress(scene.ID); err != nil {
+				t.Errorf("Failed to get the PhotoScene progress: %s\n", err.Error())
+			}
+
+			ratio, err := strconv.ParseFloat(progressResult.PhotoScene.Progress, 64)
+
+			if err != nil {
+				t.Fatalf("Failed to parse progress results: %s\n", err.Error())
+			}
+
+			if ratio == float64(100.0) {
+				break
+			}
+			time.Sleep(5 * time.Second)
+		}
+	})
+
+
+	t.Run("Get the available result", func(t *testing.T) {
+		result, err := recapAPI.GetSceneResults(scene.ID, testingFormat)
+		if err != nil {
+			t.Error(err.Error())
+		}
+		if len(result.PhotoScene.SceneLink) == 0 {
+			t.Error("The received link is empty")
+		}
+	})
+
+
+	t.Run("Delete the scene", func(t *testing.T) {
+		_, err := recapAPI.DeleteScene(scene.ID)
+		if err != nil {
+			t.Fatal(err.Error())
+		}
+	})
+
+
+
+}
+
+
+
+
+
+
+func TestCreatePhotoScene(t *testing.T) {
+
+	// prepare the credentials
+	clientID := os.Getenv("FORGE_CLIENT_ID")
+	clientSecret := os.Getenv("FORGE_CLIENT_SECRET")
+	recapAPI := recap.NewAPIWithCredentials(clientID, clientSecret)
 
 	t.Run("Create a scene", func(t *testing.T) {
 		_, err := recapAPI.CreatePhotoScene("testare", nil, "object")
@@ -112,17 +243,19 @@ func TestCreatePhotoSceneReCap(t *testing.T) {
 func ExampleReCapAPI_CreatePhotoScene() {
 	clientID := os.Getenv("FORGE_CLIENT_ID")
 	clientSecret := os.Getenv("FORGE_CLIENT_SECRET")
-	recapAPI := NewReCapAPIWithCredentials(clientID, clientSecret)
+	recapAPI := recap.NewAPIWithCredentials(clientID, clientSecret)
 
-	photoscene, err := recapAPI.CreatePhotoScene("test_scene", nil, "object")
+	photoScene, err := recapAPI.CreatePhotoScene("test_scene", nil, "object")
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 
-	if len(photoscene.ID) != 0 {
+	if len(photoScene.ID) != 0 {
 		fmt.Println("Scene was successfully created")
 	}
 
 	//Output:
 	//Scene was successfully created
 }
+
+
