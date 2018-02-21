@@ -1,11 +1,11 @@
 package oauth_test
 
 import (
-	"testing"
-	"os"
+	"fmt"
 	"github.com/apprentice3d/forge-api-go-client/oauth"
 	"log"
-	"fmt"
+	"os"
+	"testing"
 )
 
 func TestAuthenticate(t *testing.T) {
@@ -105,4 +105,3 @@ func ExampleTwoLeggedAuth_Authenticate() {
 		bearer.ExpiresIn)
 
 }
-

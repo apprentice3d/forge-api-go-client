@@ -2,10 +2,10 @@ package recap
 
 // PhotoScene holds data encountered in replies like creation of photoScene
 type PhotoScene struct {
-	ID       string     `json:"photosceneid"`
-	Name     string     `json:"name,omitempty"`
-	Files    []string   `json:",omitempty"`
-	Formats  []string   `json:",omitempty"`
+	ID       string   `json:"photosceneid"`
+	Name     string   `json:"name,omitempty"`
+	Files    []string `json:",omitempty"`
+	Formats  []string `json:",omitempty"`
 	Metadata []struct {
 		Name   string
 		Values string
@@ -17,7 +17,7 @@ type SceneCreationReply struct {
 	Usage      string     `json:",omitempty"`
 	Resource   string     `json:",omitempty"`
 	PhotoScene PhotoScene `json:"Photoscene,omitempty"`
-	Error *Error `json:"Error,omitempty"`
+	Error      *Error     `json:"Error,omitempty"`
 }
 
 // SceneDeletionReply reflects the response content upon scene deletion
@@ -25,7 +25,7 @@ type SceneDeletionReply struct {
 	Usage    string `json:",omitempty"`
 	Resource string `json:",omitempty"`
 	Message  string `json:"msg"`
-	Error *Error `json:"Error,omitempty"`
+	Error    *Error `json:"Error,omitempty"`
 }
 
 // SceneCancelReply reflects the response content upon scene cancel processing
@@ -33,7 +33,7 @@ type SceneCancelReply struct {
 	Usage    string `json:",omitempty"`
 	Resource string `json:",omitempty"`
 	Message  string `json:"msg"`
-	Error *Error `json:"Error,omitempty"`
+	Error    *Error `json:"Error,omitempty"`
 }
 
 // FileUploadingReply reflects the response content upon uploading a file,
@@ -41,7 +41,7 @@ type SceneCancelReply struct {
 type FileUploadingReply struct {
 	Usage    string `json:",omitempty"`
 	Resource string `json:",omitempty"`
-	Files *struct {
+	Files    *struct {
 		File struct {
 			FileName string `json:"filename"`
 			FileID   string `json:"fileid"`
@@ -74,13 +74,13 @@ type FileUploadingReply struct {
 type SceneStartProcessingReply struct {
 	Message    string     `json:"msg"`
 	PhotoScene PhotoScene `json:"Photoscene"`
-	Error *Error `json:"Error,omitempty"`
+	Error      *Error     `json:"Error,omitempty"`
 }
 
 // SceneProgressReply reflects the response content upon polling for scene status
 type SceneProgressReply struct {
-	Usage    string `json:",omitempty"`
-	Resource string `json:",omitempty"`
+	Usage      string `json:",omitempty"`
+	Resource   string `json:",omitempty"`
 	PhotoScene struct {
 		ID       string `json:"photosceneid"`
 		Message  string `json:"progressmsg"`
@@ -103,7 +103,6 @@ type SceneResultReply struct {
 	Error *Error `json:"Error,omitempty"`
 }
 
-
 // ErrorMessage represents a struct corresponding to successfully received task, but failed due to some reasons.
 //
 // 	Frequently the operation succeeded with returning code 200, meaning that the task was
@@ -115,7 +114,7 @@ type SceneResultReply struct {
 type ErrorMessage struct {
 	Usage    string `json:",omitempty"`
 	Resource string `json:",omitempty"`
-	Error *Error `json:"Error"`
+	Error    *Error `json:"Error"`
 }
 
 // Error is inner struct encountered in cases when the server reported status OK, but contains details
