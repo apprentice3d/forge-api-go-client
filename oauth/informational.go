@@ -25,16 +25,12 @@ type UserProfile struct {
 	ProfileImages interface{} `json:"profileImages"`
 }
 
-
 // Information struct is holding the host and path used when making queries
 // for profile of an authorizing end user in a 3-legged context
 type Information struct {
-	Host         	string `json:"host,omitempty"`
-	ProfilePath 	string	`json:"profile_path"`
+	Host        string `json:"host,omitempty"`
+	ProfilePath string `json:"profile_path"`
 }
-
-
-
 
 // NewInformationQuerier returns an Informational API accessor with default host and profilePath
 func NewInformationQuerier() Information {
@@ -43,7 +39,6 @@ func NewInformationQuerier() Information {
 		"/userprofile/v1/users/@me",
 	}
 }
-
 
 //AboutMe is used to get the profile of an authorizing end user, given the token obtained via 3-legged OAuth flow
 func (a Information) AboutMe(token string) (profile UserProfile, err error) {
@@ -73,7 +68,6 @@ func (a Information) AboutMe(token string) (profile UserProfile, err error) {
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}
-
 
 	decoder := json.NewDecoder(response.Body)
 	err = decoder.Decode(&profile)

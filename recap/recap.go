@@ -12,7 +12,6 @@ import (
 	"github.com/apprentice3d/forge-api-go-client/oauth"
 )
 
-
 // API struct holds all paths necessary to access ReCap API
 type API struct {
 	oauth.TwoLeggedAuth
@@ -82,7 +81,6 @@ func (api API) StartSceneProcessing(sceneID string) (result SceneStartProcessing
 	result, err = startSceneProcessing(path, sceneID, bearer.AccessToken)
 	return
 }
-
 
 // GetSceneProgress polls the scene processing status and progress
 //	Note: instead of polling, consider using the callback parameter that can be specified upon scene creation
