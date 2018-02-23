@@ -127,6 +127,7 @@ func TestReCapAPIWorkflowUsingLocalFiles(t *testing.T) {
 		if err != nil {
 			t.Fatal(err.Error())
 		}
+		t.Logf("Created a photoscene with ID=%s", scene.ID)
 	})
 
 	t.Run("Uploading sample images using data", func(t *testing.T) {
@@ -189,12 +190,12 @@ func TestReCapAPIWorkflowUsingLocalFiles(t *testing.T) {
 		}
 	})
 
-	t.Run("Delete the scene", func(t *testing.T) {
-		_, err := recapAPI.DeleteScene(scene.ID)
-		if err != nil {
-			t.Fatal(err.Error())
-		}
-	})
+	//t.Run("Delete the scene", func(t *testing.T) {
+	//	_, err := recapAPI.DeleteScene(scene.ID)
+	//	if err != nil {
+	//		t.Fatal(err.Error())
+	//	}
+	//})
 
 }
 
@@ -227,9 +228,9 @@ func ExampleAPI_CreatePhotoScene() {
 
 	clientID := os.Getenv("FORGE_CLIENT_ID")
 	clientSecret := os.Getenv("FORGE_CLIENT_SECRET")
-	recapAPI := recap.NewAPIWithCredentials(clientID, clientSecret)
+	recap := recap.NewAPIWithCredentials(clientID, clientSecret)
 
-	photoScene, err := recapAPI.CreatePhotoScene("test_scene", nil, "object")
+	photoScene, err := recap.CreatePhotoScene("test_scene", nil, "object")
 	if err != nil {
 		log.Fatal(err.Error())
 	}
