@@ -130,7 +130,7 @@ func addFileToSceneUsingFileData(path string, photoSceneID string, data []byte, 
 		return
 	}
 
-	dataContent := bytes.NewReader(data);
+	dataContent := bytes.NewReader(data)
 	if _, err = io.Copy(formFile, dataContent); err != nil {
 		log.Println(err.Error())
 		return
@@ -207,7 +207,6 @@ func startSceneProcessing(path string, photoSceneID string, token string) (resul
 		return
 	}
 
-
 	decoder := json.NewDecoder(response.Body)
 	err = decoder.Decode(&result)
 
@@ -249,7 +248,6 @@ func getSceneProgress(path string, photoSceneID string, token string) (result Sc
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}
-
 
 	decoder := json.NewDecoder(response.Body)
 	err = decoder.Decode(&result)
@@ -295,7 +293,6 @@ func getSceneResult(path string, photoSceneID string, token string, format strin
 		return
 	}
 
-
 	decoder := json.NewDecoder(response.Body)
 	err = decoder.Decode(&result)
 
@@ -317,7 +314,7 @@ func cancelSceneProcessing(path string, photoSceneID string, token string) (resu
 	task := http.Client{}
 
 	req, err := http.NewRequest("POST",
-		path+"/photoscene/"+photoSceneID + "/cancel",
+		path+"/photoscene/"+photoSceneID+"/cancel",
 		nil,
 	)
 
@@ -337,7 +334,6 @@ func cancelSceneProcessing(path string, photoSceneID string, token string) (resu
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}
-
 
 	decoder := json.NewDecoder(response.Body)
 

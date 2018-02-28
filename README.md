@@ -4,6 +4,11 @@
 
 # forge-api-go-client
 
+
+**Forge API:** [![oAuth2](https://img.shields.io/badge/oAuth2-v2-green.svg)](http://developer-autodesk.github.io/)
+[![Reality-Capture](https://img.shields.io/badge/Reality%20Capture-v1-green.svg)](http://developer-autodesk.github.io/)
+
+
 Golang SDK for building Forge based applications
 
 

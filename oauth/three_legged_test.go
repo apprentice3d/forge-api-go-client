@@ -1,9 +1,9 @@
 package oauth_test
 
 import (
-	"testing"
-	"os"
 	"github.com/apprentice3d/forge-api-go-client/oauth"
+	"os"
+	"testing"
 )
 
 func TestThreeLeggedAuth_Authorize(t *testing.T) {
@@ -18,8 +18,7 @@ func TestThreeLeggedAuth_Authorize(t *testing.T) {
 
 	client := oauth.NewThreeLeggedClient(clientID,
 		clientSecret,
-			"http://localhost:3009/callback")
-
+		"http://localhost:3009/callback")
 
 	authLink, err := client.Authorize("data:read data:write", "something that will be passed back")
 
