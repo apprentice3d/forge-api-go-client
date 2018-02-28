@@ -11,9 +11,18 @@ import (
 	"github.com/apprentice3d/forge-api-go-client/oauth"
 )
 
+// BucketAPI holds the necessary data for making Bucket related calls to Forge Data Management service
 type BucketAPI struct {
 	oauth.TwoLeggedAuth
 	BucketAPIPath string
+}
+
+// NewBucketAPIWithCredentials returns a Bucket API client with default configurations
+func NewBucketAPIWithCredentials(ClientID string, ClientSecret string) BucketAPI {
+	return BucketAPI{
+		oauth.NewTwoLeggedClient(ClientID, ClientSecret),
+		"/oss/v2/buckets",
+	}
 }
 
 // CreateBucketRequest contains the data necessary to be passed upon bucket creation
@@ -39,6 +48,7 @@ type ErrorResult struct {
 	Reason string `json:"reason"`
 }
 
+// ListedBuckets reflects the response when query Data Management API for buckets associated with current Forge secrets.
 type ListedBuckets struct {
 	Items []struct {
 		BucketKey   string `json:"bucketKey"`
@@ -48,14 +58,8 @@ type ListedBuckets struct {
 	Next string `json:"next"`
 }
 
-// NewBucketAPIWithCredentials returns a Bucket API client with default configurations
-func NewBucketAPIWithCredentials(ClientID string, ClientSecret string) BucketAPI {
-	return BucketAPI{
-		oauth.NewTwoLeggedClient(ClientID, ClientSecret),
-		"/oss/v2/buckets",
-	}
-}
 
+// CreateBucket creates and returns details of created bucket, or an error on failure
 func (api BucketAPI) CreateBucket(bucketKey, policyKey string) (result BucketDetails, err error) {
 
 	bearer, err := api.Authenticate("bucket:create")
@@ -68,6 +72,8 @@ func (api BucketAPI) CreateBucket(bucketKey, policyKey string) (result BucketDet
 	return
 }
 
+// DeleteBucket deletes bucket given its key.
+// 	WARNING: The bucket delete call is undocumented.
 func (api BucketAPI) DeleteBucket(bucketKey string) error {
 	bearer, err := api.Authenticate("bucket:delete")
 	if err != nil {
@@ -78,6 +84,7 @@ func (api BucketAPI) DeleteBucket(bucketKey string) error {
 	return deleteBucket(path, bucketKey, bearer.AccessToken)
 }
 
+// ListBuckets returns a list of all buckets created or associated with Forge secrets used for token creation
 func (api BucketAPI) ListBuckets(region, limit, startAt string) (result ListedBuckets, err error) {
 	bearer, err := api.Authenticate("bucket:read")
 	if err != nil {
@@ -88,6 +95,7 @@ func (api BucketAPI) ListBuckets(region, limit, startAt string) (result ListedBu
 	return listBuckets(path, region, limit, startAt, bearer.AccessToken)
 }
 
+// GetBucketDetails returns information associated to a bucket. See BucketDetails struct.
 func (api BucketAPI) GetBucketDetails(bucketKey string) (result BucketDetails, err error) {
 	bearer, err := api.Authenticate("bucket:read")
 	if err != nil {
@@ -98,6 +106,13 @@ func (api BucketAPI) GetBucketDetails(bucketKey string) (result BucketDetails, e
 	return getBucketDetails(path, bucketKey, bearer.AccessToken)
 }
 
+
+
+
+
+/*
+ *	SUPPORT FUNCTIONS
+ */
 func getBucketDetails(path, bucketKey, token string) (result BucketDetails, err error) {
 	task := http.Client{}
 
