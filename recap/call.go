@@ -24,7 +24,7 @@ func createPhotoScene(path string, name string, formats []string, sceneType stri
 
 	body := url.Values{}
 	body.Add("scenename", name)
-	body.Add("format", strings.Join(formats, " "))
+	body.Add("format", strings.Join(formats, ","))
 	body.Add("scenetype", sceneType)
 
 	req, err := http.NewRequest("POST",

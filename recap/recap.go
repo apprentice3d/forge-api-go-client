@@ -20,8 +20,6 @@ type API struct {
 
 // NewAPIWithCredentials returns a ReCap API client with default configurations
 func NewAPIWithCredentials(ClientID string, ClientSecret string) API {
-	recapAPI := API{}
-	recapAPI.ReCapPath = "/photo-to-3d/v1"
 	return API{
 		oauth.NewTwoLeggedClient(ClientID, ClientSecret),
 		"/photo-to-3d/v1",
@@ -47,6 +45,7 @@ func (api API) CreatePhotoScene(name string, formats []string, sceneType string)
 // AddFileToSceneUsingLink can be used when the needed images are already available remotely
 // and can be uploaded just by providing the remote link
 func (api API) AddFileToSceneUsingLink(sceneID string, link string) (uploads FileUploadingReply, err error) {
+
 	bearer, err := api.Authenticate("data:write")
 	if err != nil {
 		return
@@ -60,6 +59,7 @@ func (api API) AddFileToSceneUsingLink(sceneID string, link string) (uploads Fil
 // AddFileToSceneUsingData can be used when the image is already available as a byte slice,
 // be it read from a local file or as a result/body of a POST request
 func (api API) AddFileToSceneUsingData(sceneID string, data []byte) (uploads FileUploadingReply, err error) {
+
 	bearer, err := api.Authenticate("data:write")
 	if err != nil {
 		return
