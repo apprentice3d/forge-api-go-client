@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"io"
 	"io/ioutil"
 	"log"
 	"mime/multipart"
@@ -12,6 +11,8 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"time"
+	"math/rand"
 )
 
 func createPhotoScene(path string, name string, formats []string, sceneType string, token string) (scene PhotoScene, err error) {
@@ -74,10 +75,16 @@ func addFileToSceneUsingLink(path string, photoSceneID string, link string, toke
 
 	task := http.Client{}
 
-	params := `photosceneid=` + photoSceneID + `&type=image`
-	params += `&file[0]=` + link
+	//params := `photosceneid=` + photoSceneID + `&type=image`
+	//params += `&file[0]=` + link
+	//
+	//body := strings.NewReader(params)
 
-	body := strings.NewReader(params)
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	writer.WriteField("photosceneid", photoSceneID)
+	writer.WriteField("type", "image")
+	writer.WriteField("file[0", link)
 
 	req, err := http.NewRequest("POST",
 		path+"/file",
@@ -88,7 +95,7 @@ func addFileToSceneUsingLink(path string, photoSceneID string, link string, toke
 		return
 	}
 
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("Content-Type", writer.FormDataContentType())
 	req.Header.Set("Authorization", "Bearer "+token)
 	response, err := task.Do(req)
 	if err != nil {
@@ -122,22 +129,18 @@ func addFileToSceneUsingLink(path string, photoSceneID string, link string, toke
 
 func addFileToSceneUsingFileData(path string, photoSceneID string, data []byte, token string) (result FileUploadingReply, err error) {
 
+	rand.Seed(time.Now().UnixNano())
+
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
-	formFile, err := writer.CreateFormFile("file[0]", "datafile")
+	writer.WriteField("photosceneid", photoSceneID)
+	writer.WriteField("type", "image")
+	formFile, err := writer.CreateFormFile("file[0]", "data" + strconv.Itoa(rand.Int()))
 	if err != nil {
 		log.Println(err.Error())
 		return
 	}
-
-	dataContent := bytes.NewReader(data)
-	if _, err = io.Copy(formFile, dataContent); err != nil {
-		log.Println(err.Error())
-		return
-	}
-
-	writer.WriteField("photosceneid", photoSceneID)
-	writer.WriteField("type", "image")
+	formFile.Write(data)
 	writer.Close()
 
 	task := http.Client{}
