@@ -142,7 +142,7 @@ func translate(path string, params TranslationParams, token string) (result Tran
 
 	decoder := json.NewDecoder(response.Body)
 
-	err = decoder.Decode(&response)
+	err = decoder.Decode(&result)
 
 	return
 }
