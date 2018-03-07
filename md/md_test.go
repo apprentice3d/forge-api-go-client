@@ -69,7 +69,7 @@ func TestAPI_TranslateToSVF(t *testing.T) {
 			t.Error("Could not translate the test object, got: ", err.Error())
 		}
 
-		if result.Result == "created" {
+		if result.Result != "created" {
 			t.Error("The test object was uploaded, but failed to create the translation job")
 		}
 	})
