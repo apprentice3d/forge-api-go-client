@@ -33,9 +33,9 @@ func NewTwoLeggedClient(clientID, clientSecret string) TwoLeggedAuth {
 }
 
 // Authenticate allows getting a token with a given scope
-func (a TwoLeggedAuth) Authenticate(scope string) (bearer Bearer, err error) {
+func (a TwoLeggedAuth) Authenticate(task *http.Client,scope string) (bearer Bearer, err error) {
 
-	task := http.Client{}
+	//task := http.Client{}
 
 	body := url.Values{}
 	body.Add("client_id", a.ClientID)
