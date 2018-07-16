@@ -62,50 +62,50 @@ type ListedBuckets struct {
 
 
 // CreateBucket creates and returns details of created bucket, or an error on failure
-func (api BucketAPI) CreateBucket(bucketKey, policyKey string) (result BucketDetails, err error) {
+func (api BucketAPI) CreateBucket(client * http.Client, bucketKey, policyKey string) (result BucketDetails, err error) {
 
 	bearer, err := api.Authenticate("bucket:create")
 	if err != nil {
 		return
 	}
 	path := api.Host + api.BucketAPIPath
-	result, err = createBucket(api.client, path, bucketKey, policyKey, bearer.AccessToken)
+	result, err = createBucket(client, path, bucketKey, policyKey, bearer.AccessToken)
 
 	return
 }
 
 // DeleteBucket deletes bucket given its key.
 // 	WARNING: The bucket delete call is undocumented.
-func (api BucketAPI) DeleteBucket(bucketKey string) error {
+func (api BucketAPI) DeleteBucket(client * http.Client, bucketKey string) error {
 	bearer, err := api.Authenticate("bucket:delete")
 	if err != nil {
 		return err
 	}
 	path := api.Host + api.BucketAPIPath
 
-	return deleteBucket(api.client, path, bucketKey, bearer.AccessToken)
+	return deleteBucket(client, path, bucketKey, bearer.AccessToken)
 }
 
 // ListBuckets returns a list of all buckets created or associated with Forge secrets used for token creation
-func (api BucketAPI) ListBuckets(region, limit, startAt string) (result ListedBuckets, err error) {
+func (api BucketAPI) ListBuckets(client * http.Client, region, limit, startAt string) (result ListedBuckets, err error) {
 	bearer, err := api.Authenticate("bucket:read")
 	if err != nil {
 		return
 	}
 	path := api.Host + api.BucketAPIPath
 
-	return listBuckets(api.client, path, region, limit, startAt, bearer.AccessToken)
+	return listBuckets(client, path, region, limit, startAt, bearer.AccessToken)
 }
 
 // GetBucketDetails returns information associated to a bucket. See BucketDetails struct.
-func (api BucketAPI) GetBucketDetails(bucketKey string) (result BucketDetails, err error) {
+func (api BucketAPI) GetBucketDetails(client * http.Client, bucketKey string) (result BucketDetails, err error) {
 	bearer, err := api.Authenticate("bucket:read")
 	if err != nil {
 		return
 	}
 	path := api.Host + api.BucketAPIPath
 
-	return getBucketDetails(api.client, path, bucketKey, bearer.AccessToken)
+	return getBucketDetails(client, path, bucketKey, bearer.AccessToken)
 }
 
 
