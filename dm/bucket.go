@@ -15,15 +15,13 @@ import (
 type BucketAPI struct {
 	oauth.TwoLeggedAuth
 	BucketAPIPath string
-	client * http.Client
 }
 
 // NewBucketAPIWithCredentials returns a Bucket API client with default configurations
-func NewBucketAPIWithCredentials(client * http.Client, ClientID string, ClientSecret string) BucketAPI {
+func NewBucketAPIWithCredentials(ClientID string, ClientSecret string) BucketAPI {
 	return BucketAPI{
 		oauth.NewTwoLeggedClient(ClientID, ClientSecret),
 		"/oss/v2/buckets",
-		client,
 	}
 }
 
