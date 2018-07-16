@@ -17,7 +17,7 @@ type TwoLeggedAuth struct {
 
 // TwoLeggedAuthenticator interface defines the method necessary to qualify as 2-legged authenticator
 type TwoLeggedAuthenticator interface {
-	Authenticate(scope string) (Bearer, error)
+	Authenticate(client * http.Client, scope string) (Bearer, error)
 }
 
 // NewTwoLeggedClient returns a 2-legged authenticator with default host and authPath
