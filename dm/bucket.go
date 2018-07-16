@@ -15,13 +15,15 @@ import (
 type BucketAPI struct {
 	oauth.TwoLeggedAuth
 	BucketAPIPath string
+	client * http.Client
 }
 
 // NewBucketAPIWithCredentials returns a Bucket API client with default configurations
-func NewBucketAPIWithCredentials(ClientID string, ClientSecret string) BucketAPI {
+func NewBucketAPIWithCredentials(client * http.Client, ClientID string, ClientSecret string) BucketAPI {
 	return BucketAPI{
 		oauth.NewTwoLeggedClient(ClientID, ClientSecret),
 		"/oss/v2/buckets",
+		client,
 	}
 }
 
@@ -67,7 +69,7 @@ func (api BucketAPI) CreateBucket(bucketKey, policyKey string) (result BucketDet
 		return
 	}
 	path := api.Host + api.BucketAPIPath
-	result, err = createBucket(path, bucketKey, policyKey, bearer.AccessToken)
+	result, err = createBucket(api.client, path, bucketKey, policyKey, bearer.AccessToken)
 
 	return
 }
@@ -81,7 +83,7 @@ func (api BucketAPI) DeleteBucket(bucketKey string) error {
 	}
 	path := api.Host + api.BucketAPIPath
 
-	return deleteBucket(path, bucketKey, bearer.AccessToken)
+	return deleteBucket(api.client, path, bucketKey, bearer.AccessToken)
 }
 
 // ListBuckets returns a list of all buckets created or associated with Forge secrets used for token creation
@@ -92,7 +94,7 @@ func (api BucketAPI) ListBuckets(region, limit, startAt string) (result ListedBu
 	}
 	path := api.Host + api.BucketAPIPath
 
-	return listBuckets(path, region, limit, startAt, bearer.AccessToken)
+	return listBuckets(api.client, path, region, limit, startAt, bearer.AccessToken)
 }
 
 // GetBucketDetails returns information associated to a bucket. See BucketDetails struct.
@@ -103,7 +105,7 @@ func (api BucketAPI) GetBucketDetails(bucketKey string) (result BucketDetails, e
 	}
 	path := api.Host + api.BucketAPIPath
 
-	return getBucketDetails(path, bucketKey, bearer.AccessToken)
+	return getBucketDetails(api.client, path, bucketKey, bearer.AccessToken)
 }
 
 
@@ -113,8 +115,8 @@ func (api BucketAPI) GetBucketDetails(bucketKey string) (result BucketDetails, e
 /*
  *	SUPPORT FUNCTIONS
  */
-func getBucketDetails(path, bucketKey, token string) (result BucketDetails, err error) {
-	task := http.Client{}
+func getBucketDetails(task * http.Client, path, bucketKey, token string) (result BucketDetails, err error) {
+	//task := http.Client{}
 
 	req, err := http.NewRequest("GET",
 		path+"/"+bucketKey+"/details",
@@ -144,8 +146,8 @@ func getBucketDetails(path, bucketKey, token string) (result BucketDetails, err 
 	return
 }
 
-func listBuckets(path, region, limit, startAt, token string) (result ListedBuckets, err error) {
-	task := http.Client{}
+func listBuckets(task * http.Client, path, region, limit, startAt, token string) (result ListedBuckets, err error) {
+	//task := http.Client{}
 
 	req, err := http.NewRequest("GET",
 		path,
@@ -188,9 +190,9 @@ func listBuckets(path, region, limit, startAt, token string) (result ListedBucke
 	return
 }
 
-func createBucket(path, bucketKey, policyKey, token string) (result BucketDetails, err error) {
+func createBucket(task * http.Client, path, bucketKey, policyKey, token string) (result BucketDetails, err error) {
 
-	task := http.Client{}
+	//task := http.Client{}
 
 	body, err := json.Marshal(
 		CreateBucketRequest{
@@ -230,8 +232,8 @@ func createBucket(path, bucketKey, policyKey, token string) (result BucketDetail
 	return
 }
 
-func deleteBucket(path, bucketKey, token string) (err error) {
-	task := http.Client{}
+func deleteBucket(task * http.Client, path, bucketKey, token string) (err error) {
+	//task := http.Client{}
 
 	req, err := http.NewRequest("DELETE",
 		path+"/"+bucketKey,

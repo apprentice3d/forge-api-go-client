@@ -12,7 +12,8 @@ func TestBucketAPI_ListObjects(t *testing.T) {
 	// prepare the credentials
 	clientID := os.Getenv("FORGE_CLIENT_ID")
 	clientSecret := os.Getenv("FORGE_CLIENT_SECRET")
-	bucketAPI := dm.NewBucketAPIWithCredentials(clientID, clientSecret)
+	client := &http.Client{}
+	bucketAPI := dm.NewBucketAPIWithCredentials(client, clientID, clientSecret)
 
 	testBucketName := "just_a_test_bucket"
 
@@ -39,7 +40,8 @@ func TestBucketAPI_UploadObject(t *testing.T) {
 	// prepare the credentials
 	clientID := os.Getenv("FORGE_CLIENT_ID")
 	clientSecret := os.Getenv("FORGE_CLIENT_SECRET")
-	bucketAPI := dm.NewBucketAPIWithCredentials(clientID, clientSecret)
+	client := &http.Client{}
+	bucketAPI := dm.NewBucketAPIWithCredentials(client, clientID, clientSecret)
 
 	tempBucket := "some_temp_bucket_for_testings"
 	testFilePath := "../assets/HelloWorld.rvt"

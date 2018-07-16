@@ -37,7 +37,7 @@ func (api BucketAPI) UploadObject(bucketKey string, objectName string, data []by
 	}
 	path := api.Host + api.BucketAPIPath
 
-	return uploadObject(path, bucketKey, objectName, data, bearer.AccessToken)
+	return uploadObject(api.client, path, bucketKey, objectName, data, bearer.AccessToken)
 }
 
 // ListObjects returns the bucket contains along with details on each item.
@@ -48,7 +48,7 @@ func (api BucketAPI) ListObjects(bucketKey, limit, beginsWith, startAt string) (
 	}
 	path := api.Host + api.BucketAPIPath
 
-	return listObjects(path, bucketKey, limit, beginsWith, startAt, bearer.AccessToken)
+	return listObjects(api.client, path, bucketKey, limit, beginsWith, startAt, bearer.AccessToken)
 }
 
 
@@ -57,8 +57,8 @@ func (api BucketAPI) ListObjects(bucketKey, limit, beginsWith, startAt string) (
  *	SUPPORT FUNCTIONS
  */
 
-func listObjects(path, bucketKey, limit, beginsWith, startAt, token string) (result BucketContent, err error) {
-	task := http.Client{}
+func listObjects(task * http.Client, path, bucketKey, limit, beginsWith, startAt, token string) (result BucketContent, err error) {
+	//task := http.Client{}
 
 	req, err := http.NewRequest("GET",
 		path + "/" + bucketKey + "/objects",
@@ -101,9 +101,9 @@ func listObjects(path, bucketKey, limit, beginsWith, startAt, token string) (res
 	return
 }
 
-func uploadObject(path, bucketKey, objectName string, data []byte, token string) (result ObjectDetails, err error) {
+func uploadObject(task * http.Client, path, bucketKey, objectName string, data []byte, token string) (result ObjectDetails, err error) {
 
-	task := http.Client{}
+	//task := http.Client{}
 
 	dataContent := bytes.NewReader(data)
 	req, err := http.NewRequest("PUT",
