@@ -62,7 +62,7 @@ type ListedBuckets struct {
 // CreateBucket creates and returns details of created bucket, or an error on failure
 func (api BucketAPI) CreateBucket(client * http.Client, bucketKey, policyKey string) (result BucketDetails, err error) {
 
-	bearer, err := api.Authenticate("bucket:create")
+	bearer, err := api.Authenticate(client, "bucket:create")
 	if err != nil {
 		return
 	}
@@ -75,7 +75,7 @@ func (api BucketAPI) CreateBucket(client * http.Client, bucketKey, policyKey str
 // DeleteBucket deletes bucket given its key.
 // 	WARNING: The bucket delete call is undocumented.
 func (api BucketAPI) DeleteBucket(client * http.Client, bucketKey string) error {
-	bearer, err := api.Authenticate("bucket:delete")
+	bearer, err := api.Authenticate(client, "bucket:delete")
 	if err != nil {
 		return err
 	}
@@ -86,7 +86,7 @@ func (api BucketAPI) DeleteBucket(client * http.Client, bucketKey string) error 
 
 // ListBuckets returns a list of all buckets created or associated with Forge secrets used for token creation
 func (api BucketAPI) ListBuckets(client * http.Client, region, limit, startAt string) (result ListedBuckets, err error) {
-	bearer, err := api.Authenticate("bucket:read")
+	bearer, err := api.Authenticate(client, "bucket:read")
 	if err != nil {
 		return
 	}
@@ -97,7 +97,7 @@ func (api BucketAPI) ListBuckets(client * http.Client, region, limit, startAt st
 
 // GetBucketDetails returns information associated to a bucket. See BucketDetails struct.
 func (api BucketAPI) GetBucketDetails(client * http.Client, bucketKey string) (result BucketDetails, err error) {
-	bearer, err := api.Authenticate("bucket:read")
+	bearer, err := api.Authenticate(client, "bucket:read")
 	if err != nil {
 		return
 	}
