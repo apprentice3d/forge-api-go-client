@@ -79,20 +79,20 @@ type FormatSpec struct {
 }
 
 // TranslateWithParams triggers translation job with settings specified in given TranslationParams
-func (a ModelDerivativeAPI) TranslateWithParams(params TranslationParams) (result TranslationResult, err error) {
+func (a ModelDerivativeAPI) TranslateWithParams(client * http.Client, params TranslationParams) (result TranslationResult, err error) {
 	bearer, err := a.Authenticate("data:write data:read")
 	if err != nil {
 		return
 	}
 	path := a.Host + a.ModelDerivativePath
-	result, err = translate(path, params, bearer.AccessToken)
+	result, err = translate(client, path, params, bearer.AccessToken)
 
 	return
 }
 
 // TranslateToSVF is a helper function that will use the TranslationSVFPreset for translating into svf a given ObjectID.
 // It will also take care of converting objectID into Base64 (URL Safe) encoded URN.
-func (a ModelDerivativeAPI) TranslateToSVF(objectID string) (result TranslationResult, err error) {
+func (a ModelDerivativeAPI) TranslateToSVF(client * http.Client, objectID string) (result TranslationResult, err error) {
 	bearer, err := a.Authenticate("data:write data:read")
 	if err != nil {
 		return
@@ -101,7 +101,7 @@ func (a ModelDerivativeAPI) TranslateToSVF(objectID string) (result TranslationR
 	params := TranslationSVFPreset
 	params.Input.URN = base64.RawStdEncoding.EncodeToString([]byte(objectID))
 
-	result, err = translate(path, params, bearer.AccessToken)
+	result, err = translate(client, path, params, bearer.AccessToken)
 
 	return
 }
@@ -109,7 +109,7 @@ func (a ModelDerivativeAPI) TranslateToSVF(objectID string) (result TranslationR
 /*
  *	SUPPORT FUNCTIONS
  */
-func translate(path string, params TranslationParams, token string) (result TranslationResult, err error) {
+func translate(client * http.Client, path string, params TranslationParams, token string) (result TranslationResult, err error) {
 
 	byteParams, err := json.Marshal(params)
 	if err != nil {
@@ -128,7 +128,7 @@ func translate(path string, params TranslationParams, token string) (result Tran
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Authorization", "Bearer "+token)
 
-	response, err := http.DefaultClient.Do(req)
+	response, err := client.Do(req)
 	if err != nil {
 		return
 	}
