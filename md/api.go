@@ -1,7 +1,7 @@
 package md
 
 import (
-	"github.com/apprentice3d/forge-api-go-client/oauth"
+	"github.com/outer-labs/forge-api-go-client/oauth"
 	"encoding/base64"
 	"encoding/json"
 	"log"
@@ -80,7 +80,7 @@ type FormatSpec struct {
 
 // TranslateWithParams triggers translation job with settings specified in given TranslationParams
 func (a ModelDerivativeAPI) TranslateWithParams(client * http.Client, params TranslationParams) (result TranslationResult, err error) {
-	bearer, err := a.Authenticate("data:write data:read")
+	bearer, err := a.Authenticate(client, "data:write data:read")
 	if err != nil {
 		return
 	}
