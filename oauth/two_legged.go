@@ -26,7 +26,7 @@ func NewTwoLeggedClient(clientID, clientSecret string) TwoLeggedAuth {
 		AuthData{
 			clientID,
 			clientSecret,
-			"http://developer.api.autodesk.com",
+			"https://developer.api.autodesk.com",
 			"/authentication/v1",
 		},
 	}
@@ -43,7 +43,7 @@ func (a TwoLeggedAuth) Authenticate(task *http.Client,scope string) (bearer Bear
 	body.Add("scope", scope)
 
 	req, err := http.NewRequest("POST",
-		a.Host+a.AuthPath+"/authenticate",
+		"https://developer.api.autodesk.com/authentication/v1/authenticate",
 		bytes.NewBufferString(body.Encode()),
 	)
 
