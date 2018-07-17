@@ -4,7 +4,7 @@ import (
 	"io/ioutil"
 	"os"
 	"testing"
-
+	"net/http"
 	"github.com/outer-labs/forge-api-go-client/dm"
 )
 
@@ -12,7 +12,7 @@ func TestBucketAPI_ListObjects(t *testing.T) {
 	// prepare the credentials
 	clientID := os.Getenv("FORGE_CLIENT_ID")
 	clientSecret := os.Getenv("FORGE_CLIENT_SECRET")
-  client := http.Client{}
+  client := &http.Client{}
 	bucketAPI := dm.NewBucketAPIWithCredentials(clientID, clientSecret)
 
 	testBucketName := "just_a_test_bucket"
@@ -40,7 +40,7 @@ func TestBucketAPI_UploadObject(t *testing.T) {
 	// prepare the credentials
 	clientID := os.Getenv("FORGE_CLIENT_ID")
 	clientSecret := os.Getenv("FORGE_CLIENT_SECRET")
-	client := http.Client{}
+	client := &http.Client{}
 	bucketAPI := dm.NewBucketAPIWithCredentials(clientID, clientSecret)
 
 	tempBucket := "some_temp_bucket_for_testings"
