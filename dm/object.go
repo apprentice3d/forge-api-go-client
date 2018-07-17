@@ -1,10 +1,10 @@
 package dm
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
 	"io/ioutil"
+	"io"
 	"net/http"
 	"strconv"
 )
