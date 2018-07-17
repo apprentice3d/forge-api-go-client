@@ -30,15 +30,17 @@ type BucketContent struct {
 
 // UploadObject adds to specified bucket the given data (can originate from a multipart-form or direct file read).
 // Return details on uploaded object, including the object URN. Check ObjectDetails struct.
-func (api BucketAPI) UploadObject(client * http.Client, bucketKey string, objectName string, data []byte) (result ObjectDetails, err error) {
+func (api BucketAPI) UploadObject(client * http.Client, bucketKey string, objectName string, reader * io.Reader) (result ObjectDetails, err error) {
 	bearer, err := api.Authenticate(client, "data:write")
 	if err != nil {
 		return
 	}
 	path := api.Host + api.BucketAPIPath
 
-	return uploadObject(client, path, bucketKey, objectName, data, bearer.AccessToken)
+	return uploadObject(client, path, bucketKey, objectName, reader, bearer.AccessToken)
 }
+
+
 
 // ListObjects returns the bucket contains along with details on each item.
 func (api BucketAPI) ListObjects(client * http.Client, bucketKey, limit, beginsWith, startAt string) (result BucketContent, err error) {
@@ -101,11 +103,11 @@ func listObjects(task * http.Client, path, bucketKey, limit, beginsWith, startAt
 	return
 }
 
-func uploadObject(task * http.Client, path, bucketKey, objectName string, data []byte, token string) (result ObjectDetails, err error) {
+func uploadObject(task * http.Client, path, bucketKey, objectName string, dataContent * io.Reader, token string) (result ObjectDetails, err error) {
 
 	//task := http.Client{}
 
-	dataContent := bytes.NewReader(data)
+	//dataContent := bytes.NewReader(data)
 	req, err := http.NewRequest("PUT",
 		path+"/"+ bucketKey + "/objects/" + objectName,
 		dataContent)

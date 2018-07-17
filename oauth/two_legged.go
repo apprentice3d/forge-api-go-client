@@ -34,6 +34,7 @@ func NewTwoLeggedClient(clientID, clientSecret string) TwoLeggedAuth {
 
 // Authenticate allows getting a token with a given scope
 func (a TwoLeggedAuth) Authenticate(task *http.Client,scope string) (bearer Bearer, err error) {
+
 	//task := http.Client{}
 
 	body := url.Values{}
@@ -43,7 +44,7 @@ func (a TwoLeggedAuth) Authenticate(task *http.Client,scope string) (bearer Bear
 	body.Add("scope", scope)
 
 	req, err := http.NewRequest("POST",
-		"https://developer.api.autodesk.com/authentication/v1/authenticate",
+		a.Host+a.AuthPath+"/authenticate",
 		bytes.NewBufferString(body.Encode()),
 	)
 
