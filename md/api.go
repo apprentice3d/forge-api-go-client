@@ -93,7 +93,7 @@ func (a ModelDerivativeAPI) TranslateWithParams(client * http.Client, params Tra
 // TranslateToSVF is a helper function that will use the TranslationSVFPreset for translating into svf a given ObjectID.
 // It will also take care of converting objectID into Base64 (URL Safe) encoded URN.
 func (a ModelDerivativeAPI) TranslateToSVF(client * http.Client, objectID string) (result TranslationResult, err error) {
-	bearer, err := a.Authenticate("data:write data:read")
+	bearer, err := a.Authenticate(client, "data:write data:read")
 	if err != nil {
 		return
 	}
