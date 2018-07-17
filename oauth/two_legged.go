@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"fmt"
 )
 
 // TwoLeggedAuth struct holds data necessary for making requests in 2-legged context
@@ -34,7 +35,7 @@ func NewTwoLeggedClient(clientID, clientSecret string) TwoLeggedAuth {
 
 // Authenticate allows getting a token with a given scope
 func (a TwoLeggedAuth) Authenticate(task *http.Client,scope string) (bearer Bearer, err error) {
-
+	fmt.Printf("trace authenticate")
 	//task := http.Client{}
 
 	body := url.Values{}
@@ -47,6 +48,8 @@ func (a TwoLeggedAuth) Authenticate(task *http.Client,scope string) (bearer Bear
 		a.Host+a.AuthPath+"/authenticate",
 		bytes.NewBufferString(body.Encode()),
 	)
+
+	fmt.Printf("trace authenticate request: %s", req)
 
 	if err != nil {
 		return
