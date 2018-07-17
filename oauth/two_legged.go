@@ -26,7 +26,7 @@ func NewTwoLeggedClient(clientID, clientSecret string) TwoLeggedAuth {
 		AuthData{
 			clientID,
 			clientSecret,
-			"https://developer.api.autodesk.com",
+			"http://developer.api.autodesk.com",
 			"/authentication/v1",
 		},
 	}

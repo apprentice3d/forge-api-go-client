@@ -43,7 +43,7 @@ func TestBucketAPI_UploadObject(t *testing.T) {
 	client := &http.Client{}
 	bucketAPI := dm.NewBucketAPIWithCredentials(clientID, clientSecret)
 
-	tempBucket := "some_temp_bucket_for_testings"
+	tempBucket := "some_temp_bucket_for_testing"
 	testFilePath := "../assets/HelloWorld.rvt"
 
 	t.Run("Create a temp bucket to store an object", func(t *testing.T) {
