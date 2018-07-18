@@ -140,6 +140,7 @@ func (a ModelDerivativeAPI) GetManifest(client * http.Client, urn string) (resul
 	if err != nil {
 		return
 	}
+
 	path := a.Host + a.ModelDerivativePath
 	result, err = getManifest(client, path, urn, bearer.AccessToken)
 
@@ -195,7 +196,7 @@ func getManifest(client * http.Client, path string, urn string, token string) (r
 		return
 	}*/
 
-	req, err := http.NewRequest("POST",
+	req, err := http.NewRequest("GET",
 		path + "/" + urn + "/manifest",
 		nil)
 
