@@ -61,6 +61,34 @@ type TranslationResult struct {
 	}
 }
 
+type ManifestResult struct{
+	Type string `json:"type"`
+	HasThumbnail bool `json:"hasThumbnail"`
+	Status string `json:"status"`
+	Progress string `json:"progress"`
+	Region string `json:"region"`
+	URN string `json:"urn"`
+	Derivatives []DerivativeSpec `json:"derivatives"`
+}
+
+type DerivativeSpec struct{
+	Name string `json:"name"`
+	HasThumbnail bool `json:"hasThumbnail"`
+	Role string `json:"role"`
+	Status string `json:"status"`
+	Progress string `json:"progress"`
+	Children []ChildrenSpec `json:children`
+}
+
+type ChildrenSpec struct{
+	GUID string `json:"guid"`
+	Role string `json:"role"`
+	MIME string `json:"mime"`
+	URN string `json:"urn"`
+	Progress string `json:"progress"`
+	Status string `json:"status"`
+}
+
 // OutputSpec reflects data found upon creation translation job and receiving translation job status
 type OutputSpec struct {
 	Destination DestSpec     `json:"destination,omitempty"`
@@ -106,6 +134,20 @@ func (a ModelDerivativeAPI) TranslateToSVF(client * http.Client, objectID string
 	return
 }
 
+// GetManifest is a helper function that will convert objectID into Base64 (URL Safe) encoded URN.
+func (a ModelDerivativeAPI) GetManifest(client * http.Client, objectID string) (result ManifestResult, err error) {
+	bearer, err := a.Authenticate(client, "data:read")
+	if err != nil {
+		return
+	}
+	path := a.Host + a.ModelDerivativePath
+	urn := base64.RawStdEncoding.EncodeToString([]byte(objectID))
+
+	result, err = getManifest(client, path, urn, bearer.AccessToken)
+
+	return
+}
+
 /*
  *	SUPPORT FUNCTIONS
  */
@@ -135,6 +177,44 @@ func translate(client * http.Client, path string, params TranslationParams, toke
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusCreated && response.StatusCode != http.StatusOK {
+		content, _ := ioutil.ReadAll(response.Body)
+		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
+		return
+	}
+
+	decoder := json.NewDecoder(response.Body)
+
+	err = decoder.Decode(&result)
+
+	return
+}
+
+func getManifest(client * http.Client, path string, urn string, token string) (result ManifestResult, err error) {
+/*
+	byteParams, err := json.Marshal(params)
+	if err != nil {
+		log.Println("Could not marshal the translation parameters")
+		return
+	}*/
+
+	req, err := http.NewRequest("POST",
+		path + "/" + urn + "/manifest",
+		nil)
+
+	if err != nil {
+		return
+	}
+
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Authorization", "Bearer "+token)
+
+	response, err := client.Do(req)
+	if err != nil {
+		return
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusOK {
 		content, _ := ioutil.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
