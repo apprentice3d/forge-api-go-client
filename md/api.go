@@ -134,15 +134,13 @@ func (a ModelDerivativeAPI) TranslateToSVF(client * http.Client, objectID string
 	return
 }
 
-// GetManifest is a helper function that will convert objectID into Base64 (URL Safe) encoded URN.
-func (a ModelDerivativeAPI) GetManifest(client * http.Client, objectID string) (result ManifestResult, err error) {
+
+func (a ModelDerivativeAPI) GetManifest(client * http.Client, urn string) (result ManifestResult, err error) {
 	bearer, err := a.Authenticate(client, "data:read")
 	if err != nil {
 		return
 	}
 	path := a.Host + a.ModelDerivativePath
-	urn := base64.RawStdEncoding.EncodeToString([]byte(objectID))
-
 	result, err = getManifest(client, path, urn, bearer.AccessToken)
 
 	return
