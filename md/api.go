@@ -62,31 +62,31 @@ type TranslationResult struct {
 }
 
 type ManifestResult struct{
-	Type string `json:"type"`
-	HasThumbnail bool `json:"hasThumbnail"`
-	Status string `json:"status"`
-	Progress string `json:"progress"`
-	Region string `json:"region"`
-	URN string `json:"urn"`
-	Derivatives []DerivativeSpec `json:"derivatives"`
+	Type string `json:"type,omitempty"`
+	HasThumbnail bool `json:"hasThumbnail,string,omitempty"`
+	Status string `json:"status,omitempty"`
+	Progress string `json:"progress,omitempty"`
+	Region string `json:"region,omitempty"`
+	URN string `json:"urn,omitempty"`
+	Derivatives []DerivativeSpec `json:"derivatives,omitempty"`
 }
 
 type DerivativeSpec struct{
-	Name string `json:"name"`
-	HasThumbnail bool `json:"hasThumbnail"`
-	Role string `json:"role"`
-	Status string `json:"status"`
-	Progress string `json:"progress"`
-	Children []ChildrenSpec `json:children`
+	Name string `json:"name,omitempty"`
+	HasThumbnail bool `json:"hasThumbnail,string,omitempty"`
+	Role string `json:"role,omitempty"`
+	Status string `json:"status,omitempty"`
+	Progress string `json:"progress,omitempty"`
+	Children []ChildrenSpec `json:"children,omitempty"`
 }
 
 type ChildrenSpec struct{
-	GUID string `json:"guid"`
-	Role string `json:"role"`
-	MIME string `json:"mime"`
-	URN string `json:"urn"`
-	Progress string `json:"progress"`
-	Status string `json:"status"`
+	GUID string `json:"guid,omitempty"`
+	Role string `json:"role,omitempty"`
+	MIME string `json:"mime,omitempty"`
+	URN string `json:"urn,omitempty"`
+	Progress string `json:"progress,omitempty"`
+	Status string `json:"status,omitempty"`
 }
 
 // OutputSpec reflects data found upon creation translation job and receiving translation job status
