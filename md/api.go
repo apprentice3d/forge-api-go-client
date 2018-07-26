@@ -107,21 +107,21 @@ type FormatSpec struct {
 }
 
 // TranslateWithParams triggers translation job with settings specified in given TranslationParams
-func (a ModelDerivativeAPI) TranslateWithParams(client * http.Client, params TranslationParams) (result TranslationResult, err error) {
-	bearer, err := a.Authenticate(client, "data:write data:read")
+func (a ModelDerivativeAPI) TranslateWithParams(params TranslationParams) (result TranslationResult, err error) {
+	bearer, err := a.Authenticate("data:write data:read")
 	if err != nil {
 		return
 	}
 	path := a.Host + a.ModelDerivativePath
-	result, err = translate(client, path, params, bearer.AccessToken)
+	result, err = translate(path, params, bearer.AccessToken)
 
 	return
 }
 
 // TranslateToSVF is a helper function that will use the TranslationSVFPreset for translating into svf a given ObjectID.
 // It will also take care of converting objectID into Base64 (URL Safe) encoded URN.
-func (a ModelDerivativeAPI) TranslateToSVF(client * http.Client, objectID string) (result TranslationResult, err error) {
-	bearer, err := a.Authenticate(client, "data:write data:read")
+func (a ModelDerivativeAPI) TranslateToSVF(objectID string) (result TranslationResult, err error) {
+	bearer, err := a.Authenticate("data:write data:read")
 	if err != nil {
 		return
 	}
@@ -129,20 +129,20 @@ func (a ModelDerivativeAPI) TranslateToSVF(client * http.Client, objectID string
 	params := TranslationSVFPreset
 	params.Input.URN = base64.RawStdEncoding.EncodeToString([]byte(objectID))
 
-	result, err = translate(client, path, params, bearer.AccessToken)
+	result, err = translate(path, params, bearer.AccessToken)
 
 	return
 }
 
 
-func (a ModelDerivativeAPI) GetManifest(client * http.Client, urn string) (result ManifestResult, err error) {
-	bearer, err := a.Authenticate(client, "data:read")
+func (a ModelDerivativeAPI) GetManifest(urn string) (result ManifestResult, err error) {
+	bearer, err := a.Authenticate("data:read")
 	if err != nil {
 		return
 	}
 
 	path := a.Host + a.ModelDerivativePath
-	result, err = getManifest(client, path, urn, bearer.AccessToken)
+	result, err = getManifest(path, urn, bearer.AccessToken)
 
 	return
 }
@@ -150,8 +150,8 @@ func (a ModelDerivativeAPI) GetManifest(client * http.Client, urn string) (resul
 /*
  *	SUPPORT FUNCTIONS
  */
-func translate(client * http.Client, path string, params TranslationParams, token string) (result TranslationResult, err error) {
-
+func translate(path string, params TranslationParams, token string) (result TranslationResult, err error) {
+	client := http.Client{}
 	byteParams, err := json.Marshal(params)
 	if err != nil {
 		log.Println("Could not marshal the translation parameters")
@@ -188,13 +188,14 @@ func translate(client * http.Client, path string, params TranslationParams, toke
 	return
 }
 
-func getManifest(client * http.Client, path string, urn string, token string) (result ManifestResult, err error) {
+func getManifest(path string, urn string, token string) (result ManifestResult, err error) {
 /*
 	byteParams, err := json.Marshal(params)
 	if err != nil {
 		log.Println("Could not marshal the translation parameters")
 		return
 	}*/
+	client := http.Client{}
 
 	req, err := http.NewRequest("GET",
 		path + "/" + urn + "/manifest",

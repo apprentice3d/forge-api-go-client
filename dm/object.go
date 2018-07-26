@@ -30,27 +30,27 @@ type BucketContent struct {
 
 // UploadObject adds to specified bucket the given data (can originate from a multipart-form or direct file read).
 // Return details on uploaded object, including the object URN. Check ObjectDetails struct.
-func (api BucketAPI) UploadObject(client * http.Client, bucketKey string, objectName string, reader io.Reader) (result ObjectDetails, err error) {
-	bearer, err := api.Authenticate(client, "data:write")
+func (api BucketAPI) UploadObject(bucketKey string, objectName string, reader io.Reader) (result ObjectDetails, err error) {
+	bearer, err := api.Authenticate("data:write")
 	if err != nil {
 		return
 	}
 	path := api.Host + api.BucketAPIPath
 
-	return uploadObject(client, path, bucketKey, objectName, reader, bearer.AccessToken)
+	return uploadObject(path, bucketKey, objectName, reader, bearer.AccessToken)
 }
 
 
 
 // ListObjects returns the bucket contains along with details on each item.
-func (api BucketAPI) ListObjects(client * http.Client, bucketKey, limit, beginsWith, startAt string) (result BucketContent, err error) {
-	bearer, err := api.Authenticate(client, "data:read")
+func (api BucketAPI) ListObjects(bucketKey, limit, beginsWith, startAt string) (result BucketContent, err error) {
+	bearer, err := api.Authenticate("data:read")
 	if err != nil {
 		return
 	}
 	path := api.Host + api.BucketAPIPath
 
-	return listObjects(client, path, bucketKey, limit, beginsWith, startAt, bearer.AccessToken)
+	return listObjects(path, bucketKey, limit, beginsWith, startAt, bearer.AccessToken)
 }
 
 
@@ -59,8 +59,8 @@ func (api BucketAPI) ListObjects(client * http.Client, bucketKey, limit, beginsW
  *	SUPPORT FUNCTIONS
  */
 
-func listObjects(task * http.Client, path, bucketKey, limit, beginsWith, startAt, token string) (result BucketContent, err error) {
-	//task := http.Client{}
+func listObjects(path, bucketKey, limit, beginsWith, startAt, token string) (result BucketContent, err error) {
+	task := http.Client{}
 
 	req, err := http.NewRequest("GET",
 		path + "/" + bucketKey + "/objects",
@@ -103,9 +103,9 @@ func listObjects(task * http.Client, path, bucketKey, limit, beginsWith, startAt
 	return
 }
 
-func uploadObject(task * http.Client, path, bucketKey, objectName string, dataContent io.Reader, token string) (result ObjectDetails, err error) {
+func uploadObject(path, bucketKey, objectName string, dataContent io.Reader, token string) (result ObjectDetails, err error) {
 
-	//task := http.Client{}
+	task := http.Client{}
 
 	//dataContent := bytes.NewReader(data)
 	req, err := http.NewRequest("PUT",

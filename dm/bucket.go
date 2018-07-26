@@ -60,50 +60,50 @@ type ListedBuckets struct {
 
 
 // CreateBucket creates and returns details of created bucket, or an error on failure
-func (api BucketAPI) CreateBucket(client * http.Client, bucketKey, policyKey string) (result BucketDetails, err error) {
+func (api BucketAPI) CreateBucket(bucketKey, policyKey string) (result BucketDetails, err error) {
 
-	bearer, err := api.Authenticate(client, "bucket:create")
+	bearer, err := api.Authenticate("bucket:create")
 	if err != nil {
 		return
 	}
 	path := api.Host + api.BucketAPIPath
-	result, err = createBucket(client, path, bucketKey, policyKey, bearer.AccessToken)
+	result, err = createBucket(path, bucketKey, policyKey, bearer.AccessToken)
 
 	return
 }
 
 // DeleteBucket deletes bucket given its key.
 // 	WARNING: The bucket delete call is undocumented.
-func (api BucketAPI) DeleteBucket(client * http.Client, bucketKey string) error {
-	bearer, err := api.Authenticate(client, "bucket:delete")
+func (api BucketAPI) DeleteBucket(bucketKey string) error {
+	bearer, err := api.Authenticate("bucket:delete")
 	if err != nil {
 		return err
 	}
 	path := api.Host + api.BucketAPIPath
 
-	return deleteBucket(client, path, bucketKey, bearer.AccessToken)
+	return deleteBucket(path, bucketKey, bearer.AccessToken)
 }
 
 // ListBuckets returns a list of all buckets created or associated with Forge secrets used for token creation
-func (api BucketAPI) ListBuckets(client * http.Client, region, limit, startAt string) (result ListedBuckets, err error) {
-	bearer, err := api.Authenticate(client, "bucket:read")
+func (api BucketAPI) ListBuckets(region, limit, startAt string) (result ListedBuckets, err error) {
+	bearer, err := api.Authenticate("bucket:read")
 	if err != nil {
 		return
 	}
 	path := api.Host + api.BucketAPIPath
 
-	return listBuckets(client, path, region, limit, startAt, bearer.AccessToken)
+	return listBuckets(path, region, limit, startAt, bearer.AccessToken)
 }
 
 // GetBucketDetails returns information associated to a bucket. See BucketDetails struct.
-func (api BucketAPI) GetBucketDetails(client * http.Client, bucketKey string) (result BucketDetails, err error) {
-	bearer, err := api.Authenticate(client, "bucket:read")
+func (api BucketAPI) GetBucketDetails(bucketKey string) (result BucketDetails, err error) {
+	bearer, err := api.Authenticate("bucket:read")
 	if err != nil {
 		return
 	}
 	path := api.Host + api.BucketAPIPath
 
-	return getBucketDetails(client, path, bucketKey, bearer.AccessToken)
+	return getBucketDetails(path, bucketKey, bearer.AccessToken)
 }
 
 
@@ -113,8 +113,8 @@ func (api BucketAPI) GetBucketDetails(client * http.Client, bucketKey string) (r
 /*
  *	SUPPORT FUNCTIONS
  */
-func getBucketDetails(task * http.Client, path, bucketKey, token string) (result BucketDetails, err error) {
-	//task := http.Client{}
+func getBucketDetails(path, bucketKey, token string) (result BucketDetails, err error) {
+	task := http.Client{}
 
 	req, err := http.NewRequest("GET",
 		path+"/"+bucketKey+"/details",
@@ -144,8 +144,8 @@ func getBucketDetails(task * http.Client, path, bucketKey, token string) (result
 	return
 }
 
-func listBuckets(task * http.Client, path, region, limit, startAt, token string) (result ListedBuckets, err error) {
-	//task := http.Client{}
+func listBuckets(path, region, limit, startAt, token string) (result ListedBuckets, err error) {
+	task := http.Client{}
 
 	req, err := http.NewRequest("GET",
 		path,
@@ -188,9 +188,9 @@ func listBuckets(task * http.Client, path, region, limit, startAt, token string)
 	return
 }
 
-func createBucket(task * http.Client, path, bucketKey, policyKey, token string) (result BucketDetails, err error) {
+func createBucket(path, bucketKey, policyKey, token string) (result BucketDetails, err error) {
 
-	//task := http.Client{}
+	task := http.Client{}
 
 	body, err := json.Marshal(
 		CreateBucketRequest{
@@ -230,8 +230,8 @@ func createBucket(task * http.Client, path, bucketKey, policyKey, token string) 
 	return
 }
 
-func deleteBucket(task * http.Client, path, bucketKey, token string) (err error) {
-	//task := http.Client{}
+func deleteBucket(path, bucketKey, token string) (err error) {
+	task := http.Client{}
 
 	req, err := http.NewRequest("DELETE",
 		path+"/"+bucketKey,

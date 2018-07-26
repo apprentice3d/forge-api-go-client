@@ -17,7 +17,7 @@ type TwoLeggedAuth struct {
 
 // TwoLeggedAuthenticator interface defines the method necessary to qualify as 2-legged authenticator
 type TwoLeggedAuthenticator interface {
-	Authenticate(client * http.Client, scope string) (Bearer, error)
+	Authenticate(scope string) (Bearer, error)
 }
 
 // NewTwoLeggedClient returns a 2-legged authenticator with default host and authPath
@@ -33,9 +33,9 @@ func NewTwoLeggedClient(clientID, clientSecret string) TwoLeggedAuth {
 }
 
 // Authenticate allows getting a token with a given scope
-func (a TwoLeggedAuth) Authenticate(task *http.Client,scope string) (bearer Bearer, err error) {
+func (a TwoLeggedAuth) Authenticate(scope string) (bearer Bearer, err error) {
 
-	//task := http.Client{}
+	task := http.Client{}
 
 	body := url.Values{}
 	body.Add("client_id", a.ClientID)

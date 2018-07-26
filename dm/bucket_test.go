@@ -14,11 +14,11 @@ func TestBucketAPI_CreateBucket(t *testing.T) {
 	// prepare the credentials
 	clientID := os.Getenv("FORGE_CLIENT_ID")
 	clientSecret := os.Getenv("FORGE_CLIENT_SECRET")
-	client := &http.Client{}
+
 	bucketAPI := dm.NewBucketAPIWithCredentials(clientID, clientSecret)
 
 	t.Run("Create a bucket", func(t *testing.T) {
-		_, err := bucketAPI.CreateBucket(client, "go_testing_bucket", "transient")
+		_, err := bucketAPI.CreateBucket("go_testing_bucket", "transient")
 
 		if err != nil {
 			t.Fatalf("Failed to create a bucket: %s\n", err.Error())
@@ -26,7 +26,7 @@ func TestBucketAPI_CreateBucket(t *testing.T) {
 	})
 
 	t.Run("Delete created bucket", func(t *testing.T) {
-		err := bucketAPI.DeleteBucket(client, "go_testing_bucket")
+		err := bucketAPI.DeleteBucket("go_testing_bucket")
 
 		if err != nil {
 			t.Fatalf("Failed to delete bucket: %s\n", err.Error())
@@ -34,7 +34,7 @@ func TestBucketAPI_CreateBucket(t *testing.T) {
 	})
 
 	t.Run("Create a bucket with invalid name", func(t *testing.T) {
-		_, err := bucketAPI.CreateBucket(client, "goTestingBucket", "transient")
+		_, err := bucketAPI.CreateBucket("goTestingBucket", "transient")
 
 		if err == nil {
 			t.Fatalf("Should fail creating a bucket with invalid name\n")
@@ -42,7 +42,7 @@ func TestBucketAPI_CreateBucket(t *testing.T) {
 	})
 
 	t.Run("Create a bucket with invalid policyKey", func(t *testing.T) {
-		_, err := bucketAPI.CreateBucket(client, "goTestingBucket", "democracy")
+		_, err := bucketAPI.CreateBucket("goTestingBucket", "democracy")
 
 		if err == nil {
 			t.Fatalf("Should fail creating a bucket with invalid name\n")
@@ -55,13 +55,13 @@ func TestBucketAPI_GetBucketDetails(t *testing.T) {
 	// prepare the credentials
 	clientID := os.Getenv("FORGE_CLIENT_ID")
 	clientSecret := os.Getenv("FORGE_CLIENT_SECRET")
-	client := &http.Client{}
+
 	bucketAPI := dm.NewBucketAPIWithCredentials(clientID, clientSecret)
 
 	testBucketKey := "my_test_bucket_key_for_go"
 
 	t.Run("Create a bucket", func(t *testing.T) {
-		_, err := bucketAPI.CreateBucket(client,testBucketKey, "transient")
+		_, err := bucketAPI.CreateBucket(testBucketKey, "transient")
 
 		if err != nil {
 			t.Fatalf("Failed to create a bucket: %s\n", err.Error())
@@ -69,7 +69,7 @@ func TestBucketAPI_GetBucketDetails(t *testing.T) {
 	})
 
 	t.Run("Get bucket details", func(t *testing.T) {
-		_, err := bucketAPI.GetBucketDetails(client,testBucketKey)
+		_, err := bucketAPI.GetBucketDetails(testBucketKey)
 
 		if err != nil {
 			t.Fatalf("Failed to get bucket details: %s\n", err.Error())
@@ -77,7 +77,7 @@ func TestBucketAPI_GetBucketDetails(t *testing.T) {
 	})
 
 	t.Run("Delete created bucket", func(t *testing.T) {
-		err := bucketAPI.DeleteBucket(client,testBucketKey)
+		err := bucketAPI.DeleteBucket(testBucketKey)
 
 		if err != nil {
 			t.Fatalf("Failed to delete bucket: %s\n", err.Error())
@@ -85,7 +85,7 @@ func TestBucketAPI_GetBucketDetails(t *testing.T) {
 	})
 
 	t.Run("Get nonexistent bucket", func(t *testing.T) {
-		_, err := bucketAPI.GetBucketDetails(client, testBucketKey + "30091981")
+		_, err := bucketAPI.GetBucketDetails(testBucketKey + "30091981")
 
 		if err == nil {
 			t.Fatalf("Should fail getting getting details for non-existing bucket\n")
@@ -98,11 +98,11 @@ func TestBucketAPI_ListBuckets(t *testing.T) {
 	// prepare the credentials
 	clientID := os.Getenv("FORGE_CLIENT_ID")
 	clientSecret := os.Getenv("FORGE_CLIENT_SECRET")
-	client := &http.Client{}
+
 	bucketAPI := dm.NewBucketAPIWithCredentials(clientID, clientSecret)
 
 	t.Run("List available buckets", func(t *testing.T) {
-		_, err := bucketAPI.ListBuckets(client,"", "", "")
+		_, err := bucketAPI.ListBuckets("", "", "")
 
 		if err != nil {
 			t.Fatalf("Failed to list buckets: %s\n", err.Error())
@@ -111,13 +111,13 @@ func TestBucketAPI_ListBuckets(t *testing.T) {
 
 	t.Run("Create a bucket and find it among listed", func(t *testing.T) {
 		testBucketKey := "just_for_testing"
-		_, err := bucketAPI.CreateBucket(client, testBucketKey, "transient")
+		_, err := bucketAPI.CreateBucket(testBucketKey, "transient")
 
 		if err != nil {
 			t.Errorf("Failed to create a bucket: %s\n", err.Error())
 		}
 
-		list, err := bucketAPI.ListBuckets(client, "", "", "")
+		list, err := bucketAPI.ListBuckets("", "", "")
 
 		if err != nil {
 			t.Errorf("Failed to list buckets: %s\n", err.Error())
@@ -136,7 +136,7 @@ func TestBucketAPI_ListBuckets(t *testing.T) {
 			t.Errorf("Could not find the %s bucket\n", testBucketKey)
 		}
 
-		if err = bucketAPI.DeleteBucket(client, testBucketKey); err != nil {
+		if err = bucketAPI.DeleteBucket(testBucketKey); err != nil {
 			t.Errorf("Failed to delete bucket: %s\n", err.Error())
 		}
 	})
@@ -148,10 +148,10 @@ func ExampleBucketAPI_CreateBucket() {
 	// prepare the credentials
 	clientID := os.Getenv("FORGE_CLIENT_ID")
 	clientSecret := os.Getenv("FORGE_CLIENT_SECRET")
-	client := &http.Client{}
+
 	bucketAPI := dm.NewBucketAPIWithCredentials(clientID, clientSecret)
 
-	bucket, err := bucketAPI.CreateBucket(client, "some_unique_name", "transient")
+	bucket, err := bucketAPI.CreateBucket("some_unique_name", "transient")
 
 	if err != nil {
 		log.Fatalf("Failed to create a bucket: %s\n", err.Error())
