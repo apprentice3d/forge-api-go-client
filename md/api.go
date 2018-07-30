@@ -148,7 +148,7 @@ func (a ModelDerivativeAPI) GetManifest(urn string) (result ManifestResult, err 
 	return
 }
 
-func (a ModelDerivativeAPI) GetThumbnail(urn string) (reader io.ReadCloser, err error) {
+func (a ModelDerivativeAPI) GetThumbnail(urn string) (reader * io.ReadCloser, err error) {
 	bearer, err := a.Authenticate("data:read")
 	if err != nil {
 		return
@@ -234,7 +234,7 @@ func getManifest(path string, urn string, token string) (result ManifestResult, 
 	return
 }
 
-func getThumbnail(path string, urn string, token string) (reader io.ReadCloser, err error) {
+func getThumbnail(path string, urn string, token string) (reader * io.ReadCloser, err error) {
 	client := http.Client{}
 
 	req, err := http.NewRequest("GET",
@@ -252,7 +252,6 @@ func getThumbnail(path string, urn string, token string) (reader io.ReadCloser, 
 	if err != nil {
 		return
 	}
-	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
 		content, _ := ioutil.ReadAll(response.Body)
@@ -260,6 +259,6 @@ func getThumbnail(path string, urn string, token string) (reader io.ReadCloser, 
 		return
 	}
 
-	reader = response.Body
+	reader = &response.Body
 	return
 }
