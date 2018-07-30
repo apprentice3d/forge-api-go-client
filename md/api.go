@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"errors"
 	"strconv"
+	"io"
 )
 
 var (
