@@ -147,6 +147,18 @@ func (a ModelDerivativeAPI) GetManifest(urn string) (result ManifestResult, err 
 	return
 }
 
+func (a ModelDerivativeAPI) GetThumbnail(urn string) (reader io.ReadCloser, err error) {
+	bearer, err := a.Authenticate("data:read")
+	if err != nil {
+		return
+	}
+
+	path := a.Host + a.ModelDerivativePath
+	reader, err = getThumbnail(path, urn, bearer.AccessToken)
+
+	return
+}
+
 /*
  *	SUPPORT FUNCTIONS
  */
@@ -189,12 +201,6 @@ func translate(path string, params TranslationParams, token string) (result Tran
 }
 
 func getManifest(path string, urn string, token string) (result ManifestResult, err error) {
-/*
-	byteParams, err := json.Marshal(params)
-	if err != nil {
-		log.Println("Could not marshal the translation parameters")
-		return
-	}*/
 	client := http.Client{}
 
 	req, err := http.NewRequest("GET",
@@ -224,5 +230,35 @@ func getManifest(path string, urn string, token string) (result ManifestResult, 
 
 	err = decoder.Decode(&result)
 
+	return
+}
+
+func getThumbnail(path string, urn string, token string) (reader io.ReadCloser, err error) {
+	client := http.Client{}
+
+	req, err := http.NewRequest("GET",
+		path + "/" + urn + "/thumbnail",
+		nil)
+
+	if err != nil {
+		return
+	}
+
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Authorization", "Bearer "+token)
+
+	response, err := client.Do(req)
+	if err != nil {
+		return
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusOK {
+		content, _ := ioutil.ReadAll(response.Body)
+		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
+		return
+	}
+
+	reader = response.Body
 	return
 }
