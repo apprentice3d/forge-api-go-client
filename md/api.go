@@ -19,7 +19,7 @@ var (
 	TranslationSVFPreset = TranslationParams{
 		Output: OutputSpec{
 			Destination:DestSpec{"us"},
-			Formats:[]FormatSpec{
+			Formats:[]interface{
 				SVFFormatSpec{
 					"svf",
 					[]string{"2d","3d"},
