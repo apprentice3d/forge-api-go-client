@@ -26,7 +26,7 @@ var (
 				},
 				FormatSpec{
 					"thumbnail",
-				}
+				},
 			},
 		},
 	}
