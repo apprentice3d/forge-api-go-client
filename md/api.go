@@ -22,8 +22,11 @@ var (
 			Formats:[]FormatSpec{
 				FormatSpec{
 					"svf",
-					[]string{"3d"},
+					[]string{"2d","3d"},
 				},
+				FormatSpec{
+					"thumbnail",
+				}
 			},
 		},
 	}
