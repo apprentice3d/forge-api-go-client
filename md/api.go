@@ -22,7 +22,7 @@ var (
 			Formats:[]FormatSpec{
 				FormatSpec{
 					"svf",
-					[]string{"2d", "3d"},
+					[]string{"3d"},
 				},
 			},
 		},
