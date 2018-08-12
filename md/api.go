@@ -20,7 +20,7 @@ var (
 		Output: OutputSpec{
 			Destination:DestSpec{"us"},
 			Formats:[]FormatSpec{
-				FormatSpec{
+				SVFFormatSpec{
 					"svf",
 					[]string{"2d","3d"},
 				},
@@ -107,6 +107,10 @@ type DestSpec struct {
 // FormatSpec is used within OutputSpecs and should be used when specifying the expected format and views (2d or/and 3d)
 type FormatSpec struct {
 	Type  string   `json:"type"`
+}
+
+type SVFFormatSpec struct{
+	FormatSpec
 	Views []string `json:"views"`
 }
 
