@@ -19,13 +19,10 @@ var (
 	TranslationSVFPreset = TranslationParams{
 		Output: OutputSpec{
 			Destination:DestSpec{"us"},
-			Formats:[]interface{}{
-				SVFFormatSpec{
+			Formats:[]FormatSpec{
+				FormatSpec{
 					"svf",
 					[]string{"2d","3d"},
-				},
-				FormatSpec{
-					"thumbnail",
 				},
 			},
 		},
@@ -105,12 +102,8 @@ type DestSpec struct {
 }
 
 // FormatSpec is used within OutputSpecs and should be used when specifying the expected format and views (2d or/and 3d)
-type FormatSpec struct {
+type FormatSpec struct{
 	Type  string   `json:"type"`
-}
-
-type SVFFormatSpec struct{
-	FormatSpec
 	Views []string `json:"views"`
 }
 
