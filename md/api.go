@@ -364,7 +364,7 @@ func getPropertiesObject(path string, urn string, viewId string, token string) (
 	defer stream.Close()
 
 	//using 200 as an error mask since it can be 2xx depending on state
-	if (status & http.StatusOK) > 0 {
+	if (status & http.StatusOK) == 0 {
 		content, _ := ioutil.ReadAll(stream)
 		err = errors.New("[" + strconv.Itoa(status) + "] " + string(content))
 		return
