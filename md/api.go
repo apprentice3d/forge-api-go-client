@@ -107,6 +107,23 @@ type FormatSpec struct{
 	Views []string `json:"views"`
 }
 
+type PropertiesResult struct{
+	Data PropertiesSpec `json:"data",omitempty`
+	Result string `json:"result",omitempty`
+}
+
+type PropertiesSpec struct{
+	Type string    `json:"type"`
+	Collection []ObjectSpec `json:"collection"`
+}
+
+type ObjectSpec struct{
+	ObjectID string `json:"objectid"`
+	Name string     `json:"name"`
+	ExternalID string `json:"externalId"`
+	Properties json.RawMessage
+}
+
 // TranslateWithParams triggers translation job with settings specified in given TranslationParams
 func (a ModelDerivativeAPI) TranslateWithParams(params TranslationParams) (result TranslationResult, err error) {
 	bearer, err := a.Authenticate("data:write data:read")
@@ -144,6 +161,18 @@ func (a ModelDerivativeAPI) GetManifest(urn string) (result ManifestResult, err 
 
 	path := a.Host + a.ModelDerivativePath
 	result, err = getManifest(path, urn, bearer.AccessToken)
+
+	return
+}
+
+func (a ModelDerivativeAPI) GetProperties(urn string, viewId string) (result PropertiesResult, err error) {
+	bearer, err := a.Authenticate("data:read")
+	if err != nil {
+		return
+	}
+
+	path := a.Host + a.ModelDerivativePath
+	result, err = getProperties(path, urn, viewId, bearer.AccessToken)
 
 	return
 }
@@ -260,5 +289,39 @@ func getThumbnail(path string, urn string, token string) (reader io.ReadCloser, 
 	}
 
 	reader = response.Body
+	return
+}
+
+func getProperties(path string, urn string, viewId string, token string) (
+	result PropertiesResult, err error) {
+	client := http.Client{}
+
+	req, err := http.NewRequest("GET",
+		path + "/" + urn + "/manifest/" + viewId + "/properties",
+		nil)
+
+	if err != nil {
+		return
+	}
+
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Authorization", "Bearer "+token)
+
+	response, err := client.Do(req)
+	if err != nil {
+		return
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusOK {
+		content, _ := ioutil.ReadAll(response.Body)
+		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
+		return
+	}
+
+	decoder := json.NewDecoder(response.Body)
+
+	err = decoder.Decode(&result)
+
 	return
 }
