@@ -118,7 +118,7 @@ type PropertiesSpec struct{
 }
 
 type ObjectSpec struct{
-	ObjectID string `json:"objectid"`
+	ObjectID int64 `json:"objectid"`
 	Name string     `json:"name"`
 	ExternalID string `json:"externalId"`
 	Properties json.RawMessage
