@@ -297,7 +297,7 @@ func getProperties(path string, urn string, viewId string, token string) (
 	client := http.Client{}
 
 	req, err := http.NewRequest("GET",
-		path + "/" + urn + "/manifest/" + viewId + "/properties",
+		path + "/" + urn + "/metadata/" + viewId + "/properties",
 		nil)
 
 	if err != nil {
