@@ -180,6 +180,18 @@ func (a ModelDerivativeAPI) GetManifest(urn string) (result ManifestResult, err 
 	return
 }
 
+func (a ModelDerivativeAPI) GetMetadata(urn string) (result MetadataResult, err error) {
+	bearer, err := a.Authenticate("data:read")
+	if err != nil {
+		return
+	}
+
+	path := a.Host + a.ModelDerivativePath
+	result, err = getMetadata(path, urn, bearer.AccessToken)
+
+	return
+}
+
 func (a ModelDerivativeAPI) GetProperties(urn string, viewId string) (result PropertiesResult, err error) {
 	bearer, err := a.Authenticate("data:read")
 	if err != nil {
