@@ -107,6 +107,21 @@ type FormatSpec struct{
 	Views []string `json:"views"`
 }
 
+type MetadataResult struct{
+	Data MetadataSpec `json:"data",omitempty`
+}
+
+type MetadataSpec struct{
+	Type string `json:"type",omitempty`
+	Metadata []ViewSpec `json:"metadata",omitempty`
+}
+
+type ViewSpec struct{
+	Name string `json:"name",omitempty`
+	Role string `json:"role",omitempty`
+	Guid string `json:"guid",omitempty`
+}
+
 type PropertiesResult struct{
 	Data PropertiesSpec `json:"data",omitempty`
 	Result string `json:"result",omitempty`
@@ -298,6 +313,40 @@ func getProperties(path string, urn string, viewId string, token string) (
 
 	req, err := http.NewRequest("GET",
 		path + "/" + urn + "/metadata/" + viewId + "/properties",
+		nil)
+
+	if err != nil {
+		return
+	}
+
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Authorization", "Bearer "+token)
+
+	response, err := client.Do(req)
+	if err != nil {
+		return
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusOK {
+		content, _ := ioutil.ReadAll(response.Body)
+		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
+		return
+	}
+
+	decoder := json.NewDecoder(response.Body)
+
+	err = decoder.Decode(&result)
+
+	return
+}
+
+func getMetadata(path string, urn string, token string) (
+	result MetadataResult, err error) {
+	client := http.Client{}
+
+	req, err := http.NewRequest("GET",
+		path + "/" + urn + "/metadata",
 		nil)
 
 	if err != nil {
