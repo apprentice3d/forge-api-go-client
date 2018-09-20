@@ -335,7 +335,7 @@ func getPropertiesStream(path string, urn string, viewId string, token string) (
 	client := http.Client{}
 
 	req, err := http.NewRequest("GET",
-		path + "/" + urn + "/metadata/" + viewId + "/properties",
+		path + "/" + urn + "/metadata/" + viewId + "/properties?forceget=true",
 		nil)
 
 	if err != nil {
