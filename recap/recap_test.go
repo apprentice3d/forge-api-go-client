@@ -2,14 +2,14 @@ package recap_test
 
 import (
 	"fmt"
+	"github.com/apprentice3d/forge-api-go-client/recap"
+	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"strconv"
 	"testing"
 	"time"
-	"github.com/apprentice3d/forge-api-go-client/recap"
-	"net/http"
-	"io/ioutil"
 )
 
 func TestReCapAPIWorkflowUsingRemoteLinks(t *testing.T) {
@@ -42,7 +42,6 @@ func TestReCapAPIWorkflowUsingRemoteLinks(t *testing.T) {
 		}
 	})
 
-
 	t.Run("Uploading sample images using links", func(t *testing.T) {
 		for _, link := range linkSamples {
 			_, err := recapAPI.AddFileToSceneUsingLink(scene.ID, link)
@@ -57,7 +56,6 @@ func TestReCapAPIWorkflowUsingRemoteLinks(t *testing.T) {
 			t.Error(err.Error())
 		}
 	})
-
 
 	t.Run("Checking scene status each 30 sec", func(t *testing.T) {
 		var progressResult recap.SceneProgressReply
@@ -80,7 +78,6 @@ func TestReCapAPIWorkflowUsingRemoteLinks(t *testing.T) {
 		}
 	})
 
-
 	t.Run("Get the available result", func(t *testing.T) {
 		result, err := recapAPI.GetSceneResults(scene.ID, testingFormat)
 		if err != nil {
@@ -92,6 +89,45 @@ func TestReCapAPIWorkflowUsingRemoteLinks(t *testing.T) {
 	})
 
 
+	t.Run("Check the result file size for normal size", func(t *testing.T) {
+		response, err := recapAPI.GetSceneResults(scene.ID, testingFormat)
+		if err != nil {
+			t.Error(err.Error())
+		}
+		if len(response.PhotoScene.SceneLink) == 0 {
+			t.Error("The received link is empty")
+		}
+
+		filename := "temp.zip"
+
+		resp, err := http.Get(response.PhotoScene.SceneLink)
+
+		if err != nil {
+			return
+		}
+		defer resp.Body.Close()
+		result, err := os.Create(filename)
+		if err != nil {
+			return
+		}
+		defer result.Close()
+
+		tempFile, err := os.Stat(filename)
+
+		if tempFile.Size() <= 22 {
+			t.Error("The scene was processed, but the result file is abnormally small: ", tempFile.Size())
+		}
+
+		err = os.Remove(filename)
+		if err != nil {
+			t.Error(err.Error())
+		}
+
+		return
+
+	})
+
+
 	t.Run("Delete the scene", func(t *testing.T) {
 		_, err := recapAPI.DeleteScene(scene.ID)
 		if err != nil {
@@ -99,10 +135,7 @@ func TestReCapAPIWorkflowUsingRemoteLinks(t *testing.T) {
 		}
 	})
 
-
-
 }
-
 
 func TestReCapAPIWorkflowUsingLocalFiles(t *testing.T) {
 
@@ -134,6 +167,7 @@ func TestReCapAPIWorkflowUsingLocalFiles(t *testing.T) {
 		if err != nil {
 			t.Fatal(err.Error())
 		}
+		t.Logf("Created a photoscene with ID=%s", scene.ID)
 	})
 
 	t.Run("Uploading sample images using data", func(t *testing.T) {
@@ -165,7 +199,6 @@ func TestReCapAPIWorkflowUsingLocalFiles(t *testing.T) {
 		}
 	})
 
-
 	t.Run("Checking scene status each 30 sec", func(t *testing.T) {
 		var progressResult recap.SceneProgressReply
 		var err error
@@ -187,7 +220,6 @@ func TestReCapAPIWorkflowUsingLocalFiles(t *testing.T) {
 		}
 	})
 
-
 	t.Run("Get the available result", func(t *testing.T) {
 		result, err := recapAPI.GetSceneResults(scene.ID, testingFormat)
 		if err != nil {
@@ -198,6 +230,43 @@ func TestReCapAPIWorkflowUsingLocalFiles(t *testing.T) {
 		}
 	})
 
+	t.Run("Check the result file size for normal size", func(t *testing.T) {
+		response, err := recapAPI.GetSceneResults(scene.ID, testingFormat)
+		if err != nil {
+			t.Error(err.Error())
+		}
+		if len(response.PhotoScene.SceneLink) == 0 {
+			t.Error("The received link is empty")
+		}
+
+		filename := "temp.zip"
+
+		resp, err := http.Get(response.PhotoScene.SceneLink)
+
+		if err != nil {
+			return
+		}
+		defer resp.Body.Close()
+		result, err := os.Create(filename)
+		if err != nil {
+			return
+		}
+		defer result.Close()
+
+		tempFile, err := os.Stat(filename)
+
+		if tempFile.Size() <= 22 {
+			t.Error("The scene was processed, but the result file is abnormally small: ", tempFile.Size())
+		}
+
+		err = os.Remove(filename)
+		if err != nil {
+			t.Error(err.Error())
+		}
+
+		return
+
+	})
 
 	t.Run("Delete the scene", func(t *testing.T) {
 		_, err := recapAPI.DeleteScene(scene.ID)
@@ -206,14 +275,7 @@ func TestReCapAPIWorkflowUsingLocalFiles(t *testing.T) {
 		}
 	})
 
-
-
 }
-
-
-
-
-
 
 func TestCreatePhotoScene(t *testing.T) {
 
@@ -221,12 +283,23 @@ func TestCreatePhotoScene(t *testing.T) {
 	clientID := os.Getenv("FORGE_CLIENT_ID")
 	clientSecret := os.Getenv("FORGE_CLIENT_SECRET")
 	recapAPI := recap.NewAPIWithCredentials(clientID, clientSecret)
+	var sceneID string
 
 	t.Run("Create a scene", func(t *testing.T) {
-		_, err := recapAPI.CreatePhotoScene("testare", nil, "object")
+		response, err := recapAPI.CreatePhotoScene("testare", nil, "object")
 
 		if err != nil {
 			t.Fatalf("Failed to create a photoscene: %s\n", err.Error())
+		}
+
+		sceneID = response.ID
+	})
+
+	t.Run("Delete the test scene", func(t *testing.T) {
+		_, err := recapAPI.DeleteScene(sceneID)
+
+		if err != nil {
+			t.Fatalf("Failed to delete the photoscene: %s\n", err.Error())
 		}
 	})
 
@@ -244,9 +317,9 @@ func ExampleAPI_CreatePhotoScene() {
 
 	clientID := os.Getenv("FORGE_CLIENT_ID")
 	clientSecret := os.Getenv("FORGE_CLIENT_SECRET")
-	recapAPI := recap.NewAPIWithCredentials(clientID, clientSecret)
+	recap := recap.NewAPIWithCredentials(clientID, clientSecret)
 
-	photoScene, err := recapAPI.CreatePhotoScene("test_scene", nil, "object")
+	photoScene, err := recap.CreatePhotoScene("test_scene", nil, "object")
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -258,5 +331,3 @@ func ExampleAPI_CreatePhotoScene() {
 	//Output:
 	//Scene was successfully created
 }
-
-

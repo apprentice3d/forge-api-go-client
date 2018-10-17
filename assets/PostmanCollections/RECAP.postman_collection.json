@@ -1,0 +1,1694 @@
+{
+	"info": {
+		"name": "RECAP",
+		"_postman_id": "2430384c-6a85-b8c6-576b-7d756469bbdb",
+		"description": "",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "ReCap",
+			"description": "",
+			"item": [
+				{
+					"name": "2-legged-token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "dbcc9e59-eab7-420d-9c06-1ec391b0e0cc",
+								"type": "text/javascript",
+								"exec": [
+									"var response = JSON.parse(responseBody);",
+									"pm.environment.set(\"2-Legged_TOKEN\", response[\"access_token\"]);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/x-www-form-urlencoded"
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "client_id",
+									"value": "{{CLIENT_ID}}",
+									"description": "",
+									"type": "text"
+								},
+								{
+									"key": "client_secret",
+									"value": "{{CLIENT_SECRET}}",
+									"description": "",
+									"type": "text"
+								},
+								{
+									"key": "grant_type",
+									"value": "client_credentials",
+									"description": "",
+									"type": "text"
+								},
+								{
+									"key": "scope",
+									"value": "data:write data:read",
+									"description": "",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://developer.api.autodesk.com/authentication/v1/authenticate",
+							"protocol": "https",
+							"host": [
+								"developer",
+								"api",
+								"autodesk",
+								"com"
+							],
+							"path": [
+								"authentication",
+								"v1",
+								"authenticate"
+							]
+						},
+						"description": null
+					},
+					"response": []
+				},
+				{
+					"name": "Create_scene",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "7e5aa663-dedf-4add-a512-0444b8b13ca1",
+								"type": "text/javascript",
+								"exec": [
+									"var photoscene_id = JSON.parse(responseBody)[\"Photoscene\"][\"photosceneid\"];",
+									"pm.environment.set(\"RECENT_PHOTOSCENE\", photoscene_id);",
+									""
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{2-Legged_TOKEN}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "scenename",
+									"value": "some_scene_name",
+									"description": "",
+									"type": "text"
+								},
+								{
+									"key": "callback",
+									"value": "http://example.com",
+									"description": "",
+									"type": "text"
+								},
+								{
+									"key": "format",
+									"value": "rcm",
+									"description": "",
+									"type": "text"
+								},
+								{
+									"key": "scenetype",
+									"value": "object",
+									"description": "can be object or aerial",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://developer.api.autodesk.com/photo-to-3d/v1/photoscene",
+							"protocol": "https",
+							"host": [
+								"developer",
+								"api",
+								"autodesk",
+								"com"
+							],
+							"path": [
+								"photo-to-3d",
+								"v1",
+								"photoscene"
+							]
+						},
+						"description": "Creates a scene with givven settings.\nRequires an data:write token."
+					},
+					"response": []
+				},
+				{
+					"name": "Get_available_scenes[UNOFFICIAL]",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{2-Legged_TOKEN}}"
+							}
+						],
+						"body": {},
+						"url": {
+							"raw": "https://developer.api.autodesk.com/photo-to-3d/v1/photoscene/foruser",
+							"protocol": "https",
+							"host": [
+								"developer",
+								"api",
+								"autodesk",
+								"com"
+							],
+							"path": [
+								"photo-to-3d",
+								"v1",
+								"photoscene",
+								"foruser"
+							]
+						},
+						"description": "List the already created scenes (scenes created by the owner of the given token)."
+					},
+					"response": [
+						{
+							"id": "d2ea3af7-c259-4384-8e90-147e13826235",
+							"name": "Get_available_scenes[UNOFFICIAL]",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{TOKEN}}",
+										"disabled": false
+									}
+								],
+								"body": {},
+								"url": {
+									"raw": "https://developer.api.autodesk.com/photo-to-3d/v1/photoscene/foruser",
+									"protocol": "https",
+									"host": [
+										"developer",
+										"api",
+										"autodesk",
+										"com"
+									],
+									"path": [
+										"photo-to-3d",
+										"v1",
+										"photoscene",
+										"foruser"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"_postman_previewtype": "text",
+							"header": [
+								{
+									"key": "Connection",
+									"value": "keep-alive",
+									"name": "Connection",
+									"description": "Options that are desired for the connection"
+								},
+								{
+									"key": "Content-Length",
+									"value": "2401",
+									"name": "Content-Length",
+									"description": "The length of the response body in octets (8-bit bytes)"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json",
+									"name": "Content-Type",
+									"description": "The mime type of this content"
+								},
+								{
+									"key": "Date",
+									"value": "Fri, 16 Feb 2018 14:23:24 GMT",
+									"name": "Date",
+									"description": "The date and time that the message was sent"
+								},
+								{
+									"key": "Server",
+									"value": "Apache/2.4.6 (CentOS)",
+									"name": "Server",
+									"description": "A name for the server"
+								},
+								{
+									"key": "Set-Cookie",
+									"value": "AWSALB=VQ5mrZ+OJpvM4UHwKGsi2ufqh2nbM97RH/GlNATKjXfvr1Cqhhym6TE0K8SzD1fbYSNjr06SD4CrDuGrqRM+HFRGhXh7kRatECQ2ipgW4b+5EJwx2WGxH4XJVKVO; Expires=Fri, 23 Feb 2018 14:23:22 GMT; Path=/",
+									"name": "Set-Cookie",
+									"description": "an HTTP cookie"
+								},
+								{
+									"key": "X-Powered-By",
+									"value": "PHP/7.0.24",
+									"name": "X-Powered-By",
+									"description": "Specifies the technology (ASP.NET, PHP, JBoss, e.g.) supporting the web application (version details are often in X-Runtime, X-Version, or X-AspNet-Version)"
+								}
+							],
+							"cookie": [
+								{
+									"expires": "Mon Jan 18 2038 22:14:07 GMT-0500 (EST)",
+									"httpOnly": true,
+									"domain": "developer.api.autodesk.com",
+									"path": "/",
+									"secure": true,
+									"value": "m2ZAsezTwCNUhqwMPj6HsA",
+									"key": "PF"
+								},
+								{
+									"expires": "Fri Feb 23 2018 09:23:22 GMT-0500 (EST)",
+									"httpOnly": false,
+									"domain": "developer.api.autodesk.com",
+									"path": "/",
+									"secure": false,
+									"value": "VQ5mrZ+OJpvM4UHwKGsi2ufqh2nbM97RH/GlNATKjXfvr1Cqhhym6TE0K8SzD1fbYSNjr06SD4CrDuGrqRM+HFRGhXh7kRatECQ2ipgW4b+5EJwx2WGxH4XJVKVO",
+									"key": "AWSALB"
+								}
+							],
+							"responseTime": 2293,
+							"body": "{\"Usage\":\"1.3357000350952\",\"Resource\":\"\\/photoscene\\/foruser\",\"next_token\":\"rO0ABXNyACdjb20uYW1hem9uLnNkcy5RdWVyeVByb2Nlc3Nvci5Nb3JlVG9rZW7racXLnINNqwMA\\nC0kAFGluaXRpYWxDb25qdW5jdEluZGV4WgAOaXNQYWdlQm91bmRhcnlKAAxsYXN0RW50aXR5SURa\\nAApscnFFbmFibGVkSQAPcXVlcnlDb21wbGV4aXR5SgATcXVlcnlTdHJpbmdDaGVja3N1bUkACnVu\\naW9uSW5kZXhaAA11c2VRdWVyeUluZGV4TAANY29uc2lzdGVudExTTnQAEkxqYXZhL2xhbmcvU3Ry\\naW5nO0wAEmxhc3RBdHRyaWJ1dGVWYWx1ZXEAfgABTAAJc29ydE9yZGVydAAvTGNvbS9hbWF6b24v\\nc2RzL1F1ZXJ5UHJvY2Vzc29yL1F1ZXJ5JFNvcnRPcmRlcjt4cAAAAAAAAAAAAAAPJz0AAAAAAQAA\\nAAACPCKyAAAAAAF0ABhbMTM1NTk2NjUwNTI4OSwyMjgzNDY3OV1wfnIALWNvbS5hbWF6b24uc2Rz\\nLlF1ZXJ5UHJvY2Vzc29yLlF1ZXJ5JFNvcnRPcmRlcgAAAAAAAAAAEgAAeHIADmphdmEubGFuZy5F\\nbnVtAAAAAAAAAAASAAB4cHQACUFTQ0VORElOR3g=\",\"Photoscenes\":{\"Photoscene\":[{\"photosceneid\":\"asmPRfAy3JaD8pxz58U9WFhLa5Ygqrsp9uo36aFJlTo\",\"workerStatus\":{}},{\"photosceneid\":\"UnTD7n8MhvI9aW5Zitvp31zdlH85J11E1b4AojlWxbw\",\"workerStatus\":{}},{\"photosceneid\":\"DlqKqT6QVuXP2Brg1otDeojP3v3XGWmhyHDJEM0ogik\",\"workerStatus\":{}},{\"photosceneid\":\"YPg82xfxzhrf8SqTwpjOlio8aacNv4cJmbmM07C3Rno\",\"workerStatus\":{}},{\"photosceneid\":\"ydWzthVFZvlCg4d91MMjroQBPpQU2VvvNDlebNxrw0k\",\"workerStatus\":{}},{\"photosceneid\":\"UZAgvA2nRmVHSIAVx39sbuLVjTBOOnLIapMy0YcN2R0\",\"workerStatus\":\"DONE\"},{\"photosceneid\":\"uoQNI1yh6MN3LTt4RPSpP79lIR5EQF3wG1x5ybgFiC4\",\"workerStatus\":{}},{\"photosceneid\":\"wG3gEz4xPFtYucWsQE6Z7a9BQ5CTO9MYOzCjkC5UF84\",\"workerStatus\":{}},{\"photosceneid\":\"QdKhviqOeildLe2ls6tWW6YsmkJnR5lJjZy2lYX7chg\",\"workerStatus\":{}},{\"photosceneid\":\"rkLpcRvbrYQwb2wBOat22gWH5RqkkMdkkRqJD3OjI5s\",\"workerStatus\":\"DONE\"},{\"photosceneid\":\"LFCEltrPbvj41XCl9eWro1FJetocgya3J6a0Wm1xd14\",\"workerStatus\":{}},{\"photosceneid\":\"VnphmRE2CBFrYfD7rWOKnP6stNpOg8dFQO1Rmi8J2iU\",\"workerStatus\":{}},{\"photosceneid\":\"p1N71zPQlUv30uLteM8Uh8pCP0DFCwvWvPUr48Hg5uY\",\"workerStatus\":{}},{\"photosceneid\":\"N8YlBeH0K4QiYCn68cOg0iXjVZOjsMcK9yDA8Py10cM\",\"workerStatus\":{}},{\"photosceneid\":\"AQacUyR2J2srEfhRpuLwC31PCWONnFbPLXKGQV9TJBc\",\"workerStatus\":{}},{\"photosceneid\":\"1pRFPEMCebI13ktw9QtrC9x2VrjIeBGkylFwGrwoe1s\",\"workerStatus\":{}},{\"photosceneid\":\"3Vc9AHsSW1eZH5xVNUBd7INvEX0E13JjgPJ4EteDxoY\",\"workerStatus\":{}},{\"photosceneid\":\"cwDM7Dfar1pj6KP9bbmabLAHZnoQc540vcyMMhpwNeQ\",\"workerStatus\":{}},{\"photosceneid\":\"LRl66urH7TzYlSMAWQvR8j2SuaGyPnL1wPQteEMgAhs\",\"workerStatus\":{}},{\"photosceneid\":\"PfGfVLlmDcYXiFL6IaHMzqzssrR429TGJFIkFYRAWXw\",\"workerStatus\":{}}]}}"
+						}
+					]
+				},
+				{
+					"name": "Upload file",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/x-www-form-urlencoded"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{2-Legged_TOKEN}}"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "photosceneid",
+									"value": "{{RECENT_PHOTOSCENE}}",
+									"description": "",
+									"type": "text"
+								},
+								{
+									"key": "type",
+									"value": "image",
+									"description": "",
+									"type": "text"
+								},
+								{
+									"key": "file[0]",
+									"description": "",
+									"type": "file",
+									"src": "DSC_1158.JPG"
+								},
+								{
+									"key": "file[1]",
+									"description": "",
+									"type": "file",
+									"src": "DSC_1159.JPG"
+								},
+								{
+									"key": "file[2]",
+									"description": "",
+									"type": "file",
+									"src": "DSC_1160.JPG"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://developer.api.autodesk.com/photo-to-3d/v1/file",
+							"protocol": "https",
+							"host": [
+								"developer",
+								"api",
+								"autodesk",
+								"com"
+							],
+							"path": [
+								"photo-to-3d",
+								"v1",
+								"file"
+							]
+						},
+						"description": null
+					},
+					"response": [
+						{
+							"id": "9bef34c2-3291-44bb-87f6-4eef593558be",
+							"name": "Upload file_versions",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"type": "text",
+										"name": "Content-Type",
+										"value": "application/x-www-form-urlencoded"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{TOKEN}}"
+									}
+								],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": [
+										{
+											"key": "photosceneid",
+											"value": "jQy3aGbo40K16dWnuUcEnqcpmQCSXKcFAiEzuDw1RFU",
+											"description": "",
+											"type": "text"
+										},
+										{
+											"key": "type",
+											"value": "image",
+											"description": "",
+											"type": "text"
+										},
+										{
+											"key": "file[0]",
+											"value": "\"https://s3.amazonaws.com/adsk-recap-public/forge/lion/DSC_2000.JPG\"",
+											"description": "",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "https://developer.api.autodesk.com/photo-to-3d/v1/file",
+									"protocol": "https",
+									"host": [
+										"developer",
+										"api",
+										"autodesk",
+										"com"
+									],
+									"path": [
+										"photo-to-3d",
+										"v1",
+										"file"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Connection",
+									"value": "keep-alive",
+									"name": "Connection",
+									"description": ""
+								},
+								{
+									"key": "Content-Length",
+									"value": "265",
+									"name": "Content-Length",
+									"description": ""
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json",
+									"name": "Content-Type",
+									"description": ""
+								},
+								{
+									"key": "Date",
+									"value": "Tue, 06 Feb 2018 20:25:04 GMT",
+									"name": "Date",
+									"description": ""
+								},
+								{
+									"key": "Server",
+									"value": "Apache/2.4.6 (CentOS)",
+									"name": "Server",
+									"description": ""
+								},
+								{
+									"key": "Set-Cookie",
+									"value": "AWSALB=BO0N/JdLN161Pma2lRg0MjwvymdHNIgYUqawx2a5P+55YtbTlxi9ut7Uvu1h9kXA2O81EChqfGCJZRawg5Usqxl5mjSVZln3903CIDvEylB6wynQYqx2P/GsyKnW; Expires=Tue, 13 Feb 2018 20:25:02 GMT; Path=/",
+									"name": "Set-Cookie",
+									"description": ""
+								},
+								{
+									"key": "X-Powered-By",
+									"value": "PHP/7.0.24",
+									"name": "X-Powered-By",
+									"description": ""
+								}
+							],
+							"cookie": [
+								{
+									"expires": "Mon Jan 18 2038 22:14:07 GMT-0500 (EST)",
+									"httpOnly": false,
+									"domain": "autodesk.com",
+									"path": "/",
+									"secure": false,
+									"value": "DEtzKCootfc04mDsjMe43F0O4Tghe3DQ",
+									"key": "ack-prod"
+								},
+								{
+									"expires": "Mon Jan 18 2038 22:14:07 GMT-0500 (EST)",
+									"httpOnly": true,
+									"domain": "developer.api.autodesk.com",
+									"path": "/",
+									"secure": true,
+									"value": "WL7wAwDMAOrqxfhqCALOk9",
+									"key": "PF"
+								},
+								{
+									"expires": "Tue Feb 13 2018 15:25:02 GMT-0500 (EST)",
+									"httpOnly": false,
+									"domain": "developer.api.autodesk.com",
+									"path": "/",
+									"secure": false,
+									"value": "BO0N/JdLN161Pma2lRg0MjwvymdHNIgYUqawx2a5P+55YtbTlxi9ut7Uvu1h9kXA2O81EChqfGCJZRawg5Usqxl5mjSVZln3903CIDvEylB6wynQYqx2P/GsyKnW",
+									"key": "AWSALB"
+								}
+							],
+							"responseTime": "2704",
+							"body": "{\"Usage\":\"2.4938521385193\",\"Resource\":\"\\/file\",\"photosceneid\":\"jQy3aGbo40K16dWnuUcEnqcpmQCSXKcFAiEzuDw1RFU\",\"Files\":{\"file\":{\"filename\":\"DSC_1165.JPG\",\"fileid\":\"LqJc81gbeqk4a91HUksNkP9NKSNOndf4OQnAGQbR26Q=-2537563-100000000\",\"filesize\":\"2537563\",\"msg\":\"No error\"}}}"
+						}
+					]
+				},
+				{
+					"name": "Get_photoscene_details[UNoFFICIAL]",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{2-Legged_TOKEN}}"
+							}
+						],
+						"body": {},
+						"url": {
+							"raw": "https://developer.api.autodesk.com/photo-to-3d/v1/photoscene/{{RECENT_PHOTOSCENE}}/properties",
+							"protocol": "https",
+							"host": [
+								"developer",
+								"api",
+								"autodesk",
+								"com"
+							],
+							"path": [
+								"photo-to-3d",
+								"v1",
+								"photoscene",
+								"{{RECENT_PHOTOSCENE}}",
+								"properties"
+							]
+						},
+						"description": "List the photoscene details, including the files uploaded and associated with the photoscene."
+					},
+					"response": [
+						{
+							"id": "abc12d9f-2b60-4868-819d-2e5590874bed",
+							"name": "Get_photoscene_details[UNoFFICIAL]",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{TOKEN}}"
+									}
+								],
+								"body": {},
+								"url": {
+									"raw": "https://developer.api.autodesk.com/photo-to-3d/v1/photoscene/{{RECENT_PHOTOSCENE}}/properties",
+									"protocol": "https",
+									"host": [
+										"developer",
+										"api",
+										"autodesk",
+										"com"
+									],
+									"path": [
+										"photo-to-3d",
+										"v1",
+										"photoscene",
+										"{{RECENT_PHOTOSCENE}}",
+										"properties"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"_postman_previewtype": "text",
+							"header": [
+								{
+									"key": "Connection",
+									"value": "keep-alive",
+									"name": "Connection",
+									"description": "Options that are desired for the connection"
+								},
+								{
+									"key": "Content-Length",
+									"value": "1348",
+									"name": "Content-Length",
+									"description": "The length of the response body in octets (8-bit bytes)"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json",
+									"name": "Content-Type",
+									"description": "The mime type of this content"
+								},
+								{
+									"key": "Date",
+									"value": "Fri, 16 Feb 2018 20:39:07 GMT",
+									"name": "Date",
+									"description": "The date and time that the message was sent"
+								},
+								{
+									"key": "Server",
+									"value": "Apache/2.4.6 (CentOS)",
+									"name": "Server",
+									"description": "A name for the server"
+								},
+								{
+									"key": "Set-Cookie",
+									"value": "AWSALB=ttXq77Y5w8kIyvwrDPdkns6f250v9Ple2ik1am5Oh0cJqlsdf8kWVgG8UwuDvgoRUxv30vmUTtkH9ZVCOe0pc2RLTX8lbLQe6LjH3GtEtxkrAwvTjxhIBNygakx8; Expires=Fri, 23 Feb 2018 20:39:06 GMT; Path=/",
+									"name": "Set-Cookie",
+									"description": "an HTTP cookie"
+								},
+								{
+									"key": "X-Powered-By",
+									"value": "PHP/7.0.24",
+									"name": "X-Powered-By",
+									"description": "Specifies the technology (ASP.NET, PHP, JBoss, e.g.) supporting the web application (version details are often in X-Runtime, X-Version, or X-AspNet-Version)"
+								}
+							],
+							"cookie": [
+								{
+									"expires": "Mon Jan 18 2038 22:14:07 GMT-0500 (EST)",
+									"httpOnly": true,
+									"domain": "developer.api.autodesk.com",
+									"path": "/",
+									"secure": true,
+									"value": "m2ZAsezTwCNUhqwMPj6HsA",
+									"key": "PF"
+								},
+								{
+									"expires": "Fri Feb 23 2018 15:39:06 GMT-0500 (EST)",
+									"httpOnly": false,
+									"domain": "developer.api.autodesk.com",
+									"path": "/",
+									"secure": false,
+									"value": "ttXq77Y5w8kIyvwrDPdkns6f250v9Ple2ik1am5Oh0cJqlsdf8kWVgG8UwuDvgoRUxv30vmUTtkH9ZVCOe0pc2RLTX8lbLQe6LjH3GtEtxkrAwvTjxhIBNygakx8",
+									"key": "AWSALB"
+								}
+							],
+							"responseTime": 1445,
+							"body": "{\"Usage\":\"1.2874660491943\",\"Resource\":\"\\/photoscene\\/anpzMQBblC3XyGkF9HGDcWt3yz8rPPZvFdq2HWEWzQg\\/properties\",\"next_token\":{},\"Photoscenes\":{\"Photoscene\":{\"photosceneid\":\"anpzMQBblC3XyGkF9HGDcWt3yz8rPPZvFdq2HWEWzQg\",\"itemName\":\"anpzMQBblC3XyGkF9HGDcWt3yz8rPPZvFdq2HWEWzQg\",\"clientID\":\"6NHGyFrutRmejUgL8GS2nd6mayrjYRsn\",\"clientStatus\":\"CREATED\",\"type\":\"all\",\"userID\":\"uSfPxUGJ1xePv2bmz1BC1dL7Z0nhq5ZpwjNUcWPqPhI=\",\"convertStatus\":\"CREATED\",\"projectID\":\"anpzMQBblC3XyGkF9HGDcWt3yz8rPPZvFdq2HWEWzQg\",\"engineVersion\":\"3.0.0.3104\",\"convertFormat\":\"obj\",\"userAgent\":\"PF_APIv3.2.21-Photofly-WebAPI-FORGE\",\"creationDate\":\"2018-02-16T20:13:59\",\"name\":\"some_scene_name\",\"callback\":\"http:\\/\\/example.com\",\"maxResolutionForImage\":\"100000000\",\"UseTitanTextureEngine\":\"1\",\"scenetype\":\"object\",\"status\":\"PROCESSING\",\"Files\":{\"file\":[{\"@attributes\":{\"pos\":\"002\"},\"key\":\"CexE\\/tHB6\\/vDQS\\/kAfB\\/I3hp\\/DyUV\\/Faoj\\/QzLY\\/pPG8\\/y7kW\\/4ug=-2406389-100000000\",\"fileid\":\"CexEtHB6vDQSkAfBI3hpDyUVFaojQzLYpPG8y7kW4ug=-2406389-100000000\",\"filename\":\"DSC_1159.JPG\",\"type\":\"image\",\"subtype\":{},\"ancestor\":{}},{\"@attributes\":{\"pos\":\"001\"},\"key\":\"biyQ\\/TcFo\\/B6qv\\/5Ihi\\/41py\\/RXNu\\/SF1E\\/CNVU\\/qB4f\\/sVw7\\/FVc=-2359132-100000000\",\"fileid\":\"biyQTcFoB6qv5Ihi41pyRXNuSF1ECNVUqB4fsVw7FVc=-2359132-100000000\",\"filename\":\"DSC_1158.JPG\",\"type\":\"image\",\"subtype\":{},\"ancestor\":{}}]}}}}"
+						},
+						{
+							"id": "997b0e26-a257-4cac-b0ed-38732074eabe",
+							"name": "Get_photoscene_details[UNoFFICIAL][Problem]",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{2-Legged_TOKEN}}",
+										"disabled": false
+									}
+								],
+								"body": {},
+								"url": {
+									"raw": "https://developer.api.autodesk.com/photo-to-3d/v1/photoscene/{{RECENT_PHOTOSCENE}}/properties",
+									"protocol": "https",
+									"host": [
+										"developer",
+										"api",
+										"autodesk",
+										"com"
+									],
+									"path": [
+										"photo-to-3d",
+										"v1",
+										"photoscene",
+										"{{RECENT_PHOTOSCENE}}",
+										"properties"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"_postman_previewtype": "text",
+							"header": [
+								{
+									"key": "Connection",
+									"value": "keep-alive",
+									"name": "Connection",
+									"description": "Options that are desired for the connection"
+								},
+								{
+									"key": "Content-Length",
+									"value": "1613",
+									"name": "Content-Length",
+									"description": "The length of the response body in octets (8-bit bytes)"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json",
+									"name": "Content-Type",
+									"description": "The mime type of this content"
+								},
+								{
+									"key": "Date",
+									"value": "Wed, 21 Feb 2018 20:54:25 GMT",
+									"name": "Date",
+									"description": "The date and time that the message was sent"
+								},
+								{
+									"key": "Server",
+									"value": "Apache/2.4.6 (CentOS)",
+									"name": "Server",
+									"description": "A name for the server"
+								},
+								{
+									"key": "Set-Cookie",
+									"value": "AWSALB=ct57HL6h9FT6YMvdEtVOtWHkKDY4n1Ov952V8flWZFYJ/yJ6qg8lgzbBq373xrxIprXLsbuwrDmcBMyK9X+n8AIidNfDiTqAsHTLw/ziixVG2xuTL6mfW2PPM2Qt; Expires=Wed, 28 Feb 2018 20:54:23 GMT; Path=/",
+									"name": "Set-Cookie",
+									"description": "an HTTP cookie"
+								},
+								{
+									"key": "X-Powered-By",
+									"value": "PHP/7.0.24",
+									"name": "X-Powered-By",
+									"description": "Specifies the technology (ASP.NET, PHP, JBoss, e.g.) supporting the web application (version details are often in X-Runtime, X-Version, or X-AspNet-Version)"
+								}
+							],
+							"cookie": [
+								{
+									"expires": "Mon Jan 18 2038 22:14:07 GMT-0500 (EST)",
+									"httpOnly": true,
+									"domain": "developer.api.autodesk.com",
+									"path": "/",
+									"secure": true,
+									"value": "m2ZAsezTwCNUhqwMPj6HsA",
+									"key": "PF"
+								},
+								{
+									"expires": "Wed Feb 28 2018 15:54:23 GMT-0500 (EST)",
+									"httpOnly": false,
+									"domain": "developer.api.autodesk.com",
+									"path": "/",
+									"secure": false,
+									"value": "ct57HL6h9FT6YMvdEtVOtWHkKDY4n1Ov952V8flWZFYJ/yJ6qg8lgzbBq373xrxIprXLsbuwrDmcBMyK9X+n8AIidNfDiTqAsHTLw/ziixVG2xuTL6mfW2PPM2Qt",
+									"key": "AWSALB"
+								}
+							],
+							"responseTime": 1660,
+							"body": "{\"Usage\":\"1.3702168464661\",\"Resource\":\"\\/photoscene\\/nXe7mN8DujSoAtYjenIfIoJPNxzPDXiBUepzKPGZvyw\\/properties\",\"next_token\":{},\"Photoscenes\":{\"Photoscene\":{\"photosceneid\":\"nXe7mN8DujSoAtYjenIfIoJPNxzPDXiBUepzKPGZvyw\",\"itemName\":\"nXe7mN8DujSoAtYjenIfIoJPNxzPDXiBUepzKPGZvyw\",\"clientID\":\"xUP8TQF0rkkTHKTlPOjPY1kBddgNYLPX\",\"clientStatus\":\"CREATED\",\"type\":\"all\",\"userID\":\"uSfPxUGJ1xePv2bmz1BC1dL7Z0nhq5ZpwjNUcWPqPhI=\",\"convertStatus\":\"CREATED\",\"projectID\":\"nXe7mN8DujSoAtYjenIfIoJPNxzPDXiBUepzKPGZvyw\",\"engineVersion\":\"3.0.0.3104\",\"convertFormat\":\"rcm obj\",\"userAgent\":\"PF_APIv3.2.21-Photofly-WebAPI-FORGE\",\"creationDate\":\"2018-02-21T20:52:47\",\"name\":\"tts\",\"maxResolutionForImage\":\"100000000\",\"UseTitanTextureEngine\":\"1\",\"scenetype\":\"object\",\"status\":\"PROCESSING\",\"Files\":{\"file\":[{\"@attributes\":{\"pos\":\"001\"},\"key\":{},\"fileid\":{},\"filename\":\"datafile.jpg\",\"type\":\"image\",\"subtype\":{},\"ancestor\":{}},{\"@attributes\":{\"pos\":\"001\"},\"key\":{},\"fileid\":{},\"filename\":\"datafile.jpg\",\"type\":\"image\",\"subtype\":{},\"ancestor\":{}},{\"@attributes\":{\"pos\":\"002\"},\"key\":{},\"fileid\":{},\"filename\":\"datafile.jpg\",\"type\":\"image\",\"subtype\":{},\"ancestor\":{}},{\"@attributes\":{\"pos\":\"002\"},\"key\":{},\"fileid\":{},\"filename\":\"datafile.jpg\",\"type\":\"image\",\"subtype\":{},\"ancestor\":{}},{\"@attributes\":{\"pos\":\"003\"},\"key\":{},\"fileid\":{},\"filename\":\"datafile.jpg\",\"type\":\"image\",\"subtype\":{},\"ancestor\":{}},{\"@attributes\":{\"pos\":\"003\"},\"key\":{},\"fileid\":{},\"filename\":\"datafile.jpg\",\"type\":\"image\",\"subtype\":{},\"ancestor\":{}},{\"@attributes\":{\"pos\":\"004\"},\"key\":{},\"fileid\":{},\"filename\":\"datafile.jpg\",\"type\":\"image\",\"subtype\":{},\"ancestor\":{}}]}}}}"
+						},
+						{
+							"id": "28317cce-e276-4fce-9c29-529fe371f10d",
+							"name": "Get_photoscene_details[UNoFFICIAL][GoodLocalFiles]",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{2-Legged_TOKEN}}",
+										"disabled": false
+									}
+								],
+								"body": {},
+								"url": {
+									"raw": "https://developer.api.autodesk.com/photo-to-3d/v1/photoscene/{{RECENT_PHOTOSCENE}}/properties",
+									"protocol": "https",
+									"host": [
+										"developer",
+										"api",
+										"autodesk",
+										"com"
+									],
+									"path": [
+										"photo-to-3d",
+										"v1",
+										"photoscene",
+										"{{RECENT_PHOTOSCENE}}",
+										"properties"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"_postman_previewtype": "text",
+							"header": [
+								{
+									"key": "Connection",
+									"value": "keep-alive",
+									"name": "Connection",
+									"description": "Options that are desired for the connection"
+								},
+								{
+									"key": "Content-Length",
+									"value": "3501",
+									"name": "Content-Length",
+									"description": "The length of the response body in octets (8-bit bytes)"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json",
+									"name": "Content-Type",
+									"description": "The mime type of this content"
+								},
+								{
+									"key": "Date",
+									"value": "Wed, 21 Feb 2018 21:07:55 GMT",
+									"name": "Date",
+									"description": "The date and time that the message was sent"
+								},
+								{
+									"key": "Server",
+									"value": "Apache/2.4.6 (CentOS)",
+									"name": "Server",
+									"description": "A name for the server"
+								},
+								{
+									"key": "Set-Cookie",
+									"value": "AWSALB=XMp00vgwi7j5yRwt81gTw/HxNxlXTfe+pDrTyvlx2Xhe1nMlCGUjERqEMDlwsacBNNKkZHlbUkZL4c7GmmvY3GVLlIInOWPzTLuXlGvSvQuaNsPeOpkCmoZpN/Ng; Expires=Wed, 28 Feb 2018 21:07:54 GMT; Path=/",
+									"name": "Set-Cookie",
+									"description": "an HTTP cookie"
+								},
+								{
+									"key": "X-Powered-By",
+									"value": "PHP/7.0.24",
+									"name": "X-Powered-By",
+									"description": "Specifies the technology (ASP.NET, PHP, JBoss, e.g.) supporting the web application (version details are often in X-Runtime, X-Version, or X-AspNet-Version)"
+								}
+							],
+							"cookie": [
+								{
+									"expires": "Mon Jan 18 2038 22:14:07 GMT-0500 (EST)",
+									"httpOnly": true,
+									"domain": "developer.api.autodesk.com",
+									"path": "/",
+									"secure": true,
+									"value": "m2ZAsezTwCNUhqwMPj6HsA",
+									"key": "PF"
+								},
+								{
+									"expires": "Wed Feb 28 2018 16:07:54 GMT-0500 (EST)",
+									"httpOnly": false,
+									"domain": "developer.api.autodesk.com",
+									"path": "/",
+									"secure": false,
+									"value": "XMp00vgwi7j5yRwt81gTw/HxNxlXTfe+pDrTyvlx2Xhe1nMlCGUjERqEMDlwsacBNNKkZHlbUkZL4c7GmmvY3GVLlIInOWPzTLuXlGvSvQuaNsPeOpkCmoZpN/Ng",
+									"key": "AWSALB"
+								}
+							],
+							"responseTime": 2180,
+							"body": "{\"Usage\":\"1.3421750068665\",\"Resource\":\"\\/photoscene\\/QG107YsdRXPhaFL1JBeqnRAhHVz922ta4aIxh8mR5Bw\\/properties\",\"next_token\":{},\"Photoscenes\":{\"Photoscene\":{\"photosceneid\":\"QG107YsdRXPhaFL1JBeqnRAhHVz922ta4aIxh8mR5Bw\",\"itemName\":\"QG107YsdRXPhaFL1JBeqnRAhHVz922ta4aIxh8mR5Bw\",\"workerID\":\"3.0.0|10.184.150.77|D:\\\\stratos-worker\\\\src\",\"clientID\":\"xUP8TQF0rkkTHKTlPOjPY1kBddgNYLPX\",\"clientStatus\":\"SENT\",\"workerStatus\":\"DONE\",\"type\":\"all\",\"userID\":\"uSfPxUGJ1xePv2bmz1BC1dL7Z0nhq5ZpwjNUcWPqPhI=\",\"nbShots\":\"000007\",\"inFilename\":\"3.0.0\\/IN\\/wCncbM2581iKO1dT7m8ugHlWw8ofPRZHag1boipfCiE=\\/QG107YsdRXPhaFL1JBeqnRAhHVz922ta4aIxh8mR5Bw-IN.3dp\",\"convertStatus\":\"DONE\",\"projectID\":\"QG107YsdRXPhaFL1JBeqnRAhHVz922ta4aIxh8mR5Bw\",\"engineVersion\":\"3.0.0.3104\",\"convertFormat\":\"obj\",\"userAgent\":\"PF_APIv3.2.21-Photofly-WebAPI-FORGE\",\"KPStatus\":\"DONE\",\"creationDate\":\"2018-02-21T21:01:10\",\"name\":\"example\",\"outFilename\":\"3.0.0\\/OUT\\/erybgOb1oy7JK4fOVr06rufYJX1ON11tvrmh0CnIMhc=-QG107YsdRXPhaFL1JBeqnRAhHVz922ta4aIxh8mR5Bw\\/100000000\\/example.3dp\",\"Queue_messageID\":\"5e8746bf-2962-4441-8280-88fbb220b4b9\",\"Queue_message\":\"STITCH QG107YsdRXPhaFL1JBeqnRAhHVz922ta4aIxh8mR5Bw 3.2.21-Photofly-WebAPI-FORGE 3.0.0.3104 0\",\"Queue_date\":\"2018-02-21T21:01:43+00:00\",\"maxResolutionForImage\":\"100000000\",\"Queue_name\":\"forge-smallspotphotoflyqueue-calib\",\"UseTitanTextureEngine\":\"1\",\"scenetype\":\"object\",\"processingtime\":\"174.181238\",\"progress\":\"100\",\"status\":\"DONE\",\"Files\":{\"file\":[{\"@attributes\":{\"pos\":\"001\"},\"key\":\"biyQ\\/TcFo\\/B6qv\\/5Ihi\\/41py\\/RXNu\\/SF1E\\/CNVU\\/qB4f\\/sVw7\\/FVc=-2359132-100000000\",\"fileid\":\"biyQTcFoB6qv5Ihi41pyRXNuSF1ECNVUqB4fsVw7FVc=-2359132-100000000\",\"filename\":\"datafile.jpg\",\"type\":\"image\",\"subtype\":{},\"ancestor\":{}},{\"@attributes\":{\"pos\":\"002\"},\"key\":\"CexE\\/tHB6\\/vDQS\\/kAfB\\/I3hp\\/DyUV\\/Faoj\\/QzLY\\/pPG8\\/y7kW\\/4ug=-2406389-100000000\",\"fileid\":\"CexEtHB6vDQSkAfBI3hpDyUVFaojQzLYpPG8y7kW4ug=-2406389-100000000\",\"filename\":\"datafile.jpg\",\"type\":\"image\",\"subtype\":{},\"ancestor\":{}},{\"@attributes\":{\"pos\":\"003\"},\"key\":\"hcLH\\/Wj9W\\/J8H7\\/gHYv\\/J7Oo\\/pPDB\\/pFKU\\/VkM5\\/TM2M\\/j0aM\\/auA=-2520408-100000000\",\"fileid\":\"hcLHWj9WJ8H7gHYvJ7OopPDBpFKUVkM5TM2Mj0aMauA=-2520408-100000000\",\"filename\":\"datafile.jpg\",\"type\":\"image\",\"subtype\":{},\"ancestor\":{}},{\"@attributes\":{\"pos\":\"004\"},\"key\":\"RyP8\\/9ySv\\/kfes\\/sip9\\/Q88K\\/iePa\\/FY5M\\/8t4A\\/BvzG\\/e7xp\\/lyI=-2512244-100000000\",\"fileid\":\"RyP89ySvkfessip9Q88KiePaFY5M8t4ABvzGe7xplyI=-2512244-100000000\",\"filename\":\"datafile.jpg\",\"type\":\"image\",\"subtype\":{},\"ancestor\":{}},{\"@attributes\":{\"pos\":\"005\"},\"key\":\"AXmd\\/GTaF\\/qyQs\\/V26g\\/3sFs\\/9QUl\\/0ZRr\\/cbhA\\/2IQR\\/aVoz\\/NbQ=-2530262-100000000\",\"fileid\":\"AXmdGTaFqyQsV26g3sFs9QUl0ZRrcbhA2IQRaVozNbQ=-2530262-100000000\",\"filename\":\"datafile.jpg\",\"type\":\"image\",\"subtype\":{},\"ancestor\":{}},{\"@attributes\":{\"pos\":\"006\"},\"key\":\"MKPm\\/Btcv\\/5o6z\\/NOKI\\/Ky8A\\/WMX5\\/Qguo\\/ZhRt\\/ft16\\/e6An\\/44I=-2311940-100000000\",\"fileid\":\"MKPmBtcv5o6zNOKIKy8AWMX5QguoZhRtft16e6An44I=-2311940-100000000\",\"filename\":\"datafile.jpg\",\"type\":\"image\",\"subtype\":{},\"ancestor\":{}},{\"@attributes\":{\"pos\":\"007\"},\"key\":\"LqJc\\/81gb\\/eqk4\\/a91H\\/UksN\\/kP9N\\/KSNO\\/ndf4\\/OQnA\\/GQbR\\/26Q=-2537563-100000000\",\"fileid\":\"LqJc81gbeqk4a91HUksNkP9NKSNOndf4OQnAGQbR26Q=-2537563-100000000\",\"filename\":\"datafile.jpg\",\"type\":\"image\",\"subtype\":{},\"ancestor\":{}}],\"fileNotImage\":{\"key\":\"3.0.0\\/IN\\/wCncbM2581iKO1dT7m8ugHlWw8ofPRZHag1boipfCiE=\\/QG107YsdRXPhaFL1JBeqnRAhHVz922ta4aIxh8mR5Bw-IN.3dp\",\"fileid\":{},\"filename\":{},\"type\":\"project\",\"subtype\":\"100\",\"ancestor\":{}}}}}}"
+						}
+					]
+				},
+				{
+					"name": "Start_photoscene_processing",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{2-Legged_TOKEN}}"
+							}
+						],
+						"body": {},
+						"url": {
+							"raw": "https://developer.api.autodesk.com/photo-to-3d/v1/photoscene/{{RECENT_PHOTOSCENE}}",
+							"protocol": "https",
+							"host": [
+								"developer",
+								"api",
+								"autodesk",
+								"com"
+							],
+							"path": [
+								"photo-to-3d",
+								"v1",
+								"photoscene",
+								"{{RECENT_PHOTOSCENE}}"
+							]
+						},
+						"description": "At least 3 images are necessary to start the processing."
+					},
+					"response": [
+						{
+							"id": "e3aa0ae4-d2f1-4c21-a62b-6e117a948d06",
+							"name": "Start_photoscene_processing_Error",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"disabled": false
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{2-Legged_TOKEN}}",
+										"disabled": false
+									}
+								],
+								"body": {},
+								"url": {
+									"raw": "https://developer.api.autodesk.com/photo-to-3d/v1/photoscene/{{RECENT_PHOTOSCENE}}",
+									"protocol": "https",
+									"host": [
+										"developer",
+										"api",
+										"autodesk",
+										"com"
+									],
+									"path": [
+										"photo-to-3d",
+										"v1",
+										"photoscene",
+										"{{RECENT_PHOTOSCENE}}"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"_postman_previewtype": "text",
+							"header": [
+								{
+									"key": "Connection",
+									"value": "keep-alive",
+									"name": "Connection",
+									"description": "Options that are desired for the connection"
+								},
+								{
+									"key": "Content-Length",
+									"value": "188",
+									"name": "Content-Length",
+									"description": "The length of the response body in octets (8-bit bytes)"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json",
+									"name": "Content-Type",
+									"description": "The mime type of this content"
+								},
+								{
+									"key": "Date",
+									"value": "Wed, 21 Feb 2018 17:16:31 GMT",
+									"name": "Date",
+									"description": "The date and time that the message was sent"
+								},
+								{
+									"key": "Server",
+									"value": "Apache/2.4.6 (CentOS)",
+									"name": "Server",
+									"description": "A name for the server"
+								},
+								{
+									"key": "Set-Cookie",
+									"value": "AWSALB=7YbV8L3yE5Hv4NdQXMLcsEj5xh87imEaOKmUMtTaqpaMZgD2u7+ZJ3AYigRiI0TdF1Nxe1f+sRg5DFFCsIeeRkZo9wUzBvNGxFPuUaPNh2wCnNvTOvg55my5Nz8i; Expires=Wed, 28 Feb 2018 17:16:28 GMT; Path=/",
+									"name": "Set-Cookie",
+									"description": "an HTTP cookie"
+								},
+								{
+									"key": "X-Powered-By",
+									"value": "PHP/7.0.24",
+									"name": "X-Powered-By",
+									"description": "Specifies the technology (ASP.NET, PHP, JBoss, e.g.) supporting the web application (version details are often in X-Runtime, X-Version, or X-AspNet-Version)"
+								}
+							],
+							"cookie": [
+								{
+									"expires": "Mon Jan 18 2038 22:14:07 GMT-0500 (EST)",
+									"httpOnly": true,
+									"domain": "developer.api.autodesk.com",
+									"path": "/",
+									"secure": true,
+									"value": "m2ZAsezTwCNUhqwMPj6HsA",
+									"key": "PF"
+								},
+								{
+									"expires": "Wed Feb 28 2018 12:16:28 GMT-0500 (EST)",
+									"httpOnly": false,
+									"domain": "developer.api.autodesk.com",
+									"path": "/",
+									"secure": false,
+									"value": "7YbV8L3yE5Hv4NdQXMLcsEj5xh87imEaOKmUMtTaqpaMZgD2u7+ZJ3AYigRiI0TdF1Nxe1f+sRg5DFFCsIeeRkZo9wUzBvNGxFPuUaPNh2wCnNvTOvg55my5Nz8i",
+									"key": "AWSALB"
+								}
+							],
+							"responseTime": 3500,
+							"body": "{\"Usage\":\"2.9841439723969\",\"Resource\":\"\\/photoscene\\/TLO0N6EdLGLsuwav30Nrzuhd293oVBhPhHuGaKycQfk\",\"Error\":{\"code\":\"9\",\"msg\":\"At least three images are required to process the Photoscene\"}}"
+						}
+					]
+				},
+				{
+					"name": "Check_photoscene_progress",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{2-Legged_TOKEN}}"
+							}
+						],
+						"body": {},
+						"url": {
+							"raw": "https://developer.api.autodesk.com/photo-to-3d/v1/photoscene/{{RECENT_PHOTOSCENE}}/progress",
+							"protocol": "https",
+							"host": [
+								"developer",
+								"api",
+								"autodesk",
+								"com"
+							],
+							"path": [
+								"photo-to-3d",
+								"v1",
+								"photoscene",
+								"{{RECENT_PHOTOSCENE}}",
+								"progress"
+							]
+						},
+						"description": null
+					},
+					"response": [
+						{
+							"id": "923991fc-6066-4b75-a0aa-c4916a679dfd",
+							"name": "Check_photoscene_progress",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"disabled": false
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{TOKEN}}",
+										"disabled": false
+									}
+								],
+								"body": {},
+								"url": {
+									"raw": "https://developer.api.autodesk.com/photo-to-3d/v1/photoscene/{{RECENT_PHOTOSCENE}}/progress",
+									"protocol": "https",
+									"host": [
+										"developer",
+										"api",
+										"autodesk",
+										"com"
+									],
+									"path": [
+										"photo-to-3d",
+										"v1",
+										"photoscene",
+										"{{RECENT_PHOTOSCENE}}",
+										"progress"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"_postman_previewtype": "text",
+							"header": [
+								{
+									"key": "Connection",
+									"value": "keep-alive",
+									"name": "Connection",
+									"description": "Options that are desired for the connection"
+								},
+								{
+									"key": "Content-Length",
+									"value": "227",
+									"name": "Content-Length",
+									"description": "The length of the response body in octets (8-bit bytes)"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json",
+									"name": "Content-Type",
+									"description": "The mime type of this content"
+								},
+								{
+									"key": "Date",
+									"value": "Fri, 16 Feb 2018 20:46:41 GMT",
+									"name": "Date",
+									"description": "The date and time that the message was sent"
+								},
+								{
+									"key": "Server",
+									"value": "Apache/2.4.6 (CentOS)",
+									"name": "Server",
+									"description": "A name for the server"
+								},
+								{
+									"key": "Set-Cookie",
+									"value": "AWSALB=X8nHSytim+HHXThBba3AxAYw2RisMphUYIhhdjS+dhjekmR2Tl0y4xXcrmhSx6VMyln0HtlKmJAXArhsmcHKQ1YCAZ/VyKSSDsFxgRSjCOlIIFzgE7SxtEzIz2Ek; Expires=Fri, 23 Feb 2018 20:46:40 GMT; Path=/",
+									"name": "Set-Cookie",
+									"description": "an HTTP cookie"
+								},
+								{
+									"key": "X-Powered-By",
+									"value": "PHP/7.0.24",
+									"name": "X-Powered-By",
+									"description": "Specifies the technology (ASP.NET, PHP, JBoss, e.g.) supporting the web application (version details are often in X-Runtime, X-Version, or X-AspNet-Version)"
+								}
+							],
+							"cookie": [
+								{
+									"expires": "Mon Jan 18 2038 22:14:07 GMT-0500 (EST)",
+									"httpOnly": true,
+									"domain": "developer.api.autodesk.com",
+									"path": "/",
+									"secure": true,
+									"value": "m2ZAsezTwCNUhqwMPj6HsA",
+									"key": "PF"
+								},
+								{
+									"expires": "Fri Feb 23 2018 15:46:40 GMT-0500 (EST)",
+									"httpOnly": false,
+									"domain": "developer.api.autodesk.com",
+									"path": "/",
+									"secure": false,
+									"value": "X8nHSytim+HHXThBba3AxAYw2RisMphUYIhhdjS+dhjekmR2Tl0y4xXcrmhSx6VMyln0HtlKmJAXArhsmcHKQ1YCAZ/VyKSSDsFxgRSjCOlIIFzgE7SxtEzIz2Ek",
+									"key": "AWSALB"
+								}
+							],
+							"responseTime": 1642,
+							"body": "{\"Usage\":\"1.2508330345154\",\"Resource\":\"\\/photoscene\\/anpzMQBblC3XyGkF9HGDcWt3yz8rPPZvFdq2HWEWzQg\\/progress\",\"Photoscene\":{\"photosceneid\":\"anpzMQBblC3XyGkF9HGDcWt3yz8rPPZvFdq2HWEWzQg\",\"progressmsg\":\"Processing\",\"progress\":\"80\"}}"
+						}
+					]
+				},
+				{
+					"name": "Cancel_scene_processing",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{2-Legged_TOKEN}}"
+							}
+						],
+						"body": {},
+						"url": {
+							"raw": "https://developer.api.autodesk.com/photo-to-3d/v1/photoscene/{{RECENT_PHOTOSCENE}}/cancel",
+							"protocol": "https",
+							"host": [
+								"developer",
+								"api",
+								"autodesk",
+								"com"
+							],
+							"path": [
+								"photo-to-3d",
+								"v1",
+								"photoscene",
+								"{{RECENT_PHOTOSCENE}}",
+								"cancel"
+							]
+						},
+						"description": ""
+					},
+					"response": [
+						{
+							"id": "3bfc5bda-8af4-4eb0-a1cd-0b347ab8a753",
+							"name": "Cancel_scene_processing",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"disabled": false
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{2-Legged-TOKEN}}",
+										"disabled": false
+									}
+								],
+								"body": {},
+								"url": {
+									"raw": "https://developer.api.autodesk.com/photo-to-3d/v1/photoscene/{{RECENT_PHOTOSCENE}}/cancel",
+									"protocol": "https",
+									"host": [
+										"developer",
+										"api",
+										"autodesk",
+										"com"
+									],
+									"path": [
+										"photo-to-3d",
+										"v1",
+										"photoscene",
+										"{{RECENT_PHOTOSCENE}}",
+										"cancel"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"_postman_previewtype": "text",
+							"header": [
+								{
+									"key": "Connection",
+									"value": "keep-alive",
+									"name": "Connection",
+									"description": "Options that are desired for the connection"
+								},
+								{
+									"key": "Content-Length",
+									"value": "123",
+									"name": "Content-Length",
+									"description": "The length of the response body in octets (8-bit bytes)"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json",
+									"name": "Content-Type",
+									"description": "The mime type of this content"
+								},
+								{
+									"key": "Date",
+									"value": "Wed, 21 Feb 2018 16:53:11 GMT",
+									"name": "Date",
+									"description": "The date and time that the message was sent"
+								},
+								{
+									"key": "Server",
+									"value": "Apache/2.4.6 (CentOS)",
+									"name": "Server",
+									"description": "A name for the server"
+								},
+								{
+									"key": "Set-Cookie",
+									"value": "AWSALB=pi7dYlgjxn4cS7sb4/2bmY4KZc0zDOrjOc0fE6axpLQA7oZBE9aEkjZaTk3biqBwpxIiLJzgPwrdPatpGwkjajKlJLx/8xSzmuy+Kjfs30d/jnN5HxrpzTbrjWGX; Expires=Wed, 28 Feb 2018 16:53:09 GMT; Path=/",
+									"name": "Set-Cookie",
+									"description": "an HTTP cookie"
+								},
+								{
+									"key": "X-Powered-By",
+									"value": "PHP/7.0.24",
+									"name": "X-Powered-By",
+									"description": "Specifies the technology (ASP.NET, PHP, JBoss, e.g.) supporting the web application (version details are often in X-Runtime, X-Version, or X-AspNet-Version)"
+								}
+							],
+							"cookie": [
+								{
+									"expires": "Mon Jan 18 2038 22:14:07 GMT-0500 (EST)",
+									"httpOnly": true,
+									"domain": "developer.api.autodesk.com",
+									"path": "/",
+									"secure": true,
+									"value": "m2ZAsezTwCNUhqwMPj6HsA",
+									"key": "PF"
+								},
+								{
+									"expires": "Wed Feb 28 2018 11:53:09 GMT-0500 (EST)",
+									"httpOnly": false,
+									"domain": "developer.api.autodesk.com",
+									"path": "/",
+									"secure": false,
+									"value": "pi7dYlgjxn4cS7sb4/2bmY4KZc0zDOrjOc0fE6axpLQA7oZBE9aEkjZaTk3biqBwpxIiLJzgPwrdPatpGwkjajKlJLx/8xSzmuy+Kjfs30d/jnN5HxrpzTbrjWGX",
+									"key": "AWSALB"
+								}
+							],
+							"responseTime": 1556,
+							"body": "{\"Usage\":\"1.4022347927094\",\"Resource\":\"\\/photoscene\\/U0pEmLNYktcEnEFooMuqZMaIUSqCZLePIf0Nfj4EOoQ\\/cancel\",\"msg\":\"No error\"}"
+						}
+					]
+				},
+				{
+					"name": "Get_results",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{2-Legged_TOKEN}}"
+							},
+							{
+								"key": "",
+								"value": "",
+								"disabled": true
+							}
+						],
+						"body": {},
+						"url": {
+							"raw": "https://developer.api.autodesk.com/photo-to-3d/v1/photoscene/{{RECENT_PHOTOSCENE}}?format=obj",
+							"protocol": "https",
+							"host": [
+								"developer",
+								"api",
+								"autodesk",
+								"com"
+							],
+							"path": [
+								"photo-to-3d",
+								"v1",
+								"photoscene",
+								"{{RECENT_PHOTOSCENE}}"
+							],
+							"query": [
+								{
+									"key": "format",
+									"value": "obj",
+									"equals": true
+								}
+							]
+						},
+						"description": ""
+					},
+					"response": [
+						{
+							"id": "11b212b5-ccef-43a5-ae92-febcf7a8cbc0",
+							"name": "Get_results",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"disabled": false
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{TOKEN}}",
+										"disabled": false
+									},
+									{
+										"key": "",
+										"value": "",
+										"disabled": true
+									}
+								],
+								"body": {},
+								"url": {
+									"raw": "https://developer.api.autodesk.com/photo-to-3d/v1/photoscene/{{RECENT_PHOTOSCENE}}?format=obj",
+									"protocol": "https",
+									"host": [
+										"developer",
+										"api",
+										"autodesk",
+										"com"
+									],
+									"path": [
+										"photo-to-3d",
+										"v1",
+										"photoscene",
+										"{{RECENT_PHOTOSCENE}}"
+									],
+									"query": [
+										{
+											"key": "format",
+											"value": "obj",
+											"equals": true
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"_postman_previewtype": "text",
+							"header": [
+								{
+									"key": "Connection",
+									"value": "keep-alive",
+									"name": "Connection",
+									"description": "Options that are desired for the connection"
+								},
+								{
+									"key": "Content-Length",
+									"value": "753",
+									"name": "Content-Length",
+									"description": "The length of the response body in octets (8-bit bytes)"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json",
+									"name": "Content-Type",
+									"description": "The mime type of this content"
+								},
+								{
+									"key": "Date",
+									"value": "Fri, 16 Feb 2018 20:50:42 GMT",
+									"name": "Date",
+									"description": "The date and time that the message was sent"
+								},
+								{
+									"key": "Server",
+									"value": "Apache/2.4.6 (CentOS)",
+									"name": "Server",
+									"description": "A name for the server"
+								},
+								{
+									"key": "Set-Cookie",
+									"value": "AWSALB=McDQHzEftQuFlQQ4L4HVY44/fGGvzDg3Oc6z0QzJELd8sWrYCdNNUghvXQQPxzzrbaW8QkaRTbsQoTT6z0PAhVF+xh2ikq/WvrXkpNyC7uAdBLAI+GDkerdKtZqF; Expires=Fri, 23 Feb 2018 20:50:40 GMT; Path=/",
+									"name": "Set-Cookie",
+									"description": "an HTTP cookie"
+								},
+								{
+									"key": "X-Powered-By",
+									"value": "PHP/7.0.24",
+									"name": "X-Powered-By",
+									"description": "Specifies the technology (ASP.NET, PHP, JBoss, e.g.) supporting the web application (version details are often in X-Runtime, X-Version, or X-AspNet-Version)"
+								}
+							],
+							"cookie": [
+								{
+									"expires": "Mon Jan 18 2038 22:14:07 GMT-0500 (EST)",
+									"httpOnly": true,
+									"domain": "developer.api.autodesk.com",
+									"path": "/",
+									"secure": true,
+									"value": "m2ZAsezTwCNUhqwMPj6HsA",
+									"key": "PF"
+								},
+								{
+									"expires": "Fri Feb 23 2018 15:50:40 GMT-0500 (EST)",
+									"httpOnly": false,
+									"domain": "developer.api.autodesk.com",
+									"path": "/",
+									"secure": false,
+									"value": "McDQHzEftQuFlQQ4L4HVY44/fGGvzDg3Oc6z0QzJELd8sWrYCdNNUghvXQQPxzzrbaW8QkaRTbsQoTT6z0PAhVF+xh2ikq/WvrXkpNyC7uAdBLAI+GDkerdKtZqF",
+									"key": "AWSALB"
+								}
+							],
+							"responseTime": 2062,
+							"body": "{\"Usage\":\"1.507159948349\",\"Resource\":\"\\/photoscene\\/anpzMQBblC3XyGkF9HGDcWt3yz8rPPZvFdq2HWEWzQg\",\"Photoscene\":{\"photosceneid\":\"anpzMQBblC3XyGkF9HGDcWt3yz8rPPZvFdq2HWEWzQg\",\"progressmsg\":\"DONE\",\"progress\":\"100\",\"scenelink\":\"http:\\/\\/adsk-rc-photofly-prod.s3.amazonaws.com\\/3.0.0\\/OUT\\/1PyEvoLYJ0X2xz4XFPPf01L1yShrlWZUz4ywvwhB4mo%3D-anpzMQBblC3XyGkF9HGDcWt3yz8rPPZvFdq2HWEWzQg\\/100000000\\/some_scene_name.obj.zip?response-content-disposition=attachment%3B%20filename%3D3.0.0%2FOUT%2F1PyEvoLYJ0X2xz4XFPPf01L1yShrlWZUz4ywvwhB4mo%3D-anpzMQBblC3XyGkF9HGDcWt3yz8rPPZvFdq2HWEWzQg%2F100000000%2Fsome_scene_name.obj.zip&AWSAccessKeyId=AKIAISSOG3ZDTRIE6NGA&Expires=1518900642&Signature=AlMCAddVIArTqoi3ghhNV22GQ60%3D\",\"urn\":{},\"filesize\":\"5837986\",\"resultmsg\":{}}}"
+						},
+						{
+							"id": "fbeb2247-5057-4b46-8f14-099afa259f5f",
+							"name": "Get_results[ERROR]",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"disabled": false
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{2-Legged_TOKEN}}",
+										"disabled": false
+									},
+									{
+										"key": "",
+										"value": "",
+										"disabled": true
+									}
+								],
+								"body": {},
+								"url": {
+									"raw": "https://developer.api.autodesk.com/photo-to-3d/v1/photoscene/Uc9G119QEtk7SnnG36iDi14epPr0LvkIs88OAF3MDqg?format=obj",
+									"protocol": "https",
+									"host": [
+										"developer",
+										"api",
+										"autodesk",
+										"com"
+									],
+									"path": [
+										"photo-to-3d",
+										"v1",
+										"photoscene",
+										"Uc9G119QEtk7SnnG36iDi14epPr0LvkIs88OAF3MDqg"
+									],
+									"query": [
+										{
+											"key": "format",
+											"value": "obj",
+											"equals": true
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"_postman_previewtype": "text",
+							"header": [
+								{
+									"key": "Connection",
+									"value": "keep-alive",
+									"name": "Connection",
+									"description": "Options that are desired for the connection"
+								},
+								{
+									"key": "Content-Length",
+									"value": "266",
+									"name": "Content-Length",
+									"description": "The length of the response body in octets (8-bit bytes)"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json",
+									"name": "Content-Type",
+									"description": "The mime type of this content"
+								},
+								{
+									"key": "Date",
+									"value": "Wed, 21 Feb 2018 20:30:59 GMT",
+									"name": "Date",
+									"description": "The date and time that the message was sent"
+								},
+								{
+									"key": "Server",
+									"value": "Apache/2.4.6 (CentOS)",
+									"name": "Server",
+									"description": "A name for the server"
+								},
+								{
+									"key": "Set-Cookie",
+									"value": "AWSALB=v7aJ/Ox8HHcfjTJZn8Fjx8Gjixpacuy+EzYZAyhfQuiPWNS8Y1Jf8alSWDW0G+5hlcFHdcPx/HhavJpcac/0sbcsk34STvLDNhcpJ7AaK6dxgKJwJGu8+S3rHRte; Expires=Wed, 28 Feb 2018 20:30:58 GMT; Path=/",
+									"name": "Set-Cookie",
+									"description": "an HTTP cookie"
+								},
+								{
+									"key": "X-Powered-By",
+									"value": "PHP/7.0.24",
+									"name": "X-Powered-By",
+									"description": "Specifies the technology (ASP.NET, PHP, JBoss, e.g.) supporting the web application (version details are often in X-Runtime, X-Version, or X-AspNet-Version)"
+								}
+							],
+							"cookie": [
+								{
+									"expires": "Mon Jan 18 2038 22:14:07 GMT-0500 (EST)",
+									"httpOnly": true,
+									"domain": "developer.api.autodesk.com",
+									"path": "/",
+									"secure": true,
+									"value": "m2ZAsezTwCNUhqwMPj6HsA",
+									"key": "PF"
+								},
+								{
+									"expires": "Wed Feb 28 2018 15:30:58 GMT-0500 (EST)",
+									"httpOnly": false,
+									"domain": "developer.api.autodesk.com",
+									"path": "/",
+									"secure": false,
+									"value": "v7aJ/Ox8HHcfjTJZn8Fjx8Gjixpacuy+EzYZAyhfQuiPWNS8Y1Jf8alSWDW0G+5hlcFHdcPx/HhavJpcac/0sbcsk34STvLDNhcpJ7AaK6dxgKJwJGu8+S3rHRte",
+									"key": "AWSALB"
+								}
+							],
+							"responseTime": 1725,
+							"body": "{\"Usage\":\"1.1650609970093\",\"Resource\":\"\\/photoscene\\/Uc9G119QEtk7SnnG36iDi14epPr0LvkIs88OAF3MDqg\",\"Photoscene\":{\"photosceneid\":\"Uc9G119QEtk7SnnG36iDi14epPr0LvkIs88OAF3MDqg\",\"progressmsg\":\"ERROR\",\"progress\":\"100\",\"scenelink\":{},\"urn\":{},\"filesize\":{},\"resultmsg\":{}}}"
+						}
+					]
+				},
+				{
+					"name": "Delete_photoscene",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{2-Legged_TOKEN}}"
+							}
+						],
+						"body": {},
+						"url": {
+							"raw": "https://developer.api.autodesk.com/photo-to-3d/v1/photoscene/{{RECENT_PHOTOSCENE}}",
+							"protocol": "https",
+							"host": [
+								"developer",
+								"api",
+								"autodesk",
+								"com"
+							],
+							"path": [
+								"photo-to-3d",
+								"v1",
+								"photoscene",
+								"{{RECENT_PHOTOSCENE}}"
+							]
+						},
+						"description": ""
+					},
+					"response": [
+						{
+							"id": "3fd8877c-1382-49e1-a2d4-0bb3f107d36b",
+							"name": "Delete_photoscene",
+							"originalRequest": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"disabled": false
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{2-Legged-TOKEN}}",
+										"disabled": false
+									}
+								],
+								"body": {},
+								"url": {
+									"raw": "https://developer.api.autodesk.com/photo-to-3d/v1/photoscene/{{RECENT_PHOTOSCENE}}",
+									"protocol": "https",
+									"host": [
+										"developer",
+										"api",
+										"autodesk",
+										"com"
+									],
+									"path": [
+										"photo-to-3d",
+										"v1",
+										"photoscene",
+										"{{RECENT_PHOTOSCENE}}"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"_postman_previewtype": "text",
+							"header": [
+								{
+									"key": "Connection",
+									"value": "keep-alive",
+									"name": "Connection",
+									"description": "Options that are desired for the connection"
+								},
+								{
+									"key": "Content-Length",
+									"value": "115",
+									"name": "Content-Length",
+									"description": "The length of the response body in octets (8-bit bytes)"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json",
+									"name": "Content-Type",
+									"description": "The mime type of this content"
+								},
+								{
+									"key": "Date",
+									"value": "Wed, 21 Feb 2018 15:54:59 GMT",
+									"name": "Date",
+									"description": "The date and time that the message was sent"
+								},
+								{
+									"key": "Server",
+									"value": "Apache/2.4.6 (CentOS)",
+									"name": "Server",
+									"description": "A name for the server"
+								},
+								{
+									"key": "Set-Cookie",
+									"value": "AWSALB=RcIMHE8prcWw71OyP8qPUGyciAe5ZQ8GJtKGVYArg1fvXFPiGG24utDJ87BICf2DCyA0N3T3pv522h2f1dsik6zXQpMjmoFkd88e6/6GHQEjtNJFzaXoHN8M8akh; Expires=Wed, 28 Feb 2018 15:54:57 GMT; Path=/",
+									"name": "Set-Cookie",
+									"description": "an HTTP cookie"
+								},
+								{
+									"key": "X-Powered-By",
+									"value": "PHP/7.0.24",
+									"name": "X-Powered-By",
+									"description": "Specifies the technology (ASP.NET, PHP, JBoss, e.g.) supporting the web application (version details are often in X-Runtime, X-Version, or X-AspNet-Version)"
+								}
+							],
+							"cookie": [
+								{
+									"expires": "Mon Jan 18 2038 22:14:07 GMT-0500 (EST)",
+									"httpOnly": true,
+									"domain": "developer.api.autodesk.com",
+									"path": "/",
+									"secure": true,
+									"value": "m2ZAsezTwCNUhqwMPj6HsA",
+									"key": "PF"
+								},
+								{
+									"expires": "Wed Feb 28 2018 10:54:57 GMT-0500 (EST)",
+									"httpOnly": false,
+									"domain": "developer.api.autodesk.com",
+									"path": "/",
+									"secure": false,
+									"value": "RcIMHE8prcWw71OyP8qPUGyciAe5ZQ8GJtKGVYArg1fvXFPiGG24utDJ87BICf2DCyA0N3T3pv522h2f1dsik6zXQpMjmoFkd88e6/6GHQEjtNJFzaXoHN8M8akh",
+									"key": "AWSALB"
+								}
+							],
+							"responseTime": 1832,
+							"body": "{\"Usage\":\"1.4019570350647\",\"Resource\":\"\\/photoscene\\/AGOUu3N1mFzXwV01AkFor1x4mZwhBZDKv9wIb1POJwA\",\"msg\":\"No error\"}"
+						}
+					]
+				}
+			]
+		}
+	]
+}

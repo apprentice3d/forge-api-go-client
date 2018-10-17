@@ -38,7 +38,6 @@ import (
 //		profile.ProfileImages)
 //}
 
-
 func ExampleInformation_AboutMe() {
 
 	aThreeLeggedToken := "put a valid 3-legged token here"
