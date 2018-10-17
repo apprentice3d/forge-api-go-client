@@ -3,29 +3,6 @@ package md
 import (
 	"github.com/apprentice3d/forge-api-go-client/oauth"
 	"encoding/base64"
-	"encoding/json"
-	"log"
-	"net/http"
-	"bytes"
-	"io/ioutil"
-	"errors"
-	"strconv"
-)
-
-var (
-	// TranslationSVFPreset specifies the minimum necessary for translating a generic (single file, uncompressed)
-	// model into svf.
-	TranslationSVFPreset = TranslationParams{
-		Output: OutputSpec{
-			Destination:DestSpec{"us"},
-			Formats:[]FormatSpec{
-				FormatSpec{
-					"svf",
-					[]string{"2d", "3d"},
-				},
-			},
-		},
-	}
 )
 
 // API struct holds all paths necessary to access Model Derivative API
@@ -42,42 +19,6 @@ func NewAPIWithCredentials(ClientID string, ClientSecret string) ModelDerivative
 	}
 }
 
-//TranslationParams is used when specifying the translation jobs
-type TranslationParams struct {
-	Input struct {
-		URN           string  `json:"urn"`
-		CompressedURN *bool   `json:"compressedUrn,omitempty"`
-		RootFileName  *string `json:"rootFileName,omitempty"`
-	} `json:"input"`
-	Output OutputSpec `json:"output"`
-}
-
-// TranslationResult reflects data received upon successful creation of translation job
-type TranslationResult struct {
-	Result string `json:"result"`
-	URN    string `json:"urn"`
-	AcceptedJobs struct {
-		Output OutputSpec `json:"output"`
-	}
-}
-
-// OutputSpec reflects data found upon creation translation job and receiving translation job status
-type OutputSpec struct {
-	Destination DestSpec     `json:"destination,omitempty"`
-	Formats     []FormatSpec `json:"formats"`
-}
-
-// DestSpec is used within OutputSpecs and is useful when specifying the region for translation results
-type DestSpec struct {
-	Region string `json:"region"`
-}
-
-// FormatSpec is used within OutputSpecs and should be used when specifying the expected format and views (2d or/and 3d)
-type FormatSpec struct {
-	Type  string   `json:"type"`
-	Views []string `json:"views"`
-}
-
 // TranslateWithParams triggers translation job with settings specified in given TranslationParams
 func (a ModelDerivativeAPI) TranslateWithParams(params TranslationParams) (result TranslationResult, err error) {
 	bearer, err := a.Authenticate("data:write data:read")
@@ -88,6 +29,20 @@ func (a ModelDerivativeAPI) TranslateWithParams(params TranslationParams) (resul
 	result, err = translate(path, params, bearer.AccessToken)
 
 	return
+}
+
+// TranslationSVFPreset specifies the minimum necessary for translating a generic (single file, uncompressed)
+// model into svf.
+var TranslationSVFPreset = TranslationParams{
+	Output: OutputSpec{
+		Destination: DestSpec{"us"},
+		Formats: []FormatSpec{
+			FormatSpec{
+				"svf",
+				[]string{"2d", "3d"},
+			},
+		},
+	},
 }
 
 // TranslateToSVF is a helper function that will use the TranslationSVFPreset for translating into svf a given ObjectID.
@@ -106,43 +61,30 @@ func (a ModelDerivativeAPI) TranslateToSVF(objectID string) (result TranslationR
 	return
 }
 
-/*
- *	SUPPORT FUNCTIONS
- */
-func translate(path string, params TranslationParams, token string) (result TranslationResult, err error) {
 
-	byteParams, err := json.Marshal(params)
-	if err != nil {
-		log.Println("Could not marshal the translation parameters")
-		return
-	}
-
-	req, err := http.NewRequest("POST",
-		path+"/job",
-		bytes.NewBuffer(byteParams))
-
+// GetManifest returns information about derivatives that correspond to a specific source file,
+// including derivative URNs and statuses.
+func (a ModelDerivativeAPI) GetManifest(urn string) (result Manifest, err error) {
+	bearer, err := a.Authenticate("data:read")
 	if err != nil {
 		return
 	}
+	path := a.Host + a.ModelDerivativePath
+	result, err = getManifest(path, urn, bearer.AccessToken)
 
-	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("Authorization", "Bearer "+token)
+	return
+}
 
-	response, err := http.DefaultClient.Do(req)
+
+// GetDerivative downloads a selected derivative. To download the file, you need to specify the file’s URN,
+// which you retrieve by calling the GET :urn/manifest endpoint.
+func (a ModelDerivativeAPI) GetDerivative(urn, derivativeUrn string) (data []byte, err error) {
+	bearer, err := a.Authenticate("data:read")
 	if err != nil {
 		return
 	}
-	defer response.Body.Close()
-
-	if response.StatusCode != http.StatusCreated && response.StatusCode != http.StatusOK {
-		content, _ := ioutil.ReadAll(response.Body)
-		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
-		return
-	}
-
-	decoder := json.NewDecoder(response.Body)
-
-	err = decoder.Decode(&result)
+	path := a.Host + a.ModelDerivativePath
+	data, err = getDerivative(path, urn, derivativeUrn, bearer.AccessToken)
 
 	return
 }

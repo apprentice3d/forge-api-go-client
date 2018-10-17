@@ -35,7 +35,7 @@ type CreateBucketRequest struct {
 type BucketDetails struct {
 	BucketKey   string `json:"bucketKey"`
 	BucketOwner string `json:"bucketOwner"`
-	CreateDate  string `json:"createDate"`
+	CreateDate  int64 `json:"createDate"`
 	Permissions []struct {
 		AuthID string `json:"authId"`
 		Access string `json:"access"`
@@ -52,7 +52,7 @@ type ErrorResult struct {
 type ListedBuckets struct {
 	Items []struct {
 		BucketKey   string `json:"bucketKey"`
-		CreatedDate uint64 `json:"createdDate"`
+		CreatedDate int64 `json:"createdDate"`
 		PolicyKey   string `json:"policyKey"`
 	} `json:"items"`
 	Next string `json:"next"`

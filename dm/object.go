@@ -52,6 +52,17 @@ func (api BucketAPI) ListObjects(bucketKey, limit, beginsWith, startAt string) (
 }
 
 
+// DownloadObject downloads an on object, given the URL-encoded object name.
+func (api BucketAPI) DownloadObject(bucketKey string, objectName string) (result []byte, err error) {
+	bearer, err := api.Authenticate("data:read")
+	if err != nil {
+		return
+	}
+	path := api.Host + api.BucketAPIPath
+
+	return downloadObject(path, bucketKey, objectName,  bearer.AccessToken)
+}
+
 
 /*
  *	SUPPORT FUNCTIONS
@@ -130,6 +141,38 @@ func uploadObject(path, bucketKey, objectName string, data []byte, token string)
 
 	decoder := json.NewDecoder(response.Body)
 	err = decoder.Decode(&result)
+
+	return
+
+}
+
+func downloadObject(path, bucketKey, objectName string, token string) (result []byte, err error) {
+
+	task := http.Client{}
+
+	req, err := http.NewRequest("GET",
+		path+"/"+ bucketKey + "/objects/" + objectName,
+		nil)
+
+	if err != nil {
+		return
+	}
+
+	req.Header.Set("Authorization", "Bearer "+token)
+	response, err := task.Do(req)
+
+	if err != nil {
+		return
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusOK {
+		content, _ := ioutil.ReadAll(response.Body)
+		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
+		return
+	}
+
+	result,err = ioutil.ReadAll(response.Body)
 
 	return
 
