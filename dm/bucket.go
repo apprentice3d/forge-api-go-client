@@ -3,11 +3,8 @@ package dm
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
-	"io/ioutil"
 	"net/http"
 	"strconv"
-
 	"github.com/outer-labs/forge-api-go-client/oauth"
 )
 
@@ -46,6 +43,11 @@ type BucketDetails struct {
 // ErrorResult reflects the body content when a request failed (g.e. Bad request or key conflict)
 type ErrorResult struct {
 	Reason string `json:"reason"`
+  StatusCode int
+}
+
+func (e *ErrorResult) Error() string{
+  return "[" + strconv.Itoa(e.StatusCode) + "] " + e.Reason
 }
 
 // ListedBuckets reflects the response when query Data Management API for buckets associated with current Forge secrets.
@@ -132,13 +134,13 @@ func getBucketDetails(path, bucketKey, token string) (result BucketDetails, err 
 	}
 	defer response.Body.Close()
 
+  decoder := json.NewDecoder(response.Body)
 	if response.StatusCode != http.StatusOK {
-		content, _ := ioutil.ReadAll(response.Body)
-		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
+    err = &ErrorResult{StatusCode:response.StatusCode}
+    decoder.Decode(err)
 		return
 	}
 
-	decoder := json.NewDecoder(response.Body)
 	err = decoder.Decode(&result)
 
 	return
@@ -175,14 +177,13 @@ func listBuckets(path, region, limit, startAt, token string) (result ListedBucke
 		return
 	}
 	defer response.Body.Close()
-
+  decoder := json.NewDecoder(response.Body)
 	if response.StatusCode != http.StatusOK {
-		content, _ := ioutil.ReadAll(response.Body)
-		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
+    err = &ErrorResult{StatusCode:response.StatusCode}
+    decoder.Decode(err)
 		return
 	}
 
-	decoder := json.NewDecoder(response.Body)
 	err = decoder.Decode(&result)
 
 	return
@@ -217,13 +218,12 @@ func createBucket(path, bucketKey, policyKey, token string) (result BucketDetail
 	}
 	defer response.Body.Close()
 
+	decoder := json.NewDecoder(response.Body)
 	if response.StatusCode != http.StatusOK {
-		content, _ := ioutil.ReadAll(response.Body)
-		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
+    err = &ErrorResult{StatusCode:response.StatusCode}
+    decoder.Decode(err)
 		return
 	}
-
-	decoder := json.NewDecoder(response.Body)
 
 	err = decoder.Decode(&result)
 
@@ -248,10 +248,10 @@ func deleteBucket(path, bucketKey, token string) (err error) {
 		return
 	}
 	defer response.Body.Close()
-
+  decoder := json.NewDecoder(response.Body)
 	if response.StatusCode != http.StatusOK {
-		content, _ := ioutil.ReadAll(response.Body)
-		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
+    err = &ErrorResult{StatusCode:response.StatusCode}
+    decoder.Decode(err)
 		return
 	}
 
