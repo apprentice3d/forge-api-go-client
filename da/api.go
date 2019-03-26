@@ -6,6 +6,7 @@ import "github.com/apprentice3d/forge-api-go-client/oauth"
 type API struct {
 	oauth.TwoLeggedAuth
 	DesignAutomationPath string
+	UploadAppURL string
 }
 
 // NewAPIWithCredentials returns a DesignAutomation API client with default configurations
@@ -13,6 +14,7 @@ func NewAPIWithCredentials(ClientID string, ClientSecret string) API {
 	return API{
 		oauth.NewTwoLeggedClient(ClientID, ClientSecret),
 		"/da/us-east/v3",
+		"https://dasprod-store.s3.amazonaws.com",
 	}
 }
 
@@ -73,6 +75,7 @@ func (api API) CreateApp(name, engine string) (app AppBundle, err error) {
 	app.authenticator = &api.TwoLeggedAuth
 	app.path = path
 	app.name = name
+	app.uploadURL = api.UploadAppURL
 
 	//WARNING: when an AppBundle is created, it is assigned an '$LATEST' alias
 	// but this alias is not usable and if no other alias is created for this
@@ -98,6 +101,49 @@ func (api API) AppList() (list AppList, err error) {
 
 	return
 }
+
+// CreateActivity creates an activity given an app
+// 	name - should be unique and will be the appID
+// 	engine - engineId to be used by this app (check EngineList)
+func (api API) CreateActivity(config ActivityConfig) (activity Activity, err error) {
+
+	bearer, err := api.Authenticate("code:all")
+	if err != nil {
+		return
+	}
+	path := api.Host + api.DesignAutomationPath
+	activity, err = createActivity(path, config, bearer.AccessToken)
+
+	activity.authenticator = &api.TwoLeggedAuth
+	activity.path = path
+	activity.name = config.ID
+
+	//WARNING: when an Activity is created, it is assigned an '$LATEST' alias
+	// but this alias is not usable and if no other alias is created for this
+	// appBundle, then the alias listing will fail.
+	// Thus I decided to autoasign a "default" alias upon app creation
+	go activity.CreateAlias("default", 1)
+
+	return
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 // AppDelete will delete the app with specified id

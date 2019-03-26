@@ -1,14 +1,14 @@
 package md_test
 
 import (
-	"testing"
-	"os"
+	"bytes"
+	"encoding/base64"
+	"encoding/json"
 	"github.com/apprentice3d/forge-api-go-client/dm"
 	"github.com/apprentice3d/forge-api-go-client/md"
 	"io/ioutil"
-	"encoding/json"
-	"encoding/base64"
-	"bytes"
+	"os"
+	"testing"
 )
 
 func TestAPI_TranslateToSVF(t *testing.T) {
@@ -134,6 +134,113 @@ func TestAPI_TranslateToSVF2_JSON_Creation(t *testing.T) {
 	}
 
 }
+
+
+func TestModelDerivativeAPI_GetManifest(t *testing.T) {
+	// prepare the credentials
+	clientID := os.Getenv("FORGE_CLIENT_ID")
+	clientSecret := os.Getenv("FORGE_CLIENT_SECRET")
+	bucketAPI := dm.NewBucketAPIWithCredentials(clientID, clientSecret)
+	mdAPI := md.NewAPIWithCredentials(clientID, clientSecret)
+
+	tempBucketName := "go_testing_md_bucket"
+	testFilePath := "../assets/HelloWorld.rvt"
+
+	var testObject dm.ObjectDetails
+	var translationResult md.TranslationResult
+
+	t.Run("Create a temporary bucket", func(t *testing.T) {
+		_, err := bucketAPI.CreateBucket(tempBucketName, "transient")
+
+		if err != nil {
+			t.Errorf("Failed to create a bucket: %s\n", err.Error())
+		}
+	})
+
+	t.Run("Get bucket details", func(t *testing.T) {
+		_, err := bucketAPI.GetBucketDetails(tempBucketName)
+
+		if err != nil {
+			t.Fatalf("Failed to get bucket details: %s\n", err.Error())
+		}
+	})
+
+	t.Run("Upload an object into temp bucket", func(t *testing.T) {
+		file, err := os.Open(testFilePath)
+		if err != nil {
+			t.Fatal("Cannot open testfile for reading")
+		}
+		defer file.Close()
+		data, err := ioutil.ReadAll(file)
+		if err != nil {
+			t.Fatal("Cannot read the testfile")
+		}
+
+		testObject, err = bucketAPI.UploadObject(tempBucketName, "temp_file.rvt", data)
+
+		if err != nil {
+			t.Fatal("Could not upload the test object, got: ", err.Error())
+		}
+
+		if testObject.Size == 0 {
+			t.Fatal("The test object was uploaded but it is zero-sized")
+		}
+	})
+
+	t.Run("Translate object into SVF", func(t *testing.T) {
+		var err error
+		translationResult, err = mdAPI.TranslateToSVF(testObject.ObjectID)
+
+		if err != nil {
+			t.Error("Could not translate the test object, got: ", err.Error())
+		}
+
+		if translationResult.Result != "created" {
+			t.Error("The test object was uploaded, but failed to create the translation job")
+		}
+	})
+
+	t.Run("Get manifest of the object", func(t *testing.T) {
+		manifest, err := mdAPI.GetManifest(translationResult.URN)
+		if err != nil {
+			t.Errorf("Problems getting the manifest for %s: %s", translationResult.URN, err.Error())
+		}
+
+		if manifest.Type != "manifest" {
+			t.Error("Expecting 'manifest' type, got ", manifest.Type)
+		}
+
+		if manifest.URN != translationResult.URN {
+			t.Errorf("URN not matching: translation=%s\tmanifest=%s", translationResult.URN, manifest.URN)
+		}
+
+		status := manifest.Status
+		if status != "failed" && status != "success" && status != "inprogress" && status != "pending" {
+			t.Errorf("Got unexpected status: %s", status)
+		}
+
+
+		if status == "success" && len(manifest.Derivatives) != 2 {
+			t.Errorf("Expecting to have 2 derivative, got %d", len(manifest.Derivatives))
+		}
+
+		outputType := manifest.Derivatives[0].OutputType
+		if status == "success" && outputType != "svf" {
+			t.Errorf("Expecting first derivative to be 'svf', got %s", outputType)
+		}
+
+	})
+
+	t.Run("Delete the temporary bucket", func(t *testing.T) {
+		err := bucketAPI.DeleteBucket(tempBucketName)
+
+		if err != nil {
+			t.Fatalf("Failed to delete bucket: %s\n", err.Error())
+		}
+	})
+}
+
+
 
 func TestParseManifest(t *testing.T) {
 	t.Run("Parse pending manifest", func(t *testing.T) {
@@ -640,112 +747,180 @@ func TestParseManifest(t *testing.T) {
 
 	})
 
+	t.Run("Parse Revit manifest", func(t *testing.T) {
+		manifestExample := `
+{
+    "type": "manifest",
+    "hasThumbnail": "true",
+    "status": "success",
+    "progress": "complete",
+    "region": "US",
+    "urn": "dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6dGVzdC1maWxlcy8yMDE3MDcyNF9BaXJwb3J0JTIwTW9kZWwucnZ0",
+    "version": "1.0",
+    "derivatives": [
+        {
+            "name": "20170724_Airport Model.rvt",
+            "hasThumbnail": "true",
+            "status": "success",
+            "progress": "complete",
+            "messages": [
+                {
+                    "type": "warning",
+                    "code": "Revit-MissingLink",
+                    "message": [
+                        "<message>Missing link files: <ul>{0}</ul></message>",
+                        "S-FIDS-Wx-Video.jpg, solutions-airport-bcic2.jpg, zone.png"
+                    ]
+                }
+            ],
+            "outputType": "svf",
+            "children": [
+                {
+                    "guid": "6fac95cb-af5d-3e4f-b943-8a7f55847ff1",
+                    "type": "resource",
+                    "role": "Autodesk.CloudPlatform.PropertyDatabase",
+                    "urn": "urn:adsk.viewing:fs.file:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6dGVzdC1maWxlcy8yMDE3MDcyNF9BaXJwb3J0JTIwTW9kZWwucnZ0/output/Resource/model.sdb",
+                    "mime": "application/autodesk-db",
+                    "status": "success"
+                },
+                {
+                    "guid": "e7adaa0b-8274-132e-cdc1-65f55eb8b096",
+                    "type": "geometry",
+                    "role": "3d",
+                    "name": "{3D}",
+                    "viewableID": "a4646655-27fa-4fcc-b2cb-1c97f89f1e9b-00031929",
+                    "phaseNames": "New Construction",
+                    "status": "success",
+                    "hasThumbnail": "true",
+                    "progress": "complete",
+                    "children": [
+                        {
+                            "guid": "a4646655-27fa-4fcc-b2cb-1c97f89f1e9b-00031929",
+                            "type": "view",
+                            "role": "3d",
+                            "name": "{3D}",
+                            "status": "success",
+                            "progress": "complete",
+                            "camera": [
+                                68.769485,
+                                -500.972656,
+                                82.696663,
+                                -117.377716,
+                                29.634874,
+                                27.679764,
+                                -0.032235,
+                                0.091885,
+                                0.995248,
+                                4.974191,
+                                0,
+                                1,
+                                1
+                            ]
+                        },
+                        {
+                            "guid": "59a17c17-6249-81c1-5ef0-504a39b3e54f",
+                            "type": "resource",
+                            "role": "graphics",
+                            "urn": "urn:adsk.viewing:fs.file:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6dGVzdC1maWxlcy8yMDE3MDcyNF9BaXJwb3J0JTIwTW9kZWwucnZ0/output/Resource/3D View/{3D} 203049/{3D}.svf",
+                            "mime": "application/autodesk-svf"
+                        },
+                        {
+                            "guid": "daefa290-464d-9879-eefb-b60ee4549be1",
+                            "type": "resource",
+                            "role": "thumbnail",
+                            "urn": "urn:adsk.viewing:fs.file:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6dGVzdC1maWxlcy8yMDE3MDcyNF9BaXJwb3J0JTIwTW9kZWwucnZ0/output/Resource/3D View/{3D} 203049/{3D}1.png",
+                            "resolution": [
+                                100,
+                                100
+                            ],
+                            "mime": "image/png",
+                            "status": "success"
+                        },
+                        {
+                            "guid": "7241ccc4-2ed1-b357-abd3-f9acac457769",
+                            "type": "resource",
+                            "role": "thumbnail",
+                            "urn": "urn:adsk.viewing:fs.file:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6dGVzdC1maWxlcy8yMDE3MDcyNF9BaXJwb3J0JTIwTW9kZWwucnZ0/output/Resource/3D View/{3D} 203049/{3D}2.png",
+                            "resolution": [
+                                200,
+                                200
+                            ],
+                            "mime": "image/png",
+                            "status": "success"
+                        },
+                        {
+                            "guid": "71c50af6-78c8-3668-7aa6-62433efc5394",
+                            "type": "resource",
+                            "role": "thumbnail",
+                            "urn": "urn:adsk.viewing:fs.file:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6dGVzdC1maWxlcy8yMDE3MDcyNF9BaXJwb3J0JTIwTW9kZWwucnZ0/output/Resource/3D View/{3D} 203049/{3D}4.png",
+                            "resolution": [
+                                400,
+                                400
+                            ],
+                            "mime": "image/png",
+                            "status": "success"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "status": "success",
+            "progress": "complete",
+            "outputType": "thumbnail",
+            "children": [
+                {
+                    "guid": "db899ab5-939f-e250-d79d-2d1637ce4565",
+                    "type": "resource",
+                    "role": "thumbnail",
+                    "urn": "urn:adsk.viewing:fs.file:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6dGVzdC1maWxlcy8yMDE3MDcyNF9BaXJwb3J0JTIwTW9kZWwucnZ0/output/preview1.png",
+                    "resolution": [
+                        100,
+                        100
+                    ],
+                    "mime": "image/png",
+                    "status": "success"
+                },
+                {
+                    "guid": "3f6c118d-f551-7bf0-03c9-8548d26c9772",
+                    "type": "resource",
+                    "role": "thumbnail",
+                    "urn": "urn:adsk.viewing:fs.file:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6dGVzdC1maWxlcy8yMDE3MDcyNF9BaXJwb3J0JTIwTW9kZWwucnZ0/output/preview2.png",
+                    "resolution": [
+                        200,
+                        200
+                    ],
+                    "mime": "image/png",
+                    "status": "success"
+                },
+                {
+                    "guid": "4e751806-0920-ce32-e9fd-47c3cec21536",
+                    "type": "resource",
+                    "role": "thumbnail",
+                    "urn": "urn:adsk.viewing:fs.file:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6dGVzdC1maWxlcy8yMDE3MDcyNF9BaXJwb3J0JTIwTW9kZWwucnZ0/output/preview4.png",
+                    "resolution": [
+                        400,
+                        400
+                    ],
+                    "mime": "image/png",
+                    "status": "success"
+                }
+            ]
+        }
+    ]
+}`
+
+		result := md.Manifest{}
+
+		buffer := bytes.NewBufferString(manifestExample)
+		decoder := json.NewDecoder(buffer)
+		err := decoder.Decode(&result)
+
+		if err != nil {
+			t.Fatal(err.Error())
+		}
+
+	})
+
 }
 
-
-func TestModelDerivativeAPI_GetManifest(t *testing.T) {
-	// prepare the credentials
-	clientID := os.Getenv("FORGE_CLIENT_ID")
-	clientSecret := os.Getenv("FORGE_CLIENT_SECRET")
-	bucketAPI := dm.NewBucketAPIWithCredentials(clientID, clientSecret)
-	mdAPI := md.NewAPIWithCredentials(clientID, clientSecret)
-
-	tempBucketName := "go_testing_md_bucket"
-	testFilePath := "../assets/HelloWorld.rvt"
-
-	var testObject dm.ObjectDetails
-	var translationResult md.TranslationResult
-
-	t.Run("Create a temporary bucket", func(t *testing.T) {
-		_, err := bucketAPI.CreateBucket(tempBucketName, "transient")
-
-		if err != nil {
-			t.Errorf("Failed to create a bucket: %s\n", err.Error())
-		}
-	})
-
-	t.Run("Get bucket details", func(t *testing.T) {
-		_, err := bucketAPI.GetBucketDetails(tempBucketName)
-
-		if err != nil {
-			t.Fatalf("Failed to get bucket details: %s\n", err.Error())
-		}
-	})
-
-	t.Run("Upload an object into temp bucket", func(t *testing.T) {
-		file, err := os.Open(testFilePath)
-		if err != nil {
-			t.Fatal("Cannot open testfile for reading")
-		}
-		defer file.Close()
-		data, err := ioutil.ReadAll(file)
-		if err != nil {
-			t.Fatal("Cannot read the testfile")
-		}
-
-		testObject, err = bucketAPI.UploadObject(tempBucketName, "temp_file.rvt", data)
-
-		if err != nil {
-			t.Fatal("Could not upload the test object, got: ", err.Error())
-		}
-
-		if testObject.Size == 0 {
-			t.Fatal("The test object was uploaded but it is zero-sized")
-		}
-	})
-
-	t.Run("Translate object into SVF", func(t *testing.T) {
-		var err error
-		translationResult, err = mdAPI.TranslateToSVF(testObject.ObjectID)
-
-		if err != nil {
-			t.Error("Could not translate the test object, got: ", err.Error())
-		}
-
-		if translationResult.Result != "created" {
-			t.Error("The test object was uploaded, but failed to create the translation job")
-		}
-	})
-
-	t.Run("Get manifest of the object", func(t *testing.T) {
-		manifest, err := mdAPI.GetManifest(translationResult.URN)
-		if err != nil {
-			t.Errorf("Problems getting the manifest for %s: %s", translationResult.URN, err.Error())
-		}
-
-		if manifest.Type != "manifest" {
-			t.Error("Expecting 'manifest' type, got ", manifest.Type)
-		}
-
-		if manifest.URN != translationResult.URN {
-			t.Errorf("URN not matching: translation=%s\tmanifest=%s", translationResult.URN, manifest.URN)
-		}
-
-		status := manifest.Status
-		if status != "failed" && status != "success" && status != "inprogress" && status != "pending" {
-			t.Errorf("Got unexpected status: %s", status)
-		}
-
-
-		if status == "success" && len(manifest.Derivatives) != 2 {
-			t.Errorf("Expecting to have 2 derivative, got %d", len(manifest.Derivatives))
-		}
-
-		outputType := manifest.Derivatives[0].OutputType
-		if status == "success" && outputType != "svf" {
-			t.Errorf("Expecting first derivative to be 'svf', got %s", outputType)
-		}
-
-	})
-
-	t.Run("Delete the temporary bucket", func(t *testing.T) {
-		err := bucketAPI.DeleteBucket(tempBucketName)
-
-		if err != nil {
-			t.Fatalf("Failed to delete bucket: %s\n", err.Error())
-		}
-	})
-
-
-
-}

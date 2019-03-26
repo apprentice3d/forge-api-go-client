@@ -3,31 +3,40 @@ package da
 import (
 	"bytes"
 	"encoding/json"
+	"encoding/xml"
 	"errors"
+	"fmt"
 	"github.com/apprentice3d/forge-api-go-client/oauth"
 	"io/ioutil"
+	"log"
+	"mime/multipart"
 	"net/http"
 	"strconv"
 )
 
+
+
 type AppList struct {
 	InfoList
 }
+
+type FormData struct {
+	Key         string `json:"key"`
+	ContentType string `json:"content-type"`
+	Policy      string `json:"policy"`
+	Status      string `json:"success_action_status"`
+	Redirect    string `json:"success_action_redirect"`
+	Signature   string `json:"x-amz-signature"`
+	Credential  string `json:"x-amz-credential"`
+	Algorithm   string `json:"x-amz-algorithm"`
+	Date        string `json:"x-amz-date"`
+	Encryption  string `json:"x-amz-server-side-encryption"`
+	Token       string `json:"x-amz-security-token"`
+}
+
 type AppParameters struct {
 	URL  string `json:"endpointURL"`
-	Data struct {
-		Key         string `json:"key"`
-		ContentType string `json:"content-type"`
-		Policy      string `json:"policy"`
-		Status      string `json:"success_action_status"`
-		Redirect    string `json:"success_action_redirect"`
-		Signature   string `json:"x-amz-signature"`
-		Credential  string `json:"x-amz-credential"`
-		Algorithm   string `json:"x-amz-algorithm"`
-		Date        string `json:"x-amz-date"`
-		Encryption  string `json:"x-amz-server-side-encryption"`
-		Token       string `json:"x-amz-security-token"`
-	} `json:"formData"`
+	Data FormData `json:"formData"`
 }
 
 type AppData struct {
@@ -43,6 +52,7 @@ type AppBundle struct {
 	authenticator *oauth.TwoLeggedAuth
 	path          string
 	name          string
+	uploadURL	string
 }
 
 type AppDetails struct {
@@ -55,24 +65,17 @@ type CreateAppRequest struct {
 	Engine string `json:"engine"`
 }
 
-type AppAlias struct {
-	ID      string `json:"id"`
-	Version uint   `json:"version"`
-}
-
-type AliasesList struct {
-	Pagination string     `json:"paginationToken"`
-	Data       []AppAlias `json:"data"`
-}
-
-type VersionList struct {
-	Pagination string     `json:"paginationToken"`
-	Data       []uint `json:"data"`
-}
 
 
-type VersionDetails struct {
 
+type AppUploadError struct {
+	Code string `xml:"Code"`
+	Message string `xml:"Message"`
+	Argument string `xml:"Argument"`
+	ArgumentValue string `xml:"ArgumentValue"`
+	Condition string `xml:"Condition"`
+	RequestID string `xml:"RequestId"`
+	HostID string `xml:"HostId"`
 }
 
 
@@ -94,17 +97,18 @@ func (app *AppBundle) Delete() (err error) {
 	app.Version = 0
 	app.authenticator = nil
 	app.path = ""
+	app.uploadURL = ""
 
 	return
 }
 
-//Details gets the details of the specified AppBundle.
-func (app *AppBundle) Details() (details AppDetails, err error) {
+//Details gets the details of the specified AppBundle, providing an alias
+func (app *AppBundle) Details(alias string) (details AppDetails, err error) {
 	bearer, err := app.authenticator.Authenticate("code:all")
 	if err != nil {
 		return
 	}
-	details, err = getAppDetails(app.path, app.ID, bearer.AccessToken)
+	details, err = getAppDetails(app.path, app.ID + "+" + alias, bearer.AccessToken)
 
 	return
 }
@@ -122,7 +126,7 @@ func (app AppBundle) Aliases() (list AliasesList, err error) {
 
 //CreateAlias creates a new alias for this AppBundle.
 //	Limit: 1. Number of aliases (LimitAliases).
-func (app AppBundle) CreateAlias(alias string, version uint) (result AppAlias, err error) {
+func (app AppBundle) CreateAlias(alias string, version uint) (result Alias, err error) {
 	bearer, err := app.authenticator.Authenticate("code:all")
 	if err != nil {
 		return
@@ -133,7 +137,7 @@ func (app AppBundle) CreateAlias(alias string, version uint) (result AppAlias, e
 }
 
 //ModifyAlias will switch the given alias to another existing version
-func (app AppBundle) ModifyAlias(alias string, version uint) (result AppAlias, err error) {
+func (app AppBundle) ModifyAlias(alias string, version uint) (result Alias, err error) {
 	bearer, err := app.authenticator.Authenticate("code:all")
 	if err != nil {
 		return
@@ -144,7 +148,7 @@ func (app AppBundle) ModifyAlias(alias string, version uint) (result AppAlias, e
 }
 
 //AliasDetail gets the details on given alias
-func (app *AppBundle) AliasDetail(alias string) (details AppAlias, err error) {
+func (app *AppBundle) AliasDetail(alias string) (details Alias, err error) {
 	bearer, err := app.authenticator.Authenticate("code:all")
 	if err != nil {
 		return
@@ -213,11 +217,12 @@ func (app AppBundle) DeleteVersion(version uint) (err error) {
 
 
 
+func (app AppBundle) Upload(data []byte) (err error){
 
+	err = uploadApp(app.uploadURL, app.Parameters.Data, data)
 
-
-
-
+	return
+}
 
 
 
@@ -389,12 +394,12 @@ func listAppAliases(path string, appName, token string) (list AliasesList, err e
 	return
 }
 
-func createAppAlias(path, appName, alias string, version uint, token string) (result AppAlias, err error) {
+func createAppAlias(path, appName, alias string, version uint, token string) (result Alias, err error) {
 
 	task := http.Client{}
 
 	body, err := json.Marshal(
-		AppAlias{
+		Alias{
 			alias,
 			version,
 		})
@@ -431,7 +436,7 @@ func createAppAlias(path, appName, alias string, version uint, token string) (re
 	return
 }
 
-func modifyAppAlias(path, appName, alias string, version uint, token string) (result AppAlias, err error) {
+func modifyAppAlias(path, appName, alias string, version uint, token string) (result Alias, err error) {
 
 	task := http.Client{}
 
@@ -472,7 +477,7 @@ func modifyAppAlias(path, appName, alias string, version uint, token string) (re
 	return
 }
 
-func getAliasDetails(path, appName, alias, token string) (result AppAlias, err error) {
+func getAliasDetails(path, appName, alias, token string) (result Alias, err error) {
 
 	task := http.Client{}
 
@@ -659,6 +664,71 @@ func deleteAppVersion(path string, appName string, version uint, token string) (
 	if response.StatusCode != http.StatusNoContent {
 		content, _ := ioutil.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
+		return
+	}
+
+	return
+}
+
+
+func uploadApp(path string, formData FormData, data []byte) (err error) {
+
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	writer.WriteField("key", formData.Key)
+	writer.WriteField("content-type", formData.ContentType)
+	writer.WriteField("policy", formData.Policy)
+	writer.WriteField("success_action_status", formData.Status)
+	writer.WriteField("success_action_redirect", formData.Redirect)
+	writer.WriteField("x-amz-signature", formData.Signature)
+	writer.WriteField("x-amz-credential", formData.Credential)
+	writer.WriteField("x-amz-algorithm", formData.Algorithm)
+	writer.WriteField("x-amz-date", formData.Date)
+	writer.WriteField("x-amz-server-side-encryption", formData.Encryption)
+	writer.WriteField("x-amz-security-token", formData.Token)
+
+	formFile, err := writer.CreateFormFile("file", "bundle.zip")
+	if err != nil {
+		log.Println(err.Error())
+		return
+	}
+	formFile.Write(data)
+	writer.Close()
+
+	task := http.Client{}
+
+	req, err := http.NewRequest("POST",
+		path,
+		body)
+
+	if err != nil {
+		return
+	}
+
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	response, err := task.Do(req)
+
+	if err != nil {
+		return
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusOK {
+		decoder := xml.NewDecoder(response.Body)
+		errorDetails := AppUploadError{}
+		err = decoder.Decode(&errorDetails)
+
+		if err != nil {
+			return
+		}
+
+
+		err = errors.New(fmt.Sprintf("[%d][%s] - %s {%s}",
+			response.StatusCode,
+			errorDetails.Code,
+			errorDetails.Message,
+			errorDetails.Condition,
+		))
 		return
 	}
 

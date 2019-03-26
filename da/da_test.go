@@ -3,11 +3,12 @@ package da_test
 import (
 	"bytes"
 	"encoding/json"
+	"encoding/xml"
 	"github.com/apprentice3d/forge-api-go-client/da"
 	"os"
+	"reflect"
 	"testing"
 )
-
 
 func TestAPI_UserId(t *testing.T) {
 	// prepare the credentials
@@ -74,10 +75,6 @@ func TestAPI_EngineList(t *testing.T) {
 
 }
 
-
-
-
-
 func TestAPI_AppBundle(t *testing.T) {
 	// prepare the credentials
 	clientID := os.Getenv("FORGE_CLIENT_ID")
@@ -87,6 +84,7 @@ func TestAPI_AppBundle(t *testing.T) {
 
 	testAppName := "GolangSDKTest"
 	testEngine := "Autodesk.3dsMax+2019"
+	var testAlias da.Alias
 	var app da.AppBundle
 
 	nickname, err := daApi.UserId()
@@ -94,15 +92,13 @@ func TestAPI_AppBundle(t *testing.T) {
 		t.Fatal("Could not get the user ID")
 	}
 
-
 	t.Run("Create an app", func(t *testing.T) {
 		app, err = daApi.CreateApp(testAppName, testEngine)
 		if err != nil {
 			t.Fatal(err.Error())
 		}
 
-
-		if app.ID != nickname + "." +testAppName {
+		if app.ID != nickname+"."+testAppName {
 			t.Fatalf("The id of created app mismatch: expect '%s', got '%s'",
 				testAppName,
 				app.ID)
@@ -116,8 +112,8 @@ func TestAPI_AppBundle(t *testing.T) {
 		}
 
 		found := false
-		for _, v :=range list.Data {
-			if v == nickname + "." +testAppName+ "+$LATEST" {
+		for _, v := range list.Data {
+			if v == nickname+"."+testAppName+"+$LATEST" {
 				found = true
 			}
 		}
@@ -127,21 +123,25 @@ func TestAPI_AppBundle(t *testing.T) {
 		}
 	})
 
+	t.Run("Create alias for app", func(t *testing.T) {
+		testAlias, err = app.CreateAlias("test", 1)
+		if err != nil {
+			t.Fatalf("Could not create alias: %s", err.Error())
+		}
+	})
+
 	t.Run("Get app details", func(t *testing.T) {
-		details, err := app.Details()
+		details, err := app.Details("test")
 		if err != nil {
 			t.Fatal(err.Error())
 		}
 
-		if app.ID != details.ID ||
-			app.Version != details.Version ||
+		if app.Version != details.Version ||
 			app.Engine != details.Engine {
 			t.Fatalf("Mismatching between app data and details data: %+v", details)
 		}
 
 	})
-
-
 
 	t.Run("Create an app with same id", func(t *testing.T) {
 		_, err := daApi.CreateApp(testAppName, testEngine)
@@ -160,7 +160,7 @@ func TestAPI_AppBundle(t *testing.T) {
 		list, err := daApi.AppList()
 
 		found := false
-		for _, v :=range list.Data {
+		for _, v := range list.Data {
 			if v == appID {
 				found = true
 			}
@@ -174,10 +174,8 @@ func TestAPI_AppBundle(t *testing.T) {
 			t.Fatal("The app was not properly cleared")
 		}
 
-
 	})
 }
-
 
 func TestAPI_AppList(t *testing.T) {
 
@@ -199,7 +197,7 @@ func TestAPI_AppList(t *testing.T) {
 
 		exampleApp := "3dsMax.UVUnwrap+latest"
 		found := false
-		for _, v :=range list.Data {
+		for _, v := range list.Data {
 			if v == exampleApp {
 				found = true
 			}
@@ -212,8 +210,7 @@ func TestAPI_AppList(t *testing.T) {
 
 }
 
-
-func TestAppBundle_Aliases (t *testing.T) {
+func TestAppBundle_Aliases(t *testing.T) {
 
 	// prepare the credentials
 	clientID := os.Getenv("FORGE_CLIENT_ID")
@@ -227,8 +224,6 @@ func TestAppBundle_Aliases (t *testing.T) {
 	var app da.AppBundle
 	defer app.Delete()
 	var err error
-
-
 
 	t.Run("Create an app", func(t *testing.T) {
 		app, err = daApi.CreateApp(testAppName, testEngine)
@@ -267,7 +262,6 @@ func TestAppBundle_Aliases (t *testing.T) {
 			t.Errorf("Could not create another alias: %s", err.Error())
 		}
 	})
-
 
 	t.Run("List the aliases for the app", func(t *testing.T) {
 		aliases, err := app.Aliases()
@@ -334,7 +328,6 @@ func TestAppBundle_Aliases (t *testing.T) {
 
 	})
 
-
 	// WARNING: removed this step and switching to defer app.Delete()
 	//t.Run("Delete the app", func(t *testing.T) {
 	//	err := app.Delete()
@@ -343,11 +336,9 @@ func TestAppBundle_Aliases (t *testing.T) {
 	//	}
 	//})
 
-
 }
 
-
-func TestAppBundle_Versions (t *testing.T) {
+func TestAppBundle_Versions(t *testing.T) {
 
 	// prepare the credentials
 	clientID := os.Getenv("FORGE_CLIENT_ID")
@@ -363,8 +354,6 @@ func TestAppBundle_Versions (t *testing.T) {
 	var app2 da.AppBundle
 	defer app.Delete()
 	var err error
-
-
 
 	t.Run("Create an app", func(t *testing.T) {
 		app, err = daApi.CreateApp(testAppName, testEngine)
@@ -411,7 +400,7 @@ func TestAppBundle_Versions (t *testing.T) {
 	t.Run("List app versions after addition", func(t *testing.T) {
 		versions, err := app.Versions()
 		if err != nil {
-			t.Fatalf("Could not get list of versions: %s",err.Error())
+			t.Fatalf("Could not get list of versions: %s", err.Error())
 		}
 
 		if len(versions.Data) != 2 {
@@ -428,7 +417,7 @@ func TestAppBundle_Versions (t *testing.T) {
 
 		if details.ID != testAppName ||
 			details.Version != 2 ||
-			details.Engine != newVersionEngine{
+			details.Engine != newVersionEngine {
 			t.Fatalf("Version details are not as expected: %+v", details)
 		}
 
@@ -452,6 +441,164 @@ func TestAppBundle_Versions (t *testing.T) {
 	})
 
 }
+
+func TestAppBundle_Upload(t *testing.T) {
+	// prepare the credentials
+	clientID := os.Getenv("FORGE_CLIENT_ID")
+	clientSecret := os.Getenv("FORGE_CLIENT_SECRET")
+
+	daApi := da.NewAPIWithCredentials(clientID, clientSecret)
+
+	testAppName := "GolangSDKTest"
+	testEngine := "Autodesk.3dsMax+2019"
+	var app da.AppBundle
+	defer app.Delete()
+	var err error
+
+	t.Run("Create an app", func(t *testing.T) {
+		app, err = daApi.CreateApp(testAppName, testEngine)
+		if err != nil {
+			t.Fatal(err.Error())
+		}
+	})
+
+	t.Run("Upload a test bundle", func(t *testing.T) {
+
+		//data, err := ioutil.ReadFile("ListMyObjectsApplicationPackage.zip")
+		//if err != nil {
+		//	t.Fatal("Could not read file to upload it")
+		//}
+
+		data := []byte("some test load")
+		err = app.Upload(data)
+
+		if err != nil {
+			t.Fatal(err.Error())
+		}
+	})
+}
+
+
+
+func TestAPI_Activity(t *testing.T) {
+	// prepare the credentials
+	clientID := os.Getenv("FORGE_CLIENT_ID")
+	clientSecret := os.Getenv("FORGE_CLIENT_SECRET")
+
+	daApi := da.NewAPIWithCredentials(clientID, clientSecret)
+
+	testActivityName := "GolangSDKTest"
+	testEngine := "Autodesk.3dsMax+2019"
+	//testAlias := "golangTest"
+
+	var testActivity da.Activity
+
+	nickname, err := daApi.UserId()
+	if err != nil {
+		t.Fatal("Could not get the user ID")
+	}
+
+	t.Run("Create an activity", func(t *testing.T) {
+
+		config := da.ActivityConfig{
+			ID: testActivityName,
+			Engine:testEngine,
+			CommandLine:[]string{"dir"},
+
+		}
+
+		testActivity, err := daApi.CreateActivity(config)
+		if err != nil {
+			t.Fatal(err.Error())
+		}
+
+		if testActivity.ID != nickname+"."+testActivityName {
+			t.Fatalf("The id of created activity mismatch: expect '%s', got '%s'",
+				testActivityName,
+				testActivity.ID)
+		}
+	})
+
+	//t.Run("Check if activity is available", func(t *testing.T) {
+	//	list, err := daApi.AppList()
+	//	if err != nil {
+	//		t.Fatal(err.Error())
+	//	}
+	//
+	//	found := false
+	//	for _, v := range list.Data {
+	//		if v == nickname+"."+testAppName+"+$LATEST" {
+	//			found = true
+	//		}
+	//	}
+	//
+	//	if !found {
+	//		t.Fatalf("The previously created app '%s' was not found", testAppName)
+	//	}
+	//})
+
+	//t.Run("Create alias for app", func(t *testing.T) {
+	//	testAlias, err = app.CreateAlias("test", 1)
+	//	if err != nil {
+	//		t.Fatalf("Could not create alias: %s", err.Error())
+	//	}
+	//})
+	//
+	//t.Run("Get app details", func(t *testing.T) {
+	//	details, err := app.Details("test")
+	//	if err != nil {
+	//		t.Fatal(err.Error())
+	//	}
+	//
+	//	if app.Version != details.Version ||
+	//		app.Engine != details.Engine {
+	//		t.Fatalf("Mismatching between app data and details data: %+v", details)
+	//	}
+	//
+	//})
+	//
+	//t.Run("Create an app with same id", func(t *testing.T) {
+	//	_, err := daApi.CreateApp(testAppName, testEngine)
+	//	if err == nil {
+	//		t.Fatal("Creating  app with same id should fail, but it doesn't")
+	//	}
+	//})
+	//
+	t.Run("Delete the previously created app", func(t *testing.T) {
+		//activityID := testActivity.ID
+		//err := testActivity.Delete()
+		//if err != nil {
+		//	t.Fatal(err.Error())
+		//}
+		//
+		//list, err := daApi.AppList()
+		//
+		//found := false
+		//for _, v := range list.Data {
+		//	if v == appID {
+		//		found = true
+		//	}
+		//}
+		//
+		//if found {
+		//	t.Fatalf("The deleted app '%s' should not be in the list", appID)
+		//}
+		//
+		//if app.ID != "" {
+		//	t.Fatal("The app was not properly cleared")
+		//}
+
+	})
+}
+
+
+
+
+
+
+
+
+
 
 
 
@@ -494,7 +641,6 @@ func TestAPI_DataParsing(t *testing.T) {
 
 	})
 
-
 	t.Run("Check App creation result parsing", func(t *testing.T) {
 		appCreationResult := `
 {
@@ -529,13 +675,139 @@ func TestAPI_DataParsing(t *testing.T) {
 		}
 
 		if result.ID != "U4E38tF2P9hpSdth39FfTMsUphf5gHsP.DenixTest" {
-			t.Fatalf("Could not properly extract the id: " +
-				"expecting 'U4E38tF2P9hpSdth39FfTMsUphf5gHsP.DenixTest', " +
+			t.Fatalf("Could not properly extract the id: "+
+				"expecting 'U4E38tF2P9hpSdth39FfTMsUphf5gHsP.DenixTest', "+
 				"got '%s'", result.ID)
+		}
+
+	})
+
+	t.Run("Check App uploading error parsing", func(t *testing.T) {
+		appUploadingError := `
+<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+    <Code>InvalidArgument</Code>
+    <Message>POST requires exactly one file upload per request.</Message>
+    <ArgumentName>file</ArgumentName>
+    <ArgumentValue>0</ArgumentValue>
+    <RequestId>E348E16638E3065E</RequestId>
+    <HostId>Wd8GvmCwzBF5EI3QkOlurAs9pxTuixDQIajEGRhH1mC8O8vRMkSKynxpEK5mtKzVRaQyTI7Awyw=</HostId>
+</Error>
+`
+		result := struct {
+			Code          string `xml:"Code"`
+			Message       string `xml:"Message"`
+			Argument      string `xml:"Argument"`
+			ArgumentValue string `xml:"ArgumentValue"`
+			RequestID     string `xml:"RequestId"`
+			HostID        string `xml:"HostId"`
+		}{}
+
+		buffer := bytes.NewBufferString(appUploadingError)
+		decoder := xml.NewDecoder(buffer)
+		err := decoder.Decode(&result)
+
+		if err != nil {
+			t.Fatal(err.Error())
+		}
+
+	})
+
+	t.Run("Check Activity creation JSON formation", func(t *testing.T) {
+		aliasCreationJSON := `
+{
+	"id": "Denis.Incercare02",
+    "commandLine": [
+		"$(engine.path)/3dsmaxbatch.exe -sceneFile \"$(args[InputFile].path)\" \"$(settings[script].path)\""
+	],
+    "description": "Export a single max file to FBX",
+    "appbundles": [
+    	],
+    "engine" : "Autodesk.3dsMax+2019",
+    "parameters": {
+		"InputFile" : {
+		    "zip": false,
+			"description": "Input 3ds Max file",
+            "ondemand": false,
+			"required": true,
+            "verb": "get",
+            "localName": "input.max"
+		},
+		"OutputFile": {
+		    "zip": false,
+            "ondemand": false,
+            "verb": "put",
+            "description": "Output FBX file",
+            "required": true,
+            "localName": "output.fbx"
+		}
+    },
+    "settings": {
+       "script": "exportFile (sysInfo.currentdir + \"/output.fbx\") #noPrompt using:FBXEXP"
+   }
+}
+`
+
+		result := da.ActivityConfig{}
+
+		buffer := bytes.NewBufferString(aliasCreationJSON)
+		decoder := json.NewDecoder(buffer)
+		err := decoder.Decode(&result)
+
+		if err != nil {
+			t.Fatal(err.Error())
+		}
+
+		aliasCreationResponseJSON := `
+{
+    "commandLine": [
+        "$(engine.path)/3dsmaxbatch.exe -sceneFile \"$(args[InputFile].path)\" \"$(settings[script].path)\""
+    ],
+    "parameters": {
+        "InputFile": {
+            "verb": "get",
+            "description": "Input 3ds Max file",
+            "required": true,
+            "localName": "input.max"
+        },
+        "OutputFile": {
+            "verb": "put",
+            "description": "Output FBX file",
+            "required": true,
+            "localName": "output.fbx"
+        }
+    },
+    "engine": "Autodesk.3dsMax+2019",
+    "appbundles": [],
+    "settings": {
+        "script": "exportFile (sysInfo.currentdir + \"/output.fbx\") #noPrompt using:FBXEXP"
+    },
+    "description": "Export a single max file to FBX",
+    "version": 1,
+    "id": "Denis.Incercare02"
+}
+`
+
+		response := da.ActivityConfig{}
+
+		buffer2 := bytes.NewBufferString(aliasCreationResponseJSON)
+		decoder2 := json.NewDecoder(buffer2)
+		err = decoder2.Decode(&response)
+
+		if err != nil {
+			t.Fatal(err.Error())
+		}
+
+
+		if !reflect.DeepEqual(result, response) {
+			t.Fatal("failed to properly parse the Activity JSON")
 		}
 
 
 
 
+
+
 	})
+
 }

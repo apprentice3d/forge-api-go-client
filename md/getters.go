@@ -1,11 +1,11 @@
 package md
 
 import (
-	"net/http"
-	"io/ioutil"
-	"errors"
-	"strconv"
 	"encoding/json"
+	"errors"
+	"io/ioutil"
+	"net/http"
+	"strconv"
 )
 
 func getDerivative(path string, urn, derivativeUrn, token string) (result []byte, err error) {
@@ -55,12 +55,17 @@ type Derivative struct {
 	Progress     string `json:"progress"`
 	Messages []struct {
 		Type    string `json:"type"`
-		Message string `json:"message"`
+		//Message string `json:"message"`
 		Code    string `json:"code"`
 	} `json:"messages,omitempty"`
 	OutputType string  `json:"outputType"`
 	Children   []Child `json:"children"`
 }
+
+//BUG: When translating a non-Revit model, the
+// Manifest will contain an array of strings as message,
+// while in case of others it is just a string
+
 
 type Child struct {
 	GUID         string    `json:"guid"`
@@ -72,8 +77,11 @@ type Child struct {
 	Mime         string    `json:"mime,omitempty"`
 	HasThumbnail string    `json:"hasThumbnail,omitempty"`
 	URN          string    `json:"urn,omitempty"`
+	ViewableID   string    `json:"viewableID,omitempty"`
+	PhaseNames   string    `json:"phaseNames,omitempty"`
 	Resolution   []float32 `json:"resolution,omitempty"`
 	Children     []Child   `json:"children,omitempty"`
+	Camera 		[]float32	`json:"camera,omitempty"`
 	Messages []struct {
 		Type    string   `json:"type"`
 		Message []string `json:"message"`
