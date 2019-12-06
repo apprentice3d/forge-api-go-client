@@ -53,47 +53,6 @@ type HubAPI struct {
 	HubAPIPath string
 }
 
-type ListedHubs struct {
-	JsonAPI []struct {
-		Version   string `json:"version"`
-	} `json:"jsonAPI"`
-	Links []struct {
-		Self []struct {	
-			Href string `json:"href"`
-		} `json:"self"`
-	} `json:"links"`
-	Data []struct {
-		Type   string `json:"type"`
-		Id string `json:"id"`
-		Attributes []struct {	
-			Name string `json:"name"`
-			Extension []struct{
-				Type string `json:"type"`
-				Version string `json:"version"`
-				Schema []struct {
-					Href string `json:"href"`
-				} `json:"schema"`
-				Data string `json"data"`
-			} `json:"extension"`
-			Region string `json:"region"`
-		} `json:"attributes"`
-		Relationships []struct {
-			Projects []struct {
-				Links []struct {
-					Related []struct {
-						Href string `json:"href"`
-					} `json:"related"`
-				} `json:"links"`
-			} `json:"projects"`
-		} `json:"relationships"`
-		Links []struct {
-			Self []struct {
-				Href string `json:"href"`
-			}
-		} `json:"links"`
-	} `json:"data"`
-}
-
 // NewHubAPIWithCredentials returns a Hub API client with default configurations
 func NewHubAPIWithCredentials(ClientID string, ClientSecret string) HubAPI {
 	return HubAPI{
