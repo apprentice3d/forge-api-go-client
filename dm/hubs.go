@@ -1,5 +1,13 @@
 package dm
 
+import (
+	"bytes"
+	"encoding/json"
+	"net/http"
+	"strconv"
+	"github.com/outer-labs/forge-api-go-client/oauth"
+)
+
 type Hubs struct {
 	Data    []Content `json:"data, omitempty"`
 	JsonApi JsonAPI   `json:"jsonapi, omitempty"`
@@ -61,8 +69,46 @@ func NewHubAPIWithCredentials(ClientID string, ClientSecret string) HubAPI {
 	}
 }
 
-func (api HubAPI) ListHubs(id, name, extension string) (result ListedHubs, err error){
+func (api HubAPI) GetHubDetails(path, hubKey, token string) (result HubDetails, err error) {
+	bearer, err := api.Authenticate("hub:read")
+	if err != nil {
+		return
+	}
+	path := api.Host + api.BucketAPIPath
 
+	return getHubDetails(path, hubKey, bearer.AccessToken)
 }
 
-func 
+/*
+ *	SUPPORT FUNCTIONS
+ */
+func getHubDetails(path, hubKey, token string) (result ListedBuckets, err error) {
+	task := http.Client{}
+
+	req, err := http.NewRequest("GET",
+		path+"/"+hubKey+"/details",
+		nil,
+	)
+
+	if err != nil {
+		return
+	}
+
+	req.Header.Set("Authorization", "Bearer "+token)
+	response, err := task.Do(req)
+	if err != nil {
+		return
+	}
+	defer response.Body.Close()
+
+	decoder := json.NewDecoder(response.Body)
+		if response.StatusCode != http.StatusOK {
+			err = &ErrorResult{StatusCode:response.StatusCode}
+			decoder.Decode(err)
+				return
+		}
+
+		err = decoder.Decode(&result)
+
+		return
+}
