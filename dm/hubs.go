@@ -8,7 +8,7 @@ import (
 	"github.com/outer-labs/forge-api-go-client/oauth"
 )
 
-type Hubs struct {
+type HubDetails struct {
 	Data    []Content `json:"data, omitempty"`
 	JsonApi JsonAPI   `json:"jsonapi, omitempty"`
 	Links   Link      `json:"links, omitempty"`
@@ -54,7 +54,6 @@ type Attribute struct {
 	} `json:"extension, omitempty"`
 }
 
-
 // HubAPI holds the necessary data for making Bucket related calls to Forge Data Management service
 type HubAPI struct {
 	oauth.TwoLeggedAuth
@@ -82,7 +81,7 @@ func (api HubAPI) GetHubDetails(path, hubKey, token string) (result HubDetails, 
 /*
  *	SUPPORT FUNCTIONS
  */
-func getHubDetails(path, hubKey, token string) (result ListedBuckets, err error) {
+func getHubDetails(path, hubKey, token string) (result HubDetails, err error) {
 	task := http.Client{}
 
 	req, err := http.NewRequest("GET",
