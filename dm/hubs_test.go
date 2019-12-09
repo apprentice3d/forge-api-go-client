@@ -1,12 +1,9 @@
 package dm_test
 
 import (
-	"fmt"
-	"github.com/outer-labs/forge-api-go-client/dm"
-	"log"
 	"os"
 	"testing"
-	"net/http"
+	"github.com/outer-labs/forge-api-go-client/dm"
 )
 
 func TestHubAPI_GetHubDetails(t *testing.T) {

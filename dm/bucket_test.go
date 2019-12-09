@@ -6,7 +6,6 @@ import (
 	"log"
 	"os"
 	"testing"
-	"net/http"
 )
 
 func TestBucketAPI_CreateBucket(t *testing.T) {

@@ -1,10 +1,8 @@
 package dm
 
 import (
-	"bytes"
 	"encoding/json"
 	"net/http"
-	"strconv"
 	"github.com/outer-labs/forge-api-go-client/oauth"
 )
 
@@ -14,47 +12,7 @@ type HubDetails struct {
 	Links   Link      `json:"links, omitempty"`
 }
 
-type JsonAPI struct {
-	Version string `json:"version, omitempty"`
-}
-
-type Link struct {
-	Self struct {
-		Href string `json:"href, omitempty"`
-	} `json:"self, omitempty"`
-}
-
-type Content struct {
-	Relationships struct {
-		Projects Project `json:"projects, omitempty"`
-	} `json:"relationships, omitempty"`
-	Attributes Attribute `json:"attributes, omitempty"`
-	Type       string    `json:"type, omitempty"`
-	Id         string    `json:"id, omitempty"`
-	Links      Link      `json:"links, omitempty"`
-}
-
-type Project struct {
-	Links struct {
-		Related struct {
-			Href string `json:"href, omitempty"`
-		} `json:"related, omitempty"`
-	} `json:"links, omitempty"`
-}
-
-type Attribute struct {
-	Name      string `json:"name, omitempty"`
-	Extension struct {
-		Data    map[string]interface{} `json:"data, omitempty"`
-		Version string                 `json:"version, omitempty"`
-		Type    string                 `json:"type, omitempty"`
-		Schema  struct {
-			Href string `json:"href, omitempty"`
-		} `json:"schema, omitempty"`
-	} `json:"extension, omitempty"`
-}
-
-// HubAPI holds the necessary data for making Bucket related calls to Forge Data Management service
+// HubAPI holds the necessary data for making calls to Forge Data Management service
 type HubAPI struct {
 	oauth.TwoLeggedAuth
 	HubAPIPath string
@@ -68,12 +26,12 @@ func NewHubAPIWithCredentials(ClientID string, ClientSecret string) HubAPI {
 	}
 }
 
-func (api HubAPI) GetHubDetails(path, hubKey, token string) (result HubDetails, err error) {
+func (api HubAPI) GetHubDetails(hubKey string) (result HubDetails, err error) {
 	bearer, err := api.Authenticate("hub:read")
 	if err != nil {
 		return
 	}
-	path := api.Host + api.BucketAPIPath
+	path := api.Host + api.HubAPIPath
 
 	return getHubDetails(path, hubKey, bearer.AccessToken)
 }

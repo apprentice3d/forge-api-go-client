@@ -4,7 +4,6 @@ import (
 	"io/ioutil"
 	"os"
 	"testing"
-	"net/http"
 	"github.com/outer-labs/forge-api-go-client/dm"
 )
 
