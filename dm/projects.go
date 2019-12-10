@@ -11,6 +11,7 @@ type ProjectDetails struct {
 
 // ListBuckets returns a list of all buckets created or associated with Forge secrets used for token creation
 func (api HubAPI) ListProjects(hubKey string) (result HubDetails, err error) {
+	
 	// TO DO: take in optional arguments for query params: id, ext, page, limit
 	// https://forge.autodesk.com/en/docs/data/v2/reference/http/hubs-hub_id-projects-GET/
 	bearer, err := api.Authenticate("data:read")
