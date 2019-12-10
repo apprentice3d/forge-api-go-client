@@ -1,7 +1,7 @@
 package dm_test
 
 import (
-	"io/ioutil"
+	"io"
 	"os"
 	"testing"
 	"github.com/outer-labs/forge-api-go-client/dm"
@@ -68,12 +68,13 @@ func TestBucketAPI_UploadObject(t *testing.T) {
 			t.Fatal("Cannot open testfile for reading")
 		}
 		defer file.Close()
-		data, err := ioutil.ReadAll(file)
+		// data, err := ioutil.ReadAll(file) // returns []byte
+		data := io.Reader(file)
 		if err != nil {
 			t.Fatal("Cannot read the testfile")
 		}
 
-		result, err := bucketAPI.UploadObject(tempBucket, "temp_file.rvt", data)
+		result, err := bucketAPI.UploadObject(tempBucket, "temp_file.rvt", data) // doesn't want []byte as data
 
 		if err != nil {
 			t.Fatal("Could not upload the test object, got: ", err.Error())

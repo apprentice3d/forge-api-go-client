@@ -3,7 +3,9 @@ package dm_test
 import (
 	"os"
 	"testing"
-	"github.com/outer-labs/forge-api-go-client/dm"
+	"../dm"
+
+	// "github.com/outer-labs/forge-api-go-client/dm"
 )
 
 func TestHubAPI_GetHubDetails(t *testing.T) {
@@ -16,27 +18,11 @@ func TestHubAPI_GetHubDetails(t *testing.T) {
 
 	testHubKey := "my_test_hub_key_for_go"
 
-	t.Run("Create a hub", func(t *testing.T) {
-		_, err := hubAPI.CreateHub(testHubKey, "transient")
-
-		if err != nil {
-			t.Fatalf("Failed to create a hub: %s\n", err.Error())
-		}
-	})
-
 	t.Run("Get hub details", func(t *testing.T) {
 		_, err := hubAPI.GetHubDetails(testHubKey)
 
 		if err != nil {
 			t.Fatalf("Failed to get hub details: %s\n", err.Error())
-		}
-	})
-
-	t.Run("Delete created hub", func(t *testing.T) {
-		err := hubAPI.DeleteHub(testHubKey)
-
-		if err != nil {
-			t.Fatalf("Failed to delete hub: %s\n", err.Error())
 		}
 	})
 
