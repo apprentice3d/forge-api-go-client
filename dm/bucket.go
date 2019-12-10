@@ -63,7 +63,6 @@ type ListedBuckets struct {
 
 // CreateBucket creates and returns details of created bucket, or an error on failure
 func (api BucketAPI) CreateBucket(bucketKey, policyKey string) (result BucketDetails, err error) {
-
 	bearer, err := api.Authenticate("bucket:create")
 	if err != nil {
 		return
@@ -107,10 +106,6 @@ func (api BucketAPI) GetBucketDetails(bucketKey string) (result BucketDetails, e
 
 	return getBucketDetails(path, bucketKey, bearer.AccessToken)
 }
-
-
-
-
 
 /*
  *	SUPPORT FUNCTIONS
@@ -220,8 +215,8 @@ func createBucket(path, bucketKey, policyKey, token string) (result BucketDetail
 
 	decoder := json.NewDecoder(response.Body)
 	if response.StatusCode != http.StatusOK {
-    err = &ErrorResult{StatusCode:response.StatusCode}
-    decoder.Decode(err)
+    	err = &ErrorResult{StatusCode:response.StatusCode}
+    	decoder.Decode(err)
 		return
 	}
 

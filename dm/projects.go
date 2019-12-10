@@ -14,7 +14,6 @@ type ProjectDetails struct {
 	Links   Link      `json:"links, omitempty"`
 }
 
-
 type Relationships struct {
 	Hub 		[]Hub 		`json:"hub, omitempty"`
 	RootFolder 	RootFolder 	`json:"rootfolder, omitempty"`
