@@ -25,6 +25,17 @@ type Content struct {
 	Links      Link      `json:"links, omitempty"`
 }
 
+type DataDetails struct {
+	Data    Content `json:"data, omitempty"`
+	JsonApi JsonAPI   `json:"jsonapi, omitempty"`
+	Links   Link      `json:"links, omitempty"`
+}
+
+type Hub struct {
+	Links 		Link 		`json:"links, omitempty"`
+	Data 		[]Content 	`json:"data, omitempty"`
+}
+
 type JsonAPI struct {
 	Version string `json:"version, omitempty"`
 }
@@ -45,4 +56,26 @@ type Link struct {
 	Related struct {
 		Href string `json:"href, omitempty"`
 	} `json:"related, omitempty"`
+}
+
+type Project struct {
+	Links Link `json:"links, omitempty"`
+}
+
+type Relationships struct {
+	Projects 	Project `json:"projects, omitempty"`
+	Hub 		[]Hub 		`json:"hub, omitempty"`
+	RootFolder 	RootFolder 	`json:"rootfolder, omitempty"`
+	TopFolders 	TopFolders 	`json:"topfolders, omitempty"`
+}
+
+type RootFolder struct {
+	Meta struct {
+		Links Link `json:"links, omitempty"`
+	} `json:"meta, omitempty"`
+	Data    []Content `json:"data, omitempty"`
+}
+
+type TopFolders struct {
+	Links Link `json:"links, omitempty"`
 }

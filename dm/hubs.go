@@ -14,9 +14,7 @@ type HubAPI struct {
 }
 
 type HubDetails struct {
-	Data    Content `json:"data, omitempty"`
-	JsonApi JsonAPI   `json:"jsonapi, omitempty"`
-	Links   Link      `json:"links, omitempty"`
+	Details DataDetails `json:"details, omitempty"`
 }
 
 var api HubAPI
