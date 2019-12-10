@@ -2,6 +2,7 @@ package dm
 
 type Attribute struct {
 	Name      string `json:"name, omitempty"`
+	Region	  string `json: region, omitmepty"`
 	Extension struct {
 		Data    map[string]interface{} `json:"data, omitempty"`
 		Version string                 `json:"version, omitempty"`

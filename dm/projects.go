@@ -14,13 +14,6 @@ type ProjectDetails struct {
 	Links   Link      `json:"links, omitempty"`
 }
 
-// type Content struct {
-// 	Relationships Relationships `json:"relationships, omitempty"`
-// 	Attributes Attribute `json:"attributes, omitempty"`
-// 	Type       string    `json:"type, omitempty"`
-// 	Id         string    `json:"id, omitempty"`
-// 	Links      Link      `json:"links, omitempty"`
-// }
 
 type Relationships struct {
 	Hub 		[]Hub 		`json:"hub, omitempty"`

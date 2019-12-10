@@ -14,7 +14,8 @@ func TestBucketAPI_ListObjects(t *testing.T) {
 
 	bucketAPI := dm.NewBucketAPIWithCredentials(clientID, clientSecret)
 
-	testBucketName := "just_a_test_bucket"
+	// testBucketName := "just_a_test_bucket"
+	testBucketName := "my_test_bucket_key_for_go"
 
 	t.Run("List bucket content", func(t *testing.T) {
 		content, err := bucketAPI.ListObjects(testBucketName, "", "", "")
@@ -31,7 +32,6 @@ func TestBucketAPI_ListObjects(t *testing.T) {
 			t.Fatalf("Expected to fail upon listing a non-existing bucket, but it didn't, got %#v", content)
 		}
 	})
-
 }
 
 func TestBucketAPI_UploadObject(t *testing.T) {
