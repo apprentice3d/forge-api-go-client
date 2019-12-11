@@ -14,21 +14,17 @@ type Attribute struct {
 }
 
 type Content struct {
-	Relationships struct {
-		Projects struct {
-			Links Link `json:"links, omitempty"`
-		} `json:"projects, omitempty"`
-	} `json:"relationships, omitempty"`
-	Attributes Attribute `json:"attributes, omitempty"`
-	Type       string    `json:"type, omitempty"`
-	Id         string    `json:"id, omitempty"`
-	Links      Link      `json:"links, omitempty"`
+	Relationships 	Relationships 	`json:"relationships, omitempty"`
+	Attributes 	  	Attribute 		`json:"attributes, omitempty"`
+	Type       		string    		`json:"type, omitempty"`
+	Id         		string    		`json:"id, omitempty"`
+	Links      		Link      		`json:"links, omitempty"`
 }
 
 type DataDetails struct {
-	Data    Content `json:"data, omitempty"`
-	JsonApi JsonAPI   `json:"jsonapi, omitempty"`
-	Links   Link      `json:"links, omitempty"`
+	Data    	Content 	`json:"data, omitempty"`
+	JsonApi 	JsonAPI   	`json:"jsonapi, omitempty"`
+	Links   	Link      	`json:"links, omitempty"`
 }
 
 type Hub struct {
@@ -37,7 +33,7 @@ type Hub struct {
 }
 
 type JsonAPI struct {
-	Version string `json:"version, omitempty"`
+	Version 	string 		`json:"version, omitempty"`
 }
 
 type Link struct {
@@ -63,7 +59,7 @@ type Project struct {
 }
 
 type Relationships struct {
-	Projects 	Project `json:"projects, omitempty"`
+	Projects 	Project 	`json:"projects, omitempty"`
 	Hub 		[]Hub 		`json:"hub, omitempty"`
 	RootFolder 	RootFolder 	`json:"rootfolder, omitempty"`
 	TopFolders 	TopFolders 	`json:"topfolders, omitempty"`
@@ -77,5 +73,5 @@ type RootFolder struct {
 }
 
 type TopFolders struct {
-	Links Link `json:"links, omitempty"`
+	Links 		Link 	`	json:"links, omitempty"`
 }

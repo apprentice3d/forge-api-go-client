@@ -10,14 +10,14 @@ type FolderDetails struct {
 	Details DataDetails `json:"details, omitempty"`
 }
 
-// HubAPI holds the necessary data for making calls to Forge Data Management service
+// FolderAPI holds the necessary data for making calls to Forge Data Management service
 type FolderAPI struct {
 	oauth.TwoLeggedAuth
 	FolderAPIPath string
 }
 
 
-// NewHubAPIWithCredentials returns a Hub API client with default configurations
+// NewFolderAPIWithCredentials returns a Folder API client with default configurations
 func NewFolderAPIWithCredentials(ClientID string, ClientSecret string) FolderAPI {
 	return FolderAPI{
 		oauth.NewTwoLeggedClient(ClientID, ClientSecret),
