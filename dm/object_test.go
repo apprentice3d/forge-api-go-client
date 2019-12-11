@@ -14,8 +14,8 @@ func TestBucketAPI_ListObjects(t *testing.T) {
 
 	bucketAPI := dm.NewBucketAPIWithCredentials(clientID, clientSecret)
 
-	testBucketName := "just_a_test_bucket"
-	// testBucketName := os.Getenv("FORGE_OSS_TEST_BUCKET_KEY")
+	// testBucketName := "just_a_test_bucket"
+	testBucketName := os.Getenv("FORGE_OSS_TEST_BUCKET_KEY")
 
 	t.Run("List bucket content", func(t *testing.T) {
 		content, err := bucketAPI.ListObjects(testBucketName, "", "", "")

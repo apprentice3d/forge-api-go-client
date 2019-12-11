@@ -54,15 +54,11 @@ func getHubDetails(path, hubKey, token string) (result HubDetails, err error) {
 
 	req.Header.Set("Authorization", "Bearer "+token)
 
-	// fmt.Println("REQUEST", req)
-
 	response, err := task.Do(req)
 	if err != nil {
 		return
 	}
 	defer response.Body.Close()
-
-	// fmt.Println("RESP", response)
 	
 	decoder := json.NewDecoder(response.Body)
 		if response.StatusCode != http.StatusOK {
@@ -70,8 +66,6 @@ func getHubDetails(path, hubKey, token string) (result HubDetails, err error) {
 			decoder.Decode(err)
 				return
 		}
-
-	// fmt.Println("DECO", decoder)
 	
 	err = decoder.Decode(&result)
 

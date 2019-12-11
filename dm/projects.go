@@ -19,30 +19,30 @@ func (api HubAPI) ListProjects(hubKey string) (result HubDetails, err error) {
 		return
 	}
 
-	path := api.Host + api.HubAPIPath + "/" + hubKey + "/projects"
+	path := api.Host + api.HubAPIPath
 
-	return listProjects(path, "", "", "", "", bearer.AccessToken)
+	return listProjects(path, hubKey, "", "", "", "", bearer.AccessToken)
 }
 
-func (api HubAPI) GetProjectDetails(hubKey string) (result ProjectDetails, err error) {
+func (api HubAPI) GetProjectDetails(hubKey, projectKey string) (result ProjectDetails, err error) {
 	bearer, err := api.Authenticate("data:read")
 	if err != nil {
 		return
 	}
 	path := api.Host + api.HubAPIPath
 
-	return getProjectDetails(path, hubKey, bearer.AccessToken)
+	return getProjectDetails(path, hubKey, projectKey, bearer.AccessToken)
 }
 
 
 /*
  *	SUPPORT FUNCTIONS
  */
-func listProjects(path, id, extension, page, limit string, token string) (result HubDetails, err error) {
+func listProjects(path, hubKey, id, extension, page, limit string, token string) (result HubDetails, err error) {
 	task := http.Client{}
 
 	req, err := http.NewRequest("GET",
-		path,
+		path+"/"+hubKey+"/projects",
 		nil,
 	)
 
@@ -72,10 +72,11 @@ func listProjects(path, id, extension, page, limit string, token string) (result
 		return
 	}
 	defer response.Body.Close()
-  decoder := json.NewDecoder(response.Body)
+  	
+  	decoder := json.NewDecoder(response.Body)
 	if response.StatusCode != http.StatusOK {
-    err = &ErrorResult{StatusCode:response.StatusCode}
-    decoder.Decode(err)
+    	err = &ErrorResult{StatusCode:response.StatusCode}
+    	decoder.Decode(err)
 		return
 	}
 
@@ -84,11 +85,11 @@ func listProjects(path, id, extension, page, limit string, token string) (result
 	return
 }
 
-func getProjectDetails(path, projectKey, token string) (result ProjectDetails, err error) {
+func getProjectDetails(path, hubKey, projectKey, token string) (result ProjectDetails, err error) {
 	task := http.Client{}
 
 	req, err := http.NewRequest("GET",
-		path+"/"+projectKey,
+		path+"/"+hubKey+"/projects/"+projectKey,
 		nil,
 	)
 
@@ -103,10 +104,10 @@ func getProjectDetails(path, projectKey, token string) (result ProjectDetails, e
 	}
 	defer response.Body.Close()
 
-  decoder := json.NewDecoder(response.Body)
+  	decoder := json.NewDecoder(response.Body)
 	if response.StatusCode != http.StatusOK {
-    err = &ErrorResult{StatusCode:response.StatusCode}
-    decoder.Decode(err)
+    	err = &ErrorResult{StatusCode:response.StatusCode}
+    	decoder.Decode(err)
 		return
 	}
 
