@@ -7,7 +7,7 @@ import (
 	// "github.com/outer-labs/forge-api-go-client/dm"
 )
 
-func TestFolderAPI_ListFolders(t *testing.T) {
+func TestFolderAPI_GetFolderDetails(t *testing.T) {
 
 	// prepare the credentials
 	clientID := os.Getenv("FORGE_CLIENT_ID")
@@ -19,7 +19,7 @@ func TestFolderAPI_ListFolders(t *testing.T) {
 	testFolderKey := os.Getenv("BIM_360_TEST_ACCOUNT_FOLDERKEY")
 
 	t.Run("List all folders for a given project", func(t *testing.T) {
-		_, err := folderAPI.ListFolders(testProjectKey, testFolderKey)
+		_, err := folderAPI.GetFolderDetails(testProjectKey, testFolderKey)
 
 		if err != nil {
 			t.Fatalf("Failed to get project details: %s\n", err.Error())

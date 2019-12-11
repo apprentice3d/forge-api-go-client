@@ -26,7 +26,7 @@ func NewFolderAPIWithCredentials(ClientID string, ClientSecret string) FolderAPI
 }
 
 // ListBuckets returns a list of all buckets created or associated with Forge secrets used for token creation
-func (api FolderAPI) ListFolders(projectKey, folderKey string) (result FolderDetails, err error) {
+func (api FolderAPI) GetFolderDetails(projectKey, folderKey string) (result FolderDetails, err error) {
 	
 	// TO DO: take in optional header arguments
 	// https://forge.autodesk.com/en/docs/data/v2/reference/http/projects-project_id-folders-folder_id-GET/
@@ -37,7 +37,7 @@ func (api FolderAPI) ListFolders(projectKey, folderKey string) (result FolderDet
 
 	path := api.Host + api.FolderAPIPath
 
-	return listFolders(path, projectKey, folderKey, bearer.AccessToken)
+	return getFolderDetails(path, projectKey, folderKey, bearer.AccessToken)
 }
 
 func (api FolderAPI) GetFolderContents(projectKey, folderKey string) (result ProjectDetails, err error) {
@@ -54,7 +54,7 @@ func (api FolderAPI) GetFolderContents(projectKey, folderKey string) (result Pro
 /*
  *	SUPPORT FUNCTIONS
  */
-func listFolders(path, projectKey, folderKey, token string) (result FolderDetails, err error) {
+func getFolderDetails(path, projectKey, folderKey, token string) (result FolderDetails, err error) {
 	task := http.Client{}
 
 	req, err := http.NewRequest("GET",
