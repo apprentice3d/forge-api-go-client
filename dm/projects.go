@@ -5,13 +5,8 @@ import (
 	"net/http"
 )
 
-type ProjectDetails struct {
-	Details DataDetails `json:"details, omitempty"`
-}
-
-
 // ListBuckets returns a list of all buckets created or associated with Forge secrets used for token creation
-func (api HubAPI) ListProjects(hubKey string) (result ProjectDetails, err error) {
+func (api HubAPI) ListProjects(hubKey string) (result DataDetails, err error) {
 	
 	// TO DO: take in optional arguments for query params: id, ext, page, limit
 	// https://forge.autodesk.com/en/docs/data/v2/reference/http/hubs-hub_id-projects-GET/
@@ -25,7 +20,7 @@ func (api HubAPI) ListProjects(hubKey string) (result ProjectDetails, err error)
 	return listProjects(path, hubKey, "", "", "", "", bearer.AccessToken)
 }
 
-func (api HubAPI) GetProjectDetails(hubKey, projectKey string) (result ProjectDetails, err error) {
+func (api HubAPI) GetProjectDetails(hubKey, projectKey string) (result DataDetails, err error) {
 	bearer, err := api.Authenticate("data:read")
 	if err != nil {
 		return
@@ -35,7 +30,7 @@ func (api HubAPI) GetProjectDetails(hubKey, projectKey string) (result ProjectDe
 	return getProjectDetails(path, hubKey, projectKey, bearer.AccessToken)
 }
 
-func (api HubAPI) GetTopFolders(hubKey, projectKey string) (result ProjectDetails, err error) {
+func (api HubAPI) GetTopFolders(hubKey, projectKey string) (result DataDetails, err error) {
 	bearer, err := api.Authenticate("data:read")
 	if err != nil {
 		return
@@ -48,7 +43,7 @@ func (api HubAPI) GetTopFolders(hubKey, projectKey string) (result ProjectDetail
 /*
  *	SUPPORT FUNCTIONS
  */
-func listProjects(path, hubKey, id, extension, page, limit string, token string) (result ProjectDetails, err error) {
+func listProjects(path, hubKey, id, extension, page, limit string, token string) (result DataDetails, err error) {
 	task := http.Client{}
 
 	req, err := http.NewRequest("GET",
@@ -95,7 +90,7 @@ func listProjects(path, hubKey, id, extension, page, limit string, token string)
 	return
 }
 
-func getProjectDetails(path, hubKey, projectKey, token string) (result ProjectDetails, err error) {
+func getProjectDetails(path, hubKey, projectKey, token string) (result DataDetails, err error) {
 	task := http.Client{}
 
 	req, err := http.NewRequest("GET",
@@ -126,7 +121,7 @@ func getProjectDetails(path, hubKey, projectKey, token string) (result ProjectDe
 	return
 }
 
-func getTopFolders(path, hubKey, projectKey, token string) (result ProjectDetails, err error) {
+func getTopFolders(path, hubKey, projectKey, token string) (result DataDetails, err error) {
 	task := http.Client{}
 
 	req, err := http.NewRequest("GET",
