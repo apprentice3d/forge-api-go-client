@@ -22,7 +22,7 @@ type Content struct {
 }
 
 type DataDetails struct {
-	Data    	Content 	`json:"data, omitempty"`
+	Data    	[]Content 	`json:"data, omitempty"`
 	JsonApi 	JsonAPI   	`json:"jsonapi, omitempty"`
 	Links   	Link      	`json:"links, omitempty"`
 }
