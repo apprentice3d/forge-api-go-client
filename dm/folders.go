@@ -6,10 +6,6 @@ import (
 	"github.com/outer-labs/forge-api-go-client/oauth"
 )
 
-type FolderDetails struct {
-	Details DataDetails `json:"details, omitempty"`
-}
-
 // FolderAPI holds the necessary data for making calls to Forge Data Management service
 type FolderAPI struct {
 	oauth.TwoLeggedAuth
@@ -26,7 +22,7 @@ func NewFolderAPIWithCredentials(ClientID string, ClientSecret string) FolderAPI
 }
 
 // ListBuckets returns a list of all buckets created or associated with Forge secrets used for token creation
-func (api FolderAPI) GetFolderDetails(projectKey, folderKey string) (result FolderDetails, err error) {
+func (api FolderAPI) GetFolderDetails(projectKey, folderKey string) (result DataDetails, err error) {
 	
 	// TO DO: take in optional header arguments
 	// https://forge.autodesk.com/en/docs/data/v2/reference/http/projects-project_id-folders-folder_id-GET/
@@ -54,7 +50,7 @@ func (api FolderAPI) GetFolderContents(projectKey, folderKey string) (result Dat
 /*
  *	SUPPORT FUNCTIONS
  */
-func getFolderDetails(path, projectKey, folderKey, token string) (result FolderDetails, err error) {
+func getFolderDetails(path, projectKey, folderKey, token string) (result DataDetails, err error) {
 	task := http.Client{}
 
 	req, err := http.NewRequest("GET",
