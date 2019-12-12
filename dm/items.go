@@ -5,11 +5,6 @@ import (
 	"net/http"
 )
 
-type ItemDetails struct {
-	Details 	DataDetails 	`json:"details, omitempty"`
-	Included 	[]Content 		`json:"included, omitempty"`
-}
-
 // ListBuckets returns a list of all buckets created or associated with Forge secrets used for token creation
 func (api FolderAPI) GetItemDetails(projectKey, itemKey string) (result ItemDetails, err error) {
 	

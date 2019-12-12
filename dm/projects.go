@@ -20,7 +20,7 @@ func (api HubAPI) ListProjects(hubKey string) (result DataDetails, err error) {
 	return listProjects(path, hubKey, "", "", "", "", bearer.AccessToken)
 }
 
-func (api HubAPI) GetProjectDetails(hubKey, projectKey string) (result DataDetails, err error) {
+func (api HubAPI) GetProjectDetails(hubKey, projectKey string) (result ItemDetails, err error) {
 	bearer, err := api.Authenticate("data:read")
 	if err != nil {
 		return
@@ -90,7 +90,7 @@ func listProjects(path, hubKey, id, extension, page, limit string, token string)
 	return
 }
 
-func getProjectDetails(path, hubKey, projectKey, token string) (result DataDetails, err error) {
+func getProjectDetails(path, hubKey, projectKey, token string) (result ItemDetails, err error) {
 	task := http.Client{}
 
 	req, err := http.NewRequest("GET",
