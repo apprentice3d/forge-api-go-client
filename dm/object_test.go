@@ -1,10 +1,9 @@
 package dm_test
 
 import (
-	"io/ioutil"
+	"io"
 	"os"
 	"testing"
-	"net/http"
 	"github.com/outer-labs/forge-api-go-client/dm"
 )
 
@@ -15,7 +14,8 @@ func TestBucketAPI_ListObjects(t *testing.T) {
 
 	bucketAPI := dm.NewBucketAPIWithCredentials(clientID, clientSecret)
 
-	testBucketName := "just_a_test_bucket"
+	// testBucketName := "just_a_test_bucket"
+	testBucketName := os.Getenv("FORGE_OSS_TEST_BUCKET_KEY")
 
 	t.Run("List bucket content", func(t *testing.T) {
 		content, err := bucketAPI.ListObjects(testBucketName, "", "", "")
@@ -32,7 +32,6 @@ func TestBucketAPI_ListObjects(t *testing.T) {
 			t.Fatalf("Expected to fail upon listing a non-existing bucket, but it didn't, got %#v", content)
 		}
 	})
-
 }
 
 func TestBucketAPI_UploadObject(t *testing.T) {
@@ -69,12 +68,13 @@ func TestBucketAPI_UploadObject(t *testing.T) {
 			t.Fatal("Cannot open testfile for reading")
 		}
 		defer file.Close()
-		data, err := ioutil.ReadAll(file)
+		// data, err := ioutil.ReadAll(file) // returns []byte
+		data := io.Reader(file)
 		if err != nil {
 			t.Fatal("Cannot read the testfile")
 		}
 
-		result, err := bucketAPI.UploadObject(tempBucket, "temp_file.rvt", data)
+		result, err := bucketAPI.UploadObject(tempBucket, "temp_file.rvt", data) // doesn't want []byte as data
 
 		if err != nil {
 			t.Fatal("Could not upload the test object, got: ", err.Error())

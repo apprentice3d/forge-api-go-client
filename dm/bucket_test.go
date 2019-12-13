@@ -6,7 +6,6 @@ import (
 	"log"
 	"os"
 	"testing"
-	"net/http"
 )
 
 func TestBucketAPI_CreateBucket(t *testing.T) {
@@ -110,9 +109,11 @@ func TestBucketAPI_ListBuckets(t *testing.T) {
 	})
 
 	t.Run("Create a bucket and find it among listed", func(t *testing.T) {
-		testBucketKey := "just_for_testing"
-		_, err := bucketAPI.CreateBucket(testBucketKey, "transient")
 
+		testBucketKey := "just_for_testing"
+		
+		_, err := bucketAPI.CreateBucket(testBucketKey, "transient")
+		
 		if err != nil {
 			t.Errorf("Failed to create a bucket: %s\n", err.Error())
 		}
@@ -126,6 +127,7 @@ func TestBucketAPI_ListBuckets(t *testing.T) {
 		found := false
 
 		for _, bucket := range list.Items {
+
 			if bucket.BucketKey == testBucketKey {
 				found = true
 				break
