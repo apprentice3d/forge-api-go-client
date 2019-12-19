@@ -83,6 +83,17 @@ type Relationships struct {
 	} 		`json:"hub, omitempty"`
 	RootFolder 	RootFolder 	`json:"rootfolder, omitempty"`
 	TopFolders 	TopFolders 	`json:"topfolders, omitempty"`
+	Storage Storage `json:"storage, omitempty"`
+}
+
+type Storage struct {
+	Meta struct {
+		Links Link `json:"links, omitempty"`
+	} `json:"meta, omitempty"`
+	Data struct {
+		ID 		string 	`json:"id, omitempty"`
+		Type 	string 	`json:"type, omitempty"`
+	} 	`json:"data, omitempty"`
 }
 
 type RootFolder struct {
