@@ -5,7 +5,8 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
-	"github.com/outer-labs/forge-api-go-client/oauth"
+	// "github.com/outer-labs/forge-api-go-client/oauth"
+	"../oauth"
 )
 
 // BucketAPI holds the necessary data for making Bucket related calls to Forge Data Management service
