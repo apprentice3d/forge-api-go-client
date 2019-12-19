@@ -92,3 +92,66 @@ func TestBucketAPI_UploadObject(t *testing.T) {
 		}
 	})
 }
+
+func TestBucketAPI_DownloadObject(t *testing.T) {
+	// prepare the credentials
+	clientID := os.Getenv("FORGE_CLIENT_ID")
+	clientSecret := os.Getenv("FORGE_CLIENT_SECRET")
+
+	bucketAPI := dm.NewBucketAPIWithCredentials(clientID, clientSecret)
+
+	tempBucket := "test_bucket_for_download"
+	testFilePath := "../assets/TestFile.txt"
+	bucketDetails, err := bucketAPI.GetBucketDetails(tempBucket)
+
+	// Check if bucket is still hanging around
+	if err != nil && bucketDetails.CreateDate == "" {
+		_, err := bucketAPI.CreateBucket(tempBucket, "transient")
+		if err != nil {
+			t.Error("Could not create temp bucket, got: ", err.Error())
+		}
+		defer deleteBucket(bucketAPI, tempBucket, t)
+	}
+
+	file, err := os.Open(testFilePath)
+	if err != nil {
+		t.Fatal("Cannot open testfile for reading")
+	}
+	defer file.Close()
+
+	data := io.Reader(file)
+	if err != nil {
+		t.Fatal("Cannot read the testfile")
+	}
+
+	result, err := bucketAPI.UploadObject(tempBucket, "temp_file.txt", data) // doesn't want []byte as data
+
+	if err != nil {
+		t.Fatal("Could not upload the test object, got: ", err.Error())
+	}
+
+	if result.Size == 0 {
+		t.Fatal("The test object was uploaded but it is zero-sized")
+	}
+
+	reader, err := bucketAPI.DownloadObject(tempBucket, "temp_file.txt")
+	defer reader.Close()
+	if err != nil {
+		t.Fatal("Could not download the test object, got: ", err.Error())
+	}
+	buf := make([]byte, 15)
+	if _, err := io.ReadFull(reader, buf); err != nil {
+		t.Fatal(err)
+	}
+	if string(buf) != "Test test 1 2 3" {
+		t.Fatal("Test file contents do not match what was downloaded, got: ", string(buf))
+	}
+
+}
+
+func deleteBucket(bucketAPI dm.BucketAPI, bucketKey string, t *testing.T) {
+	err := bucketAPI.DeleteBucket(bucketKey)
+	if err != nil {
+		t.Error("Could not delete temp bucket, got: ", err.Error())
+	}
+}
