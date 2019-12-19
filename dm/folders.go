@@ -36,7 +36,7 @@ func (api FolderAPI) GetFolderDetails(projectKey, folderKey string) (result Item
 	return getFolderDetails(path, projectKey, folderKey, bearer.AccessToken)
 }
 
-func (api FolderAPI) GetFolderContents(projectKey, folderKey string) (result DataDetails, err error) {
+func (api FolderAPI) GetFolderContents(projectKey, folderKey string) (result FolderContents, err error) {
 	bearer, err := api.Authenticate("data:read")
 	if err != nil {
 		return
@@ -80,7 +80,7 @@ func getFolderDetails(path, projectKey, folderKey, token string) (result ItemDet
 	return
 }
 
-func getFolderContents(path, projectKey, folderKey, token string) (result DataDetails, err error) {
+func getFolderContents(path, projectKey, folderKey, token string) (result FolderContents, err error) {
 	task := http.Client{}
 
 	req, err := http.NewRequest("GET",
