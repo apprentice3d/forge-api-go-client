@@ -27,6 +27,13 @@ type DataDetails struct {
 	Links   	Link      	`json:"links, omitempty"`
 }
 
+type FolderContents struct {
+	JsonApi 	JsonAPI   	`json:"jsonapi, omitempty"`
+	Links   	Link      	`json:"links, omitempty"`
+	Data    	[]Content 	`json:"data, omitempty"`
+	Included 	[]Content 	`json:"included, omitempty"`
+}
+
 type ItemDetails struct {
 	Data    	Content 	`json:"data, omitempty"`
 	JsonApi 	JsonAPI   	`json:"jsonapi, omitempty"`
@@ -76,6 +83,17 @@ type Relationships struct {
 	} 		`json:"hub, omitempty"`
 	RootFolder 	RootFolder 	`json:"rootfolder, omitempty"`
 	TopFolders 	TopFolders 	`json:"topfolders, omitempty"`
+	Storage Storage `json:"storage, omitempty"`
+}
+
+type Storage struct {
+	Meta struct {
+		Links Link `json:"links, omitempty"`
+	} `json:"meta, omitempty"`
+	Data struct {
+		ID 		string 	`json:"id, omitempty"`
+		Type 	string 	`json:"type, omitempty"`
+	} 	`json:"data, omitempty"`
 }
 
 type RootFolder struct {
