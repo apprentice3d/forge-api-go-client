@@ -1,16 +1,16 @@
 package dm
 
 type Attribute struct {
-	Name      string `json:"name, omitempty"`
-	Region	  string `json: region, omitmepty"`
+	Name      string `json:"name"`
+	Region	  string `json: region"`
 	Extension struct {
-		Data    map[string]interface{} `json:"data, omitempty"`
-		Version string                 `json:"version, omitempty"`
-		Type    string                 `json:"type, omitempty"`
+		Data    map[string]interface{} `json:"data"`
+		Version string                 `json:"version"`
+		Type    string                 `json:"type"`
 		Schema  struct {
-			Href string `json:"href, omitempty"`
-		} `json:"schema, omitempty"`
-	} `json:"extension, omitempty"`
+			Href string `json:"href"`
+		} `json:"schema"`
+	} `json:"extension"`
 }
 
 type Content struct {
