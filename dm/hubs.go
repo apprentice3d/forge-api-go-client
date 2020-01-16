@@ -4,8 +4,7 @@ import (
 	// "fmt"
 	"encoding/json"
 	"net/http"
-	// "github.com/outer-labs/forge-api-go-client/oauth"
-	"../oauth"
+	"github.com/outer-labs/forge-api-go-client/oauth"
 )
 
 // HubAPI holds the necessary data for making calls to Forge Data Management service

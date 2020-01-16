@@ -2,8 +2,7 @@ package dm_test
 
 import (
 	"fmt"
-	// "github.com/outer-labs/forge-api-go-client/dm"
-	"../dm"
+	"github.com/outer-labs/forge-api-go-client/dm"
 	"log"
 	"os"
 	"testing"
