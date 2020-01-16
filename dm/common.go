@@ -40,7 +40,7 @@ type Attributes struct {
 	Region	  				*string 		`json:"region, omitempty"`
 	Scopes 					*[]string  		`json:"scopes, omitempty"`
 	DisplayName      		*string 		`json:"displayName, omitempty"`
-	ObjectCount      		*string 		`json:"objectCount, omitempty"`
+	ObjectCount      		*int 			`json:"objectCount, omitempty"`
 	CreateTime      		*string 		`json:"createTime, omitempty"`
 	CreateUserId      		*string 		`json:"createUserId, omitempty"`
 	CreateUserName      	*string 		`json:"createUserName, omitempty"`
@@ -48,7 +48,7 @@ type Attributes struct {
 	LastModifiedUserId  	*string 		`json:"lastModifiedUserId, omitempty"`
 	LastModifiedUserName    *string 		`json:"lastModifiedUserName, omitempty"`
 	Hidden      			*bool 			`json:"displayName, omitempty"`
-	VersionNumber      		*int 		`json:"versionNumber, omitempty"`
+	VersionNumber      		*int 			`json:"versionNumber, omitempty"`
 	Mimetype      			*string 		`json:"mimeType, omitempty"`
 	FileType      			*string 		`json:"fileType, omitempty"`
 	StorageSize      		*string 		`json:"storageSize, omitempty"`
