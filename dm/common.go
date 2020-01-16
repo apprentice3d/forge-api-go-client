@@ -51,7 +51,7 @@ type Attributes struct {
 	VersionNumber      		*int 			`json:"versionNumber, omitempty"`
 	Mimetype      			*string 		`json:"mimeType, omitempty"`
 	FileType      			*string 		`json:"fileType, omitempty"`
-	StorageSize      		*string 		`json:"storageSize, omitempty"`
+	StorageSize      		*int 			`json:"storageSize, omitempty"`
 	Reserved 				*bool 			`json:"reserved, omitempty"`
 	ReservedTime 			*string 		`json:"reservedTime, omitempty"`
 	ReservedUserId 			*string 		`json:"reservedUserId, omitempty"`
