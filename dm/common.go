@@ -4,7 +4,7 @@ type ForgeResponse struct {
 	JsonApi 				JsonAPI 		`json:"jsonApi`
 	Links 					Links 			`json:"links"`
 	Data 					Data 			`json:"data"`
-	Included 				*Data 			`json:"included, omitempty"`
+	Included 				*[]Data 		`json:"included, omitempty"`
 }
 
 type JsonAPI struct {
@@ -34,19 +34,19 @@ type Attributes struct {
 	Scopes 					*string  		`json:"scopes, omitempty"`
 	DisplayName      		*string 		`json:"displayName, omitempty"`
 	ObjectCount      		*string 		`json:"objectCount, omitempty"`
-	CreateTime      		*datetime 		`json:"createTime, omitempty"`
+	CreateTime      		*string 		`json:"createTime, omitempty"`
 	CreateUserId      		*string 		`json:"createUserId, omitempty"`
 	CreateUserName      	*string 		`json:"createUserName, omitempty"`
-	LastModifiedTime    	*datetime 		`json:"lastModifiedTime, omitempty"`
+	LastModifiedTime    	*string 		`json:"lastModifiedTime, omitempty"`
 	LastModifiedUserId  	*string 		`json:"lastModifiedUserId, omitempty"`
 	LastModifiedUserName    *string 		`json:"lastModifiedUserName, omitempty"`
-	Hidden      			*boolean 		`json:"displayName, omitempty"`
-	VersionNumber      		*string 		`json:"versionNumber, omitempty"`
+	Hidden      			*bool 			`json:"displayName, omitempty"`
+	VersionNumber      		*int 		`json:"versionNumber, omitempty"`
 	Mimetype      			*string 		`json:"mimeType, omitempty"`
 	FileType      			*string 		`json:"fileType, omitempty"`
 	StorageSize      		*string 		`json:"storageSize, omitempty"`
-	Reserved 				*boolean 		`json:"reserved, omitempty"`
-	ReservedTime 			*datetime 		`json:"reservedTime, omitempty"`
+	Reserved 				*bool 			`json:"reserved, omitempty"`
+	ReservedTime 			*string 		`json:"reservedTime, omitempty"`
 	ReservedUserId 			*string 		`json:"reservedUserId, omitempty"`
 	ReservedUserName		*string 		`json:"reservedUserName, omitempty"`
 	PathInProject 			*string 		`json:"pathInProject, omitempty"`
