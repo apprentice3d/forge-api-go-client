@@ -1,6 +1,13 @@
 package dm
 
-type ForgeResponse struct {
+type ForgeResponseObject struct {
+	JsonApi 				JsonAPI 		`json:"jsonApi`
+	Links 					Links 			`json:"links"`
+	Data 					Data 			`json:"data"`
+	Included 				*[]Data 		`json:"included, omitempty"`
+}
+
+type ForgeResponseArray struct {
 	JsonApi 				JsonAPI 		`json:"jsonApi`
 	Links 					Links 			`json:"links"`
 	Data 					[]Data 			`json:"data"`

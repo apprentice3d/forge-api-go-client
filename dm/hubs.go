@@ -23,7 +23,7 @@ func NewHubAPIWithCredentials(ClientID string, ClientSecret string) HubAPI {
 	}
 }
 
-func (api HubAPI) GetHubDetails(hubKey string) (result ForgeResponse, err error) {
+func (api HubAPI) GetHubDetails(hubKey string) (result ForgeResponseObject, err error) {
 	bearer, err := api.Authenticate("data:read")
 	if err != nil {
 		return
@@ -36,7 +36,7 @@ func (api HubAPI) GetHubDetails(hubKey string) (result ForgeResponse, err error)
 /*
  *	SUPPORT FUNCTIONS
  */
-func getHubDetails(path, hubKey, token string) (result ForgeResponse, err error) {
+func getHubDetails(path, hubKey, token string) (result ForgeResponseObject, err error) {
 	task := http.Client{}
 
 	req, err := http.NewRequest("GET",
