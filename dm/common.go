@@ -34,17 +34,22 @@ type Attributes struct {
 	Scopes 					*string  		`json:"scopes, omitempty"`
 	DisplayName      		*string 		`json:"displayName, omitempty"`
 	ObjectCount      		*string 		`json:"objectCount, omitempty"`
-	CreateTime      		*string 		`json:"createTime, omitempty"`
+	CreateTime      		*datetime 		`json:"createTime, omitempty"`
 	CreateUserId      		*string 		`json:"createUserId, omitempty"`
 	CreateUserName      	*string 		`json:"createUserName, omitempty"`
-	LastModifiedTime    	*string 		`json:"lastModifiedTime, omitempty"`
+	LastModifiedTime    	*datetime 		`json:"lastModifiedTime, omitempty"`
 	LastModifiedUserId  	*string 		`json:"lastModifiedUserId, omitempty"`
 	LastModifiedUserName    *string 		`json:"lastModifiedUserName, omitempty"`
-	Hidden      			*string 		`json:"displayName, omitempty"`
+	Hidden      			*boolean 		`json:"displayName, omitempty"`
 	VersionNumber      		*string 		`json:"versionNumber, omitempty"`
 	Mimetype      			*string 		`json:"mimeType, omitempty"`
 	FileType      			*string 		`json:"fileType, omitempty"`
 	StorageSize      		*string 		`json:"storageSize, omitempty"`
+	Reserved 				*boolean 		`json:"reserved, omitempty"`
+	ReservedTime 			*datetime 		`json:"reservedTime, omitempty"`
+	ReservedUserId 			*string 		`json:"reservedUserId, omitempty"`
+	ReservedUserName		*string 		`json:"reservedUserName, omitempty"`
+	PathInProject 			*string 		`json:"pathInProject, omitempty"`
 }
 
 type Relationships struct {
@@ -53,6 +58,8 @@ type Relationships struct {
 	RootFolder 				*RelatedLinks 	`json:"rootFolder, omitempty"`
 	TopFolders 				*RelatedLinks 	`json:"topFolders, omitempty"`
 	Parent  				*RelatedLinks 	`json:"parent, omitempty"`
+	Tip  					*RelatedLinks 	`json:"tip, omitempty"`
+	Versions  				*RelatedLinks 	`json:"versions, omitempty"`
 	Contents  				*RelatedLinks 	`json:"contents, omitempty"`
 	Refs  					*RelatedLinks 	`json:"refs, omitempty"`		
 	Links 					*RelatedLinks 	`json:"links, omitempty"`
@@ -67,7 +74,7 @@ type Extension struct {
 	Type 					string 			`json:"type"`
 	Version 				string 			`json:"version"`
 	Schema 					Href			`json:"schema"`
-	Data 					string 			`json:"data"`
+	Data 					struct{} 		`json:"data"`
 }
 
 type RelatedLinks struct {
