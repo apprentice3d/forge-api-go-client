@@ -3,7 +3,7 @@ package dm
 type ForgeResponse struct {
 	JsonApi 				JsonAPI 		`json:"jsonApi`
 	Links 					Links 			`json:"links"`
-	Data 					Data 			`json:"data"`
+	Data 					[]Data 			`json:"data"`
 	Included 				*[]Data 		`json:"included, omitempty"`
 }
 
