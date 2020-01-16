@@ -38,7 +38,7 @@ type Attributes struct {
 	Name      				string 			`json:"name"`
 	Extension 				Extension 		`json:"extension"`
 	Region	  				*string 		`json:"region, omitempty"`
-	Scopes 					*string  		`json:"scopes, omitempty"`
+	Scopes 					*[]string  		`json:"scopes, omitempty"`
 	DisplayName      		*string 		`json:"displayName, omitempty"`
 	ObjectCount      		*string 		`json:"objectCount, omitempty"`
 	CreateTime      		*string 		`json:"createTime, omitempty"`
