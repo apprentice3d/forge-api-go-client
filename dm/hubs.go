@@ -13,10 +13,6 @@ type HubAPI struct {
 	HubAPIPath string
 }
 
-type HubDetails struct {
-	Details DataDetails `json:"details, omitempty"`
-}
-
 var api HubAPI
 
 // NewHubAPIWithCredentials returns a Hub API client with default configurations
@@ -27,7 +23,7 @@ func NewHubAPIWithCredentials(ClientID string, ClientSecret string) HubAPI {
 	}
 }
 
-func (api HubAPI) GetHubDetails(hubKey string) (result HubDetails, err error) {
+func (api HubAPI) GetHubDetails(hubKey string) (result ForgeResponse, err error) {
 	bearer, err := api.Authenticate("data:read")
 	if err != nil {
 		return
@@ -40,7 +36,7 @@ func (api HubAPI) GetHubDetails(hubKey string) (result HubDetails, err error) {
 /*
  *	SUPPORT FUNCTIONS
  */
-func getHubDetails(path, hubKey, token string) (result HubDetails, err error) {
+func getHubDetails(path, hubKey, token string) (result ForgeResponse, err error) {
 	task := http.Client{}
 
 	req, err := http.NewRequest("GET",

@@ -1,10 +1,10 @@
 package dm
 
 type ForgeResponse struct {
-	JsonApi 				JsonApi 			`json:"jsonApi`
-	Links 					Links 				`json:"links"`
-	Data 					Data 				`json:"data"`
-	Included 				*Data 				`json:"included, omitempty"`
+	JsonApi 				JsonAPI 		`json:"jsonApi`
+	Links 					Links 			`json:"links"`
+	Data 					Data 			`json:"data"`
+	Included 				*Data 			`json:"included, omitempty"`
 }
 
 type JsonAPI struct {
@@ -64,24 +64,24 @@ type Relationships struct {
 }
 
 type Extension struct {
-	Type 		string 			`json:"type"`
-	Version 	string 			`json:"version"`
-	Schema 		Href			`json:"schema"`
-	Data 		string 			`json:"data"`
+	Type 					string 			`json:"type"`
+	Version 				string 			`json:"version"`
+	Schema 					Href			`json:"schema"`
+	Data 					string 			`json:"data"`
 }
 
 type RelatedLinks struct {
-	Meta 	*Meta 				`json:"meta, omitempty"`
-	Links 	*Links 				`json:"links, omitempty"`
-	Data 	*DataOrIncluded		`json:"data, omitempty"`
+	Meta 					*Meta 			`json:"meta, omitempty"`
+	Links 					*Links 			`json:"links, omitempty"`
+	Data 					*Data			`json:"data, omitempty"`
 }
 
 type Meta struct {
-	Link   	Href 		`json:"href"`	
+	Link   					Href 			`json:"href"`	
 }
 
 type Href struct {
-	Href 	string 		`json:"href"`
+	Href 					string 			`json:"href"`
 }
 
 // Note on use of omitempty: https://www.sohamkamani.com/blog/golang/2018-07-19-golang-omitempty/
