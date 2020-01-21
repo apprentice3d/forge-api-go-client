@@ -28,9 +28,9 @@ type Links struct {
 
 type Data struct {
 	Type 					string 			`json:"type"` 	 
-	Id 						string 			`json:"id"`
-	Attributes 				*Attributes 	`json:"attributes, omitempty"`
-	Relationships 			*Relationships 	`json:"relationships, omitempty"`
+	Id 					string 			`json:"id"`
+	Attributes 				*Attributes 		`json:"attributes, omitempty"`
+	Relationships 				*Relationships 		`json:"relationships, omitempty"`
 	Links 					*Links 			`json:"links, omitempty"`
 }
 
@@ -39,42 +39,42 @@ type Attributes struct {
 	Extension 				Extension 		`json:"extension"`
 	Region	  				*string 		`json:"region, omitempty"`
 	Scopes 					*[]string  		`json:"scopes, omitempty"`
-	DisplayName      		*string 		`json:"displayName, omitempty"`
-	ObjectCount      		*int 			`json:"objectCount, omitempty"`
-	CreateTime      		*string 		`json:"createTime, omitempty"`
-	CreateUserId      		*string 		`json:"createUserId, omitempty"`
-	CreateUserName      	*string 		`json:"createUserName, omitempty"`
-	LastModifiedTime    	*string 		`json:"lastModifiedTime, omitempty"`
-	LastModifiedUserId  	*string 		`json:"lastModifiedUserId, omitempty"`
-	LastModifiedUserName    *string 		`json:"lastModifiedUserName, omitempty"`
-	Hidden      			*bool 			`json:"displayName, omitempty"`
-	VersionNumber      		*int 			`json:"versionNumber, omitempty"`
-	Mimetype      			*string 		`json:"mimeType, omitempty"`
-	FileType      			*string 		`json:"fileType, omitempty"`
-	StorageSize      		*int 			`json:"storageSize, omitempty"`
+	DisplayName      			*string 		`json:"displayName, omitempty"`
+	ObjectCount      			*int 			`json:"objectCount, omitempty"`
+	CreateTime      			*string 		`json:"createTime, omitempty"`
+	CreateUserId      			*string 		`json:"createUserId, omitempty"`
+	CreateUserName      			*string 		`json:"createUserName, omitempty"`
+	LastModifiedTime    			*string 		`json:"lastModifiedTime, omitempty"`
+	LastModifiedUserId  			*string 		`json:"lastModifiedUserId, omitempty"`
+	LastModifiedUserName    		*string 		`json:"lastModifiedUserName, omitempty"`
+	Hidden      				*bool 			`json:"displayName, omitempty"`
+	VersionNumber      			*int 			`json:"versionNumber, omitempty"`
+	Mimetype      				*string 		`json:"mimeType, omitempty"`
+	FileType      				*string 		`json:"fileType, omitempty"`
+	StorageSize      			*int 			`json:"storageSize, omitempty"`
 	Reserved 				*bool 			`json:"reserved, omitempty"`
-	ReservedTime 			*string 		`json:"reservedTime, omitempty"`
-	ReservedUserId 			*string 		`json:"reservedUserId, omitempty"`
-	ReservedUserName		*string 		`json:"reservedUserName, omitempty"`
-	PathInProject 			*string 		`json:"pathInProject, omitempty"`
+	ReservedTime 				*string 		`json:"reservedTime, omitempty"`
+	ReservedUserId 				*string 		`json:"reservedUserId, omitempty"`
+	ReservedUserName			*string 		`json:"reservedUserName, omitempty"`
+	PathInProject 				*string 		`json:"pathInProject, omitempty"`
 }
 
 type Relationships struct {
-	Hub 					*RelatedLinks	`json:"hub, omitempty"`
-	Projects 				*RelatedLinks 	`json:projects, omitempty"`
-	RootFolder 				*RelatedLinks 	`json:"rootFolder, omitempty"`
-	TopFolders 				*RelatedLinks 	`json:"topFolders, omitempty"`
-	Parent  				*RelatedLinks 	`json:"parent, omitempty"`
-	Tip  					*RelatedLinks 	`json:"tip, omitempty"`
-	Versions  				*RelatedLinks 	`json:"versions, omitempty"`
-	Contents  				*RelatedLinks 	`json:"contents, omitempty"`
-	Refs  					*RelatedLinks 	`json:"refs, omitempty"`		
-	Links 					*RelatedLinks 	`json:"links, omitempty"`
-	Item 					*RelatedLinks	`json:"item, omitempty"`
-	Storage 				*RelatedLinks	`json:"storage, omitempty"`
-	Derivatives 			*RelatedLinks	`json:"derivatives, omitempty"`
-	Thumbnails 				*RelatedLinks	`json:"thumbmails, omitempty"`
-	DownloadFormats 		*RelatedLinks	`json:"downloadFormats, omitempty"`
+	Hub 					*RelatedLinks		`json:"hub, omitempty"`
+	Projects 				*RelatedLinks 		`json:projects, omitempty"`
+	RootFolder 				*RelatedLinks 		`json:"rootFolder, omitempty"`
+	TopFolders 				*RelatedLinks 		`json:"topFolders, omitempty"`
+	Parent  				*RelatedLinks 		`json:"parent, omitempty"`
+	Tip  					*RelatedLinks 		`json:"tip, omitempty"`
+	Versions  				*RelatedLinks 		`json:"versions, omitempty"`
+	Contents  				*RelatedLinks 		`json:"contents, omitempty"`
+	Refs  					*RelatedLinks 		`json:"refs, omitempty"`		
+	Links 					*RelatedLinks 		`json:"links, omitempty"`
+	Item 					*RelatedLinks		`json:"item, omitempty"`
+	Storage 				*RelatedLinks		`json:"storage, omitempty"`
+	Derivatives 				*RelatedLinks		`json:"derivatives, omitempty"`
+	Thumbnails 				*RelatedLinks		`json:"thumbmails, omitempty"`
+	DownloadFormats 			*RelatedLinks		`json:"downloadFormats, omitempty"`
 }
 
 type Extension struct {
