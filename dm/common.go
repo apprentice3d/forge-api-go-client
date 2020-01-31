@@ -1,111 +1,101 @@
 package dm
 
-type Attribute struct {
-	Name      string `json:"name"`
-	Region	  string `json: region"`
-	Extension struct {
-		Data    map[string]interface{} `json:"data"`
-		Version string                 `json:"version"`
-		Type    string                 `json:"type"`
-		Schema  struct {
-			Href string `json:"href"`
-		} `json:"schema"`
-	} `json:"extension"`
+type ForgeResponseObject struct {
+	JsonApi 				JsonAPI 		`json:"jsonApi`
+	Links 					Links 			`json:"links"`
+	Data 					Data 			`json:"data"`
+	Included 				*[]Data 		`json:"included, omitempty"`
 }
 
-type Content struct {
-	Relationships 	Relationships 	`json:"relationships, omitempty"`
-	Attributes 	  	Attribute 		`json:"attributes, omitempty"`
-	Type       		string    		`json:"type, omitempty"`
-	Id         		string    		`json:"id, omitempty"`
-	Links      		Link      		`json:"links, omitempty"`
-}
-
-type DataDetails struct {
-	Data    	[]Content 	`json:"data, omitempty"`
-	JsonApi 	JsonAPI   	`json:"jsonapi, omitempty"`
-	Links   	Link      	`json:"links, omitempty"`
-}
-
-type FolderContents struct {
-	JsonApi 	JsonAPI   	`json:"jsonapi, omitempty"`
-	Links   	Link      	`json:"links, omitempty"`
-	Data    	[]Content 	`json:"data, omitempty"`
-	Included 	[]Content 	`json:"included, omitempty"`
-}
-
-type ItemDetails struct {
-	Data    	Content 	`json:"data, omitempty"`
-	JsonApi 	JsonAPI   	`json:"jsonapi, omitempty"`
-	Links   	Link      	`json:"links, omitempty"`
-	Included 	[]Content 	`json:"included, omitempty"`
-}
-
-type Hub struct {
-	Links 		Link 		`json:"links, omitempty"`
-	Data 		[]Content 	`json:"data, omitempty"`
+type ForgeResponseArray struct {
+	JsonApi 				JsonAPI 		`json:"jsonApi`
+	Links 					Links 			`json:"links"`
+	Data 					[]Data 			`json:"data"`
+	Included 				*[]Data 		`json:"included, omitempty"`
 }
 
 type JsonAPI struct {
-	Version 	string 		`json:"version, omitempty"`
+	Version 				string 			`json:"version"`
 }
 
-type Link struct {
-	Self struct {
-		Href 	string `json:"href, omitempty"`
-	} `json:"self, omitempty"`
-	First struct {
-		Href string `json:"href, omitempty"`
-	} `json:"first, omitempty"`
-	Prev struct {
-		Href string `json:"href, omitempty"`
-	} `json:"prev, omitempty"`
-	Next struct {
-		Href string `json:"href, omitempty"`
-	} `json:"next, omitempty"`
-	Related struct {
-		Href string `json:"href, omitempty"`
-	} `json:"related, omitempty"`
+type Links struct {
+	Self 					*Href 			`json:"self, omitempty"`
+	Related 				*Href 			`json:"related, omitempty"`
+	First 					*Href 			`json:"first, omitempty"`
+	Prev 					*Href 			`json:"prev, omitempty"`
+	Next 					*Href 			`json:"next, omitempty"`
 }
 
-type Project struct {
-	Links Link `json:"links, omitempty"`
+type Data struct {
+	Type 					string 			`json:"type"` 	 
+	Id 					string 			`json:"id"`
+	Attributes 				*Attributes 		`json:"attributes, omitempty"`
+	Relationships 				*Relationships 		`json:"relationships, omitempty"`
+	Links 					*Links 			`json:"links, omitempty"`
+}
+
+type Attributes struct {
+	Name      				string 			`json:"name"`
+	Extension 				Extension 		`json:"extension"`
+	Region	  				*string 		`json:"region, omitempty"`
+	Scopes 					*[]string  		`json:"scopes, omitempty"`
+	DisplayName      			*string 		`json:"displayName, omitempty"`
+	ObjectCount      			*int 			`json:"objectCount, omitempty"`
+	CreateTime      			*string 		`json:"createTime, omitempty"`
+	CreateUserId      			*string 		`json:"createUserId, omitempty"`
+	CreateUserName      			*string 		`json:"createUserName, omitempty"`
+	LastModifiedTime    			*string 		`json:"lastModifiedTime, omitempty"`
+	LastModifiedUserId  			*string 		`json:"lastModifiedUserId, omitempty"`
+	LastModifiedUserName    		*string 		`json:"lastModifiedUserName, omitempty"`
+	Hidden      				*bool 			`json:"displayName, omitempty"`
+	VersionNumber      			*int 			`json:"versionNumber, omitempty"`
+	Mimetype      				*string 		`json:"mimeType, omitempty"`
+	FileType      				*string 		`json:"fileType, omitempty"`
+	StorageSize      			*int 			`json:"storageSize, omitempty"`
+	Reserved 				*bool 			`json:"reserved, omitempty"`
+	ReservedTime 				*string 		`json:"reservedTime, omitempty"`
+	ReservedUserId 				*string 		`json:"reservedUserId, omitempty"`
+	ReservedUserName			*string 		`json:"reservedUserName, omitempty"`
+	PathInProject 				*string 		`json:"pathInProject, omitempty"`
 }
 
 type Relationships struct {
-	Projects 	Project 	`json:"projects, omitempty"`
-	Hub 		struct {
-		Links 		Link 		`json:"links, omitempty"`
-		Data 		struct {
-			ID 		string 	`json:"id, omitempty"`
-			Type 	string 	`json:"type, omitempty"`
-		} 	`json:"data, omitempty"`
-	} 		`json:"hub, omitempty"`
-	RootFolder 	RootFolder 	`json:"rootfolder, omitempty"`
-	TopFolders 	TopFolders 	`json:"topfolders, omitempty"`
-	Storage Storage `json:"storage, omitempty"`
+	Hub 					*RelatedLinks		`json:"hub, omitempty"`
+	Projects 				*RelatedLinks 		`json:projects, omitempty"`
+	RootFolder 				*RelatedLinks 		`json:"rootFolder, omitempty"`
+	TopFolders 				*RelatedLinks 		`json:"topFolders, omitempty"`
+	Parent  				*RelatedLinks 		`json:"parent, omitempty"`
+	Tip  					*RelatedLinks 		`json:"tip, omitempty"`
+	Versions  				*RelatedLinks 		`json:"versions, omitempty"`
+	Contents  				*RelatedLinks 		`json:"contents, omitempty"`
+	Refs  					*RelatedLinks 		`json:"refs, omitempty"`		
+	Links 					*RelatedLinks 		`json:"links, omitempty"`
+	Item 					*RelatedLinks		`json:"item, omitempty"`
+	Storage 				*RelatedLinks		`json:"storage, omitempty"`
+	Derivatives 				*RelatedLinks		`json:"derivatives, omitempty"`
+	Thumbnails 				*RelatedLinks		`json:"thumbmails, omitempty"`
+	DownloadFormats 			*RelatedLinks		`json:"downloadFormats, omitempty"`
 }
 
-type Storage struct {
-	Meta struct {
-		Links Link `json:"links, omitempty"`
-	} `json:"meta, omitempty"`
-	Data struct {
-		ID 		string 	`json:"id, omitempty"`
-		Type 	string 	`json:"type, omitempty"`
-	} 	`json:"data, omitempty"`
+type Extension struct {
+	Type 					string 			`json:"type"`
+	Version 				string 			`json:"version"`
+	Schema 					Href			`json:"schema"`
+	Data 					struct{} 		`json:"data"`
 }
 
-type RootFolder struct {
-	Meta struct {
-		Links Link `json:"links, omitempty"`
-	} `json:"meta, omitempty"`
-	Data struct {
-		ID 		string 	`json:"id, omitempty"`
-		Type 	string 	`json:"type, omitempty"`
-	} 	`json:"data, omitempty"`
+type RelatedLinks struct {
+	Meta 					*Meta 			`json:"meta, omitempty"`
+	Links 					*Links 			`json:"links, omitempty"`
+	Data 					*Data			`json:"data, omitempty"`
 }
 
-type TopFolders struct {
-	Links 		Link 	`	json:"links, omitempty"`
+type Meta struct {
+	Link   					Href 			`json:"href"`	
 }
+
+type Href struct {
+	Href 					string 			`json:"href"`
+}
+
+// Note on use of omitempty: https://www.sohamkamani.com/blog/golang/2018-07-19-golang-omitempty/

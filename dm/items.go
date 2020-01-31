@@ -6,7 +6,7 @@ import (
 )
 
 // ListBuckets returns a list of all buckets created or associated with Forge secrets used for token creation
-func (api FolderAPI) GetItemDetails(projectKey, itemKey string) (result ItemDetails, err error) {
+func (api FolderAPI) GetItemDetails(projectKey, itemKey string) (result ForgeResponseObject, err error) {
 	
 	// TO DO: take in optional header argument
 	// https://forge.autodesk.com/en/docs/data/v2/reference/http/projects-project_id-items-item_id-GET/
@@ -20,7 +20,7 @@ func (api FolderAPI) GetItemDetails(projectKey, itemKey string) (result ItemDeta
 	return getItemDetails(path, projectKey, itemKey, bearer.AccessToken)
 }
 
-func (api FolderAPI) GetItemTip(projectKey, itemKey string) (result ItemDetails, err error) {
+func (api FolderAPI) GetItemTip(projectKey, itemKey string) (result ForgeResponseObject, err error) {
 	
 	// TO DO: take in optional header argument
 	// https://forge.autodesk.com/en/docs/data/v2/reference/http/projects-project_id-items-item_id-GET/
@@ -34,7 +34,7 @@ func (api FolderAPI) GetItemTip(projectKey, itemKey string) (result ItemDetails,
 	return getItemDetails(path, projectKey, itemKey, bearer.AccessToken)
 }
 
-func (api FolderAPI) GetItemVersions(projectKey, itemKey string) (result ItemDetails, err error) {
+func (api FolderAPI) GetItemVersions(projectKey, itemKey string) (result ForgeResponseArray, err error) {
 	
 	// TO DO: take in optional header argument
 	// https://forge.autodesk.com/en/docs/data/v2/reference/http/projects-project_id-items-item_id-GET/
@@ -45,14 +45,14 @@ func (api FolderAPI) GetItemVersions(projectKey, itemKey string) (result ItemDet
 
 	path := api.Host + api.FolderAPIPath
 
-	return getItemDetails(path, projectKey, itemKey, bearer.AccessToken)
+	return getItemVersions(path, projectKey, itemKey, "", "", "", "", "", "", bearer.AccessToken)
 }
 
 
 /*
  *	SUPPORT FUNCTIONS
  */
-func getItemDetails(path, projectKey, itemKey, token string) (result ItemDetails, err error) {
+func getItemDetails(path, projectKey, itemKey, token string) (result ForgeResponseObject, err error) {
 	task := http.Client{}
 
 	req, err := http.NewRequest("GET",
@@ -82,7 +82,7 @@ func getItemDetails(path, projectKey, itemKey, token string) (result ItemDetails
 	return
 }
 
-func getItemTip(path, projectKey, itemKey, token string) (result ItemDetails, err error) {
+func getItemTip(path, projectKey, itemKey, token string) (result ForgeResponseObject, err error) {
 	task := http.Client{}
 
 	req, err := http.NewRequest("GET",
@@ -112,7 +112,7 @@ func getItemTip(path, projectKey, itemKey, token string) (result ItemDetails, er
 	return
 }
 
-func getItemVersions(path, projectKey, itemKey, refType, id, extension, versionNumber, page, limit string, token string) (result ItemDetails, err error) {
+func getItemVersions(path, projectKey, itemKey, refType, id, extension, versionNumber, page, limit, token string) (result ForgeResponseArray, err error) {
 	task := http.Client{}
 
 	req, err := http.NewRequest("GET",
