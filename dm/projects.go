@@ -6,6 +6,21 @@ import (
 )
 
 // ListBuckets returns a list of all buckets created or associated with Forge secrets used for token creation
+func (bearer ThreeLeggedAuth) ListProjectsThreeLegged(hubKey string) (result ForgeResponseArray, err error) {
+	
+	// TO DO: take in optional arguments for query params: id, ext, page, limit
+	// https://forge.autodesk.com/en/docs/data/v2/reference/http/hubs-hub_id-projects-GET/
+	// bearer, err := api.RefreshToken("data:read")
+	// if err != nil {
+	// 	return
+	// }
+
+	// path := api.Host + api.HubAPIPath
+
+	return listProjects(path, hubKey, "", "", "", "", bearer.AccessToken)
+}
+
+// ListBuckets returns a list of all buckets created or associated with Forge secrets used for token creation
 func (api HubAPI) ListProjects(hubKey string) (result ForgeResponseArray, err error) {
 	
 	// TO DO: take in optional arguments for query params: id, ext, page, limit

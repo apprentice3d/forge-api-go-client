@@ -44,6 +44,21 @@ func (api HubAPI) GetHubDetails(hubKey string) (result ForgeResponseObject, err 
 }
 
 
+func (bearer ThreeLeggedAuth) GetHubsThreeLegged() (result ForgeResponseArray, err error) {
+	// bearer, err := api.Authenticate("data:read")
+	// if err != nil {
+	// 	return
+	// }
+	// path := api.Host + api.HubAPIPath
+
+	//To do? check if access token needs to be refreshed? if so, run bearer.RefreshToken?
+
+	return getHubs(path, bearer.AccessToken)
+}
+
+
+
+
 /*
  *	SUPPORT FUNCTIONS
  */
