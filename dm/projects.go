@@ -3,10 +3,11 @@ package dm
 import (
 	"encoding/json"
 	"net/http"
+	"github.com/outer-labs/forge-api-go-client/oauth"
 )
 
 // ListBuckets returns a list of all buckets created or associated with Forge secrets used for token creation
-func (bearer ThreeLeggedAuth) ListProjectsThreeLegged(hubKey string) (result ForgeResponseArray, err error) {
+func ListProjectsThreeLegged(bearer oauth.Bearer, hubKey string) (result ForgeResponseArray, err error) {
 	
 	// TO DO: take in optional arguments for query params: id, ext, page, limit
 	// https://forge.autodesk.com/en/docs/data/v2/reference/http/hubs-hub_id-projects-GET/
@@ -16,7 +17,7 @@ func (bearer ThreeLeggedAuth) ListProjectsThreeLegged(hubKey string) (result For
 	// }
 
 	// path := api.Host + api.HubAPIPath
-
+	path := "https://developer.api.autodesk.com/project/v1/hubs"
 	return listProjects(path, hubKey, "", "", "", "", bearer.AccessToken)
 }
 

@@ -44,7 +44,7 @@ func (api HubAPI) GetHubDetails(hubKey string) (result ForgeResponseObject, err 
 }
 
 
-func (bearer ThreeLeggedAuth) GetHubsThreeLegged() (result ForgeResponseArray, err error) {
+func GetHubsThreeLegged(bearer oauth.Bearer) (result ForgeResponseArray, err error) {
 	// bearer, err := api.Authenticate("data:read")
 	// if err != nil {
 	// 	return
@@ -52,7 +52,7 @@ func (bearer ThreeLeggedAuth) GetHubsThreeLegged() (result ForgeResponseArray, e
 	// path := api.Host + api.HubAPIPath
 
 	//To do? check if access token needs to be refreshed? if so, run bearer.RefreshToken?
-
+	path := "https://developer.api.autodesk.com/project/v1/hubs"
 	return getHubs(path, bearer.AccessToken)
 }
 
