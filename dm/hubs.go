@@ -28,7 +28,7 @@ func NewHubAPIWithCredentials(ClientID string, ClientSecret string) HubAPI {
 	}
 }
 
-func NewHubAPI3LWithCredentials(threeLeggedAuth oauth.ThreeLeggedAuth) HubAPI {
+func NewHubAPI3LWithCredentials(threeLeggedAuth oauth.ThreeLeggedAuth) HubAPI3L {
 	return HubAPI3L{
 		threeLeggedAuth,
 		"/project/v1/hubs",

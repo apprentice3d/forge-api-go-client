@@ -25,6 +25,13 @@ func NewFolderAPIWithCredentials(ClientID string, ClientSecret string) FolderAPI
 	}
 }
 
+func NewFolderAPI3LWithCredentials(threeLeggedAuth oauth.ThreeLeggedAuth) FolderAPI3L {
+	return FolderAPI{
+		threeLeggedAuth,
+		"/data/v1/projects",
+	}
+}
+
 // ListBuckets returns a list of all buckets created or associated with Forge secrets used for token creation
 func (api FolderAPI) GetFolderDetails(projectKey, folderKey string) (result ForgeResponseObject, err error) {
 	
