@@ -28,6 +28,13 @@ func NewHubAPIWithCredentials(ClientID string, ClientSecret string) HubAPI {
 	}
 }
 
+func NewHubAPI3LWithCredentials(threeLeggedAuth oauth.ThreeLeggedAuth) HubAPI {
+	return HubAPI3L{
+		threeLeggedAuth,
+		"/project/v1/hubs",
+	}
+}
+
 func (api HubAPI) GetHubs() (result ForgeResponseArray, err error) {
 	bearer, err := api.Authenticate("data:read")
 	if err != nil {
