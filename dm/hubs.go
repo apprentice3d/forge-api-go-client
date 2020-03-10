@@ -57,14 +57,14 @@ func (api HubAPI3L)GetHubsThreeLegged(bearer oauth.Bearer) (result ForgeResponse
 	return getHubs(path, bearer.AccessToken)
 }
 
-func (api HubAPI3L) GetHubDetailsThreeLegged(hubKey string) (result ForgeResponseObject, err error) {
-	bearer, err := api.Authenticate("data:read")
+func (api HubAPI3L) GetHubDetailsThreeLegged(bearer oauth.Bearer, hubKey string) (result ForgeResponseObject, err error) {
+	refreshedBearer, err := api.RefreshToken(bearer.RefreshToken, "data:read")
 	if err != nil {
 		return
 	}
 	path := api.Host + api.HubAPIPath
 
-	return getHubDetails(path, hubKey, bearer.AccessToken)
+	return getHubDetails(path, hubKey, refreshedBearer.AccessToken)
 }
 
 
