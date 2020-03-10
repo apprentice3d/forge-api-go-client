@@ -14,6 +14,11 @@ type BucketAPI struct {
 	BucketAPIPath string
 }
 
+type BucketAPI3L struct {
+	oauth.ThreeLeggedAuth
+	BucketAPIPath string
+}
+
 // NewBucketAPIWithCredentials returns a Bucket API client with default configurations
 func NewBucketAPIWithCredentials(ClientID string, ClientSecret string) BucketAPI {
 	return BucketAPI{

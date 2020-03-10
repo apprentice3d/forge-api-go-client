@@ -13,6 +13,11 @@ type HubAPI struct {
 	HubAPIPath string
 }
 
+type HubAPI3L struct {
+	oauth.ThreeLeggedAuth
+	HubAPIPath string
+}
+
 var api HubAPI
 
 // NewHubAPIWithCredentials returns a Hub API client with default configurations
@@ -43,20 +48,24 @@ func (api HubAPI) GetHubDetails(hubKey string) (result ForgeResponseObject, err 
 	return getHubDetails(path, hubKey, bearer.AccessToken)
 }
 
-
-func GetHubsThreeLegged(bearer oauth.Bearer) (result ForgeResponseArray, err error) {
-	// bearer, err := api.Authenticate("data:read")
-	// if err != nil {
-	// 	return
-	// }
-	// path := api.Host + api.HubAPIPath
+// Hub functions for use with 3legged authentication
+func (api HubAPI3L)GetHubsThreeLegged(bearer oauth.Bearer) (result ForgeResponseArray, err error) {
 
 	//To do? check if access token needs to be refreshed? if so, run bearer.RefreshToken?
+	// if bearer.ExpiresIn 
 	path := "https://developer.api.autodesk.com/project/v1/hubs"
 	return getHubs(path, bearer.AccessToken)
 }
 
+func (api HubAPI3L) GetHubDetailsThreeLegged(hubKey string) (result ForgeResponseObject, err error) {
+	bearer, err := api.Authenticate("data:read")
+	if err != nil {
+		return
+	}
+	path := api.Host + api.HubAPIPath
 
+	return getHubDetails(path, hubKey, bearer.AccessToken)
+}
 
 
 /*

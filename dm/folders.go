@@ -12,6 +12,10 @@ type FolderAPI struct {
 	FolderAPIPath string
 }
 
+type FolderAPI3L struct {
+	oauth.ThreeLeggedAuth
+	FolderAPIPath string
+}
 
 // NewFolderAPIWithCredentials returns a Folder API client with default configurations
 func NewFolderAPIWithCredentials(ClientID string, ClientSecret string) FolderAPI {
@@ -44,6 +48,31 @@ func (api FolderAPI) GetFolderContents(projectKey, folderKey string) (result For
 	path := api.Host + api.FolderAPIPath
 
 	return getFolderContents(path, projectKey, folderKey, bearer.AccessToken)
+}
+
+// Three legged Folder api calls
+func (api FolderAPI3L) GetFolderDetailsThreeLegged(bearer oauth.Bearer, projectKey, folderKey string) (result ForgeResponseObject, err error) {
+	
+	// TO DO: take in optional header arguments
+	// https://forge.autodesk.com/en/docs/data/v2/reference/http/projects-project_id-folders-folder_id-GET/
+	refreshedBearer, err := api.RefreshToken(bearer.RefreshToken, "data:read")
+	if err != nil {
+		return
+	}
+
+	path := api.Host + api.FolderAPIPath
+
+	return getFolderDetails(path, projectKey, folderKey, refreshedBearer.AccessToken)
+}
+
+func (api FolderAPI3L) GetFolderContentsThreeLegged(bearer oauth.Bearer, projectKey, folderKey string) (result ForgeResponseArray, err error) {
+	refreshedBearer, err := api.RefreshToken(bearer.RefreshToken, "data:read")
+	if err != nil {
+		return
+	}
+	path := api.Host + api.FolderAPIPath
+
+	return getFolderContents(path, projectKey, folderKey, refreshedBearer.AccessToken)
 }
 
 
