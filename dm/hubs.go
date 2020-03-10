@@ -49,7 +49,7 @@ func (api HubAPI) GetHubDetails(hubKey string) (result ForgeResponseObject, err 
 }
 
 // Hub functions for use with 3legged authentication
-func (api HubAPI3L)GetHubsThreeLegged(bearer oauth.Bearer) (result ForgeResponseArray, err error) {
+func (api HubAPI3L) GetHubsThreeLegged(bearer oauth.Bearer) (result ForgeResponseArray, err error) {
 
 	//To do? check if access token needs to be refreshed? if so, run bearer.RefreshToken?
 	// if bearer.ExpiresIn 

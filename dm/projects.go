@@ -42,7 +42,7 @@ func (api HubAPI) GetTopFolders(hubKey, projectKey string) (result ForgeResponse
 }
 
 // Three-legged api calls
-func (api HubAPI3L)ListProjectsThreeLegged(bearer oauth.Bearer, hubKey string) (result ForgeResponseArray, err error) {
+func (api HubAPI3L) ListProjectsThreeLegged(bearer oauth.Bearer, hubKey string) (result ForgeResponseArray, err error) {
 	
 	refreshedBearer, err := api.RefreshToken(bearer.RefreshToken, "data:read")
 	if err != nil {
