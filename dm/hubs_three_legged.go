@@ -77,12 +77,11 @@ func (a *HubAPI3L) refreshTokenIfRequired() error {
 	}
 
 	// TODO: Store expiry time
-	a.BearerToken = &oauth.Bearer{
-		AccessToken:  refreshedBearer.AccessToken,
-		ExpiresIn:    refreshedBearer.ExpiresIn,
-		RefreshToken: refreshedBearer.RefreshToken,
-		TokenType:    refreshedBearer.TokenType,
-	}
+
+	a.BearerToken.AccessToken = refreshedBearer.AccessToken
+	a.BearerToken.ExpiresIn = refreshedBearer.ExpiresIn
+	a.BearerToken.RefreshToken = refreshedBearer.RefreshToken
+	a.BearerToken.TokenType = refreshedBearer.TokenType
 
 	return nil
 }
