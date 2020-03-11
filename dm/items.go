@@ -3,6 +3,7 @@ package dm
 import (
 	"encoding/json"
 	"net/http"
+	"github.com/outer-labs/forge-api-go-client/oauth"
 )
 
 // ListBuckets returns a list of all buckets created or associated with Forge secrets used for token creation
@@ -53,7 +54,7 @@ func (api FolderAPI3L) GetItemDetailsThreeLegged(bearer oauth.Bearer, projectKey
 	
 	// TO DO: take in optional header argument
 	// https://forge.autodesk.com/en/docs/data/v2/reference/http/projects-project_id-items-item_id-GET/
-	refreshedBearer, err := api.RefreshToken("data:read")
+	refreshedBearer, err := api.RefreshToken(bearer.RefreshToken, "data:read")
 	if err != nil {
 		return
 	}

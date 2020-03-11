@@ -26,7 +26,7 @@ func NewFolderAPIWithCredentials(ClientID string, ClientSecret string) FolderAPI
 }
 
 func NewFolderAPI3LWithCredentials(threeLeggedAuth oauth.ThreeLeggedAuth) FolderAPI3L {
-	return FolderAPI{
+	return FolderAPI3L{
 		threeLeggedAuth,
 		"/data/v1/projects",
 	}
