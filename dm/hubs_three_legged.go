@@ -29,7 +29,7 @@ func (a *HubAPI3L) GetHubsThreeLegged() (result ForgeResponseArray, err error) {
 		return
 	}
 
-	path := "https://developer.api.autodesk.com/project/v1/hubs"
+	path := a.Auth.Host + a.HubAPIPath
 	return getHubs(path, a.BearerToken.AccessToken)
 }
 
@@ -38,7 +38,7 @@ func (a *HubAPI3L) GetHubDetailsThreeLegged(hubKey string) (result ForgeResponse
 		return
 	}
 
-	path := a.Auth.Host + api.HubAPIPath
+	path := a.Auth.Host + a.HubAPIPath
 	return getHubDetails(path, hubKey, a.BearerToken.AccessToken)
 }
 
@@ -56,7 +56,7 @@ func (a *HubAPI3L) GetProjectDetailsThreeLegged(hubKey, projectKey string) (resu
 		return
 	}
 
-	path := api.Host + api.HubAPIPath
+	path := a.Host + a.HubAPIPath
 	return getProjectDetails(path, hubKey, projectKey, a.BearerToken.AccessToken)
 }
 
@@ -65,7 +65,7 @@ func (a *HubAPI3L) GetTopFoldersThreeLegged(hubKey, projectKey string) (result F
 		return
 	}
 
-	path := api.Host + api.HubAPIPath
+	path := a.Host + a.HubAPIPath
 	return getTopFolders(path, hubKey, projectKey, a.BearerToken.AccessToken)
 }
 

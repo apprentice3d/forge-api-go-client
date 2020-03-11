@@ -49,21 +49,6 @@ func (api FolderAPI) GetItemVersions(projectKey, itemKey string) (result ForgeRe
 	return getItemVersions(path, projectKey, itemKey, "", "", "", "", "", "", bearer.AccessToken)
 }
 
-// Three legged api calls
-func (api FolderAPI3L) GetItemDetailsThreeLegged(bearer oauth.Bearer, projectKey, itemKey string) (result ForgeResponseObject, err error) {
-	
-	// TO DO: take in optional header argument
-	// https://forge.autodesk.com/en/docs/data/v2/reference/http/projects-project_id-items-item_id-GET/
-	refreshedBearer, err := api.RefreshToken(bearer.RefreshToken, "data:read")
-	if err != nil {
-		return
-	}
-
-	path := api.Host + api.FolderAPIPath
-
-	return getItemDetails(path, projectKey, itemKey, refreshedBearer.AccessToken)
-}
-
 /*
  *	SUPPORT FUNCTIONS
  */
