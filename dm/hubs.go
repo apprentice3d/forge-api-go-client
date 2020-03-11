@@ -4,6 +4,7 @@ import (
 	// "fmt"
 	"encoding/json"
 	"net/http"
+
 	"github.com/outer-labs/forge-api-go-client/oauth"
 )
 
@@ -13,24 +14,12 @@ type HubAPI struct {
 	HubAPIPath string
 }
 
-type HubAPI3L struct {
-	oauth.ThreeLeggedAuth
-	HubAPIPath string
-}
-
 var api HubAPI
 
 // NewHubAPIWithCredentials returns a Hub API client with default configurations
 func NewHubAPIWithCredentials(ClientID string, ClientSecret string) HubAPI {
 	return HubAPI{
 		oauth.NewTwoLeggedClient(ClientID, ClientSecret),
-		"/project/v1/hubs",
-	}
-}
-
-func NewHubAPI3LWithCredentials(threeLeggedAuth oauth.ThreeLeggedAuth) HubAPI3L {
-	return HubAPI3L{
-		threeLeggedAuth,
 		"/project/v1/hubs",
 	}
 }
@@ -55,26 +44,6 @@ func (api HubAPI) GetHubDetails(hubKey string) (result ForgeResponseObject, err 
 	return getHubDetails(path, hubKey, bearer.AccessToken)
 }
 
-// Hub functions for use with 3legged authentication
-func (api HubAPI3L) GetHubsThreeLegged(bearer oauth.Bearer) (result ForgeResponseArray, err error) {
-
-	//To do? check if access token needs to be refreshed? if so, run bearer.RefreshToken?
-	// if bearer.ExpiresIn 
-	path := "https://developer.api.autodesk.com/project/v1/hubs"
-	return getHubs(path, bearer.AccessToken)
-}
-
-func (api HubAPI3L) GetHubDetailsThreeLegged(bearer oauth.Bearer, hubKey string) (result ForgeResponseObject, err error) {
-	refreshedBearer, err := api.RefreshToken(bearer.RefreshToken, "data:read")
-	if err != nil {
-		return
-	}
-	path := api.Host + api.HubAPIPath
-
-	return getHubDetails(path, hubKey, refreshedBearer.AccessToken)
-}
-
-
 /*
  *	SUPPORT FUNCTIONS
  */
@@ -98,14 +67,14 @@ func getHubs(path, token string) (result ForgeResponseArray, err error) {
 		return
 	}
 	defer response.Body.Close()
-	
+
 	decoder := json.NewDecoder(response.Body)
-		if response.StatusCode != http.StatusOK {
-			err = &ErrorResult{StatusCode:response.StatusCode}
-			decoder.Decode(err)
-				return
-		}
-	
+	if response.StatusCode != http.StatusOK {
+		err = &ErrorResult{StatusCode: response.StatusCode}
+		decoder.Decode(err)
+		return
+	}
+
 	err = decoder.Decode(&result)
 
 	return
@@ -130,14 +99,14 @@ func getHubDetails(path, hubKey, token string) (result ForgeResponseObject, err 
 		return
 	}
 	defer response.Body.Close()
-	
+
 	decoder := json.NewDecoder(response.Body)
-		if response.StatusCode != http.StatusOK {
-			err = &ErrorResult{StatusCode:response.StatusCode}
-			decoder.Decode(err)
-				return
-		}
-	
+	if response.StatusCode != http.StatusOK {
+		err = &ErrorResult{StatusCode: response.StatusCode}
+		decoder.Decode(err)
+		return
+	}
+
 	err = decoder.Decode(&result)
 
 	return

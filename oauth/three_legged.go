@@ -110,7 +110,6 @@ func (a ThreeLeggedAuth) GetToken(code string) (bearer Bearer, err error) {
 
 // RefreshToken is used to get a new access token by using the refresh token provided by GetToken
 func (a ThreeLeggedAuth) RefreshToken(refreshToken string, scope string) (bearer Bearer, err error) {
-
 	task := http.Client{}
 
 	body := url.Values{}
@@ -119,6 +118,7 @@ func (a ThreeLeggedAuth) RefreshToken(refreshToken string, scope string) (bearer
 	body.Add("grant_type", "refresh_token")
 	body.Add("refresh_token", refreshToken)
 	body.Add("scope", scope)
+	body.Add("redirect_uri", a.RedirectURI)
 
 	req, err := http.NewRequest("POST",
 		a.Host+a.AuthPath+"/refreshtoken",
@@ -128,6 +128,7 @@ func (a ThreeLeggedAuth) RefreshToken(refreshToken string, scope string) (bearer
 	if err != nil {
 		return
 	}
+	d
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	response, err := task.Do(req)
 
