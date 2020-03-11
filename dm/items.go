@@ -3,7 +3,6 @@ package dm
 import (
 	"encoding/json"
 	"net/http"
-	"github.com/outer-labs/forge-api-go-client/oauth"
 )
 
 // ListBuckets returns a list of all buckets created or associated with Forge secrets used for token creation

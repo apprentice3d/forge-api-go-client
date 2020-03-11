@@ -56,7 +56,7 @@ func (a *HubAPI3L) GetProjectDetailsThreeLegged(hubKey, projectKey string) (resu
 		return
 	}
 
-	path := a.Host + a.HubAPIPath
+	path := a.Auth.Host + a.HubAPIPath
 	return getProjectDetails(path, hubKey, projectKey, a.BearerToken.AccessToken)
 }
 
@@ -65,7 +65,7 @@ func (a *HubAPI3L) GetTopFoldersThreeLegged(hubKey, projectKey string) (result F
 		return
 	}
 
-	path := a.Host + a.HubAPIPath
+	path := a.Auth.Host + a.HubAPIPath
 	return getTopFolders(path, hubKey, projectKey, a.BearerToken.AccessToken)
 }
 

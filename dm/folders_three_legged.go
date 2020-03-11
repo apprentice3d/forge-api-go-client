@@ -28,36 +28,25 @@ func (a FolderAPI3L) GetFolderDetailsThreeLegged(bearer oauth.Bearer, projectKey
 	}
 
 	path := a.Auth.Host + a.HubAPIPath
-	return getFolderDetails(path, projectKey, folderKey, refreshedBearer.AccessToken)
+	return getFolderDetails(path, projectKey, folderKey, a.BearerToken.AccessToken)
 }
 
 func (a FolderAPI3L) GetFolderContentsThreeLegged(bearer oauth.Bearer, projectKey, folderKey string) (result ForgeResponseArray, err error) {
 	if err = a.refreshTokenIfRequired(); err != nil {
 		return
 	}
-
-	refreshedBearer, err := a.refreshTokenIfRequired(bearer.RefreshToken, "data:read")
-	if err != nil {
-		return
-	}
 	
 	path := a.Auth.Host + a.HubAPIPath
-	return getFolderContents(path, projectKey, folderKey, refreshedBearer.AccessToken)
+	return getFolderContents(path, projectKey, folderKey, a.BearerToken.AccessToken)
 }
 
 func (a FolderAPI3L) GetItemDetailsThreeLegged(bearer oauth.Bearer, projectKey, itemKey string) (result ForgeResponseObject, err error) {
 	if err = a.refreshTokenIfRequired(); err != nil {
 		return
 	}
-	// TO DO: take in optional header argument
-	// https://forge.autodesk.com/en/docs/data/v2/reference/http/projects-project_id-items-item_id-GET/
-	refreshedBearer, err := a.RefreshToken(bearer.RefreshToken, "data:read")
-	if err != nil {
-		return
-	}
 
 	path := a.Auth.Host + a.HubAPIPath
-	return getItemDetails(path, projectKey, itemKey, refreshedBearer.AccessToken)
+	return getItemDetails(path, projectKey, itemKey, a.BearerToken.AccessToken)
 }
 
 func (a *FolderAPI3L) refreshTokenIfRequired() error {
@@ -75,4 +64,3 @@ func (a *FolderAPI3L) refreshTokenIfRequired() error {
 
 	return nil
 }
-
