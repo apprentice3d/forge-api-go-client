@@ -27,15 +27,7 @@ func (a FolderAPI3L) GetFolderDetailsThreeLegged(bearer oauth.Bearer, projectKey
 		return
 	}
 
-	// TO DO: take in optional header arguments
-	// https://forge.autodesk.com/en/docs/data/v2/reference/http/projects-project_id-folders-folder_id-GET/
-	refreshedBearer, err := a.RefreshToken(bearer.RefreshToken, "data:read")
-	if err != nil {
-		return
-	}
-
-	path := a.Host + a.FolderAPIPath
-
+	path := a.Auth.Host + a.HubAPIPath
 	return getFolderDetails(path, projectKey, folderKey, refreshedBearer.AccessToken)
 }
 
@@ -44,12 +36,12 @@ func (a FolderAPI3L) GetFolderContentsThreeLegged(bearer oauth.Bearer, projectKe
 		return
 	}
 
-	refreshedBearer, err := a.RefreshToken(bearer.RefreshToken, "data:read")
+	refreshedBearer, err := a.refreshTokenIfRequired(bearer.RefreshToken, "data:read")
 	if err != nil {
 		return
 	}
-	path := a.Host + a.FolderAPIPath
-
+	
+	path := a.Auth.Host + a.HubAPIPath
 	return getFolderContents(path, projectKey, folderKey, refreshedBearer.AccessToken)
 }
 
@@ -64,8 +56,7 @@ func (a FolderAPI3L) GetItemDetailsThreeLegged(bearer oauth.Bearer, projectKey, 
 		return
 	}
 
-	path := a.Host + a.FolderAPIPath
-
+	path := a.Auth.Host + a.HubAPIPath
 	return getItemDetails(path, projectKey, itemKey, refreshedBearer.AccessToken)
 }
 
