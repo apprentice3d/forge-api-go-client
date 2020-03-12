@@ -1,4 +1,7 @@
 package oauth
+import (
+	"time"
+)
 
 // Bearer reflects the response when acquiring a 2-legged token or in 3-legged context for exchanging the authorization
 // code for a token + refresh token and when exchanging the refresh token for a new token
@@ -15,7 +18,7 @@ type AuthData struct {
 	ClientSecret 	 string `json:"client_secret,omitempty"`
 	Host         	 string `json:"host,omitempty"`
 	AuthPath     	 string `json:"auth_path"`
-	TokenExpireTime	 string `json:"expire_time,omitempty"`   // Calculated expiration time against time.Now() for 3-legged oauth
+	TokenExpireTime	 time.Time `json:"expire_time,omitempty"`   // Calculated expiration time against time.Now() for 3-legged oauth
 }
 
 // ForgeAuthenticator defines an interface that allows abstraction from

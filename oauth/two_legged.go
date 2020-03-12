@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"time"
 )
 
 // TwoLeggedAuth struct holds data necessary for making requests in 2-legged context
