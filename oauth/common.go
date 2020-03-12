@@ -15,6 +15,7 @@ type AuthData struct {
 	ClientSecret string `json:"client_secret,omitempty"`
 	Host         string `json:"host,omitempty"`
 	AuthPath     string `json:"auth_path"`
+	TokenExpireTime	 string `json:"expire_time,omitempty"`   // Calculated expiration time against time.Now() for 3-legged oauth
 }
 
 // ForgeAuthenticator defines an interface that allows abstraction from
