@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"time"
 )
 
 // ThreeLeggedAuth struct holds data necessary for making requests in 3-legged context
@@ -31,6 +32,7 @@ func NewThreeLeggedClient(clientID, clientSecret, redirectURI string) ThreeLegge
 			clientSecret,
 			"https://developer.api.autodesk.com",
 			"/authentication/v1",
+			time.Now(),
 		},
 		redirectURI,
 	}
