@@ -71,6 +71,7 @@ func (a *HubAPI3L) GetTopFoldersThreeLegged(hubKey, projectKey string) (result F
 
 func (a *HubAPI3L) refreshTokenIfRequired() error {
 	// TODO: Check expiry time, and return nil if not expired
+
 	refreshedBearer, err := a.Auth.RefreshToken(a.BearerToken.RefreshToken, "data:read")
 	if err != nil {
 		return err

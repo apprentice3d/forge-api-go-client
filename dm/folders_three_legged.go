@@ -1,6 +1,7 @@
 package dm
 
 import (
+	"time"
 	"github.com/outer-labs/forge-api-go-client/oauth"
 )
 
@@ -50,17 +51,27 @@ func (a FolderAPI3L) GetItemDetailsThreeLegged(bearer oauth.Bearer, projectKey, 
 }
 
 func (a *FolderAPI3L) refreshTokenIfRequired() error {
-	// TODO: Check expiry time, and return nil if not expired
+	
+	now := time.Now()
+	expiryTime := a.BearerToken.ExpireTime
+	
+	if now.Before(expiryTime){
+		return nil
+	}
+	
 	refreshedBearer, err := a.Auth.RefreshToken(a.BearerToken.RefreshToken, "data:read")
 	if err != nil {
 		return err
 	}
 
-	// TODO: Store expiry time
+	newExpiryTime := now.Add(time.Second * time.Duration(refreshedBearer.ExpiresIn))
+	expireTimeFormatted := newExpiryTime.Format(time.RFC3339)
+
 	a.BearerToken.AccessToken = refreshedBearer.AccessToken
 	a.BearerToken.ExpiresIn = refreshedBearer.ExpiresIn
 	a.BearerToken.RefreshToken = refreshedBearer.RefreshToken
 	a.BearerToken.TokenType = refreshedBearer.TokenType
+	a.BearerToken.ExpireTime = expireTimeFormatted
 
-	return nil
+	return nil	
 }
