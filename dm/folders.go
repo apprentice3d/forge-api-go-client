@@ -3,6 +3,7 @@ package dm
 import (
 	"encoding/json"
 	"net/http"
+
 	"github.com/outer-labs/forge-api-go-client/oauth"
 )
 
@@ -22,7 +23,7 @@ func NewFolderAPIWithCredentials(ClientID string, ClientSecret string) FolderAPI
 
 // ListBuckets returns a list of all buckets created or associated with Forge secrets used for token creation
 func (api FolderAPI) GetFolderDetails(projectKey, folderKey string) (result ForgeResponseObject, err error) {
-	
+
 	// TO DO: take in optional header arguments
 	// https://forge.autodesk.com/en/docs/data/v2/reference/http/projects-project_id-folders-folder_id-GET/
 	bearer, err := api.Authenticate("data:read")
@@ -65,11 +66,11 @@ func getFolderDetails(path, projectKey, folderKey, token string) (result ForgeRe
 		return
 	}
 	defer response.Body.Close()
-  
-  	decoder := json.NewDecoder(response.Body)
+
+	decoder := json.NewDecoder(response.Body)
 	if response.StatusCode != http.StatusOK {
-    	err = &ErrorResult{StatusCode:response.StatusCode}
-    	decoder.Decode(err)
+		err = &ErrorResult{StatusCode: response.StatusCode}
+		decoder.Decode(err)
 		return
 	}
 
@@ -97,10 +98,10 @@ func getFolderContents(path, projectKey, folderKey, token string) (result ForgeR
 	}
 	defer response.Body.Close()
 
-  	decoder := json.NewDecoder(response.Body)
+	decoder := json.NewDecoder(response.Body)
 	if response.StatusCode != http.StatusOK {
-    	err = &ErrorResult{StatusCode:response.StatusCode}
-    	decoder.Decode(err)
+		err = &ErrorResult{StatusCode: response.StatusCode}
+		decoder.Decode(err)
 		return
 	}
 

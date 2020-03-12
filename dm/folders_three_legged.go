@@ -1,80 +1,50 @@
 package dm
 
 import (
-	"time"
 	"github.com/outer-labs/forge-api-go-client/oauth"
 )
 
 type FolderAPI3L struct {
-	Auth        oauth.ThreeLeggedAuth
-	BearerToken *oauth.Bearer
-	HubAPIPath  string
-	TokenExpireTime time.Time
+	Auth            oauth.ThreeLeggedAuth
+	Token           TokenRefresher
+	ProjectsAPIPath string
 }
 
 func NewFolderAPI3LWithCredentials(
 	auth oauth.ThreeLeggedAuth,
-	bearer *oauth.Bearer,
+	token TokenRefresher,
 ) *FolderAPI3L {
 	return &FolderAPI3L{
-		Auth:        auth,
-		BearerToken: bearer,
-		HubAPIPath:  "/project/v1/hubs",
-		TokenExpireTime: time.Now(),
+		Auth:            auth,
+		Token:           token,
+		ProjectsAPIPath: "/data/v1/projects",
 	}
 }
 
 // Three legged Folder api calls
-func (a FolderAPI3L) GetFolderDetailsThreeLegged(bearer oauth.Bearer, projectKey, folderKey string) (result ForgeResponseObject, err error) {
-	if err = a.refreshTokenIfRequired(); err != nil {
+func (a FolderAPI3L) GetFolderDetailsThreeLegged(projectKey, folderKey string) (result ForgeResponseObject, err error) {
+	if err = a.Token.RefreshTokenIfRequired(a.Auth); err != nil {
 		return
 	}
 
-	path := a.Auth.Host + a.HubAPIPath
-	return getFolderDetails(path, projectKey, folderKey, a.BearerToken.AccessToken)
+	path := a.Auth.Host + a.ProjectsAPIPath
+	return getFolderDetails(path, projectKey, folderKey, a.Token.Bearer().AccessToken)
 }
 
-func (a FolderAPI3L) GetFolderContentsThreeLegged(bearer oauth.Bearer, projectKey, folderKey string) (result ForgeResponseArray, err error) {
-	if err = a.refreshTokenIfRequired(); err != nil {
-		return
-	}
-	
-	path := a.Auth.Host + a.HubAPIPath
-	return getFolderContents(path, projectKey, folderKey, a.BearerToken.AccessToken)
-}
-
-func (a FolderAPI3L) GetItemDetailsThreeLegged(bearer oauth.Bearer, projectKey, itemKey string) (result ForgeResponseObject, err error) {
-	if err = a.refreshTokenIfRequired(); err != nil {
+func (a FolderAPI3L) GetFolderContentsThreeLegged(projectKey, folderKey string) (result ForgeResponseArray, err error) {
+	if err = a.Token.RefreshTokenIfRequired(a.Auth); err != nil {
 		return
 	}
 
-	path := a.Auth.Host + a.HubAPIPath
-	return getItemDetails(path, projectKey, itemKey, a.BearerToken.AccessToken)
+	path := a.Auth.Host + a.ProjectsAPIPath
+	return getFolderContents(path, projectKey, folderKey, a.Token.Bearer().AccessToken)
 }
 
-func (a *FolderAPI3L) refreshTokenIfRequired() error {
-	
-	// Check if token has expired
-	now := time.Now()
-	expiryTime := a.TokenExpireTime
-	if now.Before(expiryTime){
-		return nil
-	}
-	
-	refreshedBearer, err := a.Auth.RefreshToken(a.BearerToken.RefreshToken, "data:read")
-	if err != nil {
-		return err
+func (a FolderAPI3L) GetItemDetailsThreeLegged(projectKey, itemKey string) (result ForgeResponseObject, err error) {
+	if err = a.Token.RefreshTokenIfRequired(a.Auth); err != nil {
+		return
 	}
 
-	// Refresh "now" and add new token expiration time to API struct along with new credentials
-	now = time.Now()
-	newExpiryTime := now.Add(time.Second * time.Duration(refreshedBearer.ExpiresIn))
-	a.TokenExpireTime = newExpiryTime
-
-	a.BearerToken.AccessToken = refreshedBearer.AccessToken
-	a.BearerToken.ExpiresIn = refreshedBearer.ExpiresIn
-	a.BearerToken.RefreshToken = refreshedBearer.RefreshToken
-	a.BearerToken.TokenType = refreshedBearer.TokenType
-
-	return nil	
+	path := a.Auth.Host + a.ProjectsAPIPath
+	return getItemDetails(path, projectKey, itemKey, a.Token.Bearer().AccessToken)
 }
