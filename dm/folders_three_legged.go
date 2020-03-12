@@ -9,6 +9,7 @@ type FolderAPI3L struct {
 	Auth        oauth.ThreeLeggedAuth
 	BearerToken *oauth.Bearer
 	HubAPIPath  string
+	TokenExpireTime time.Time
 }
 
 func NewFolderAPI3LWithCredentials(
@@ -19,6 +20,7 @@ func NewFolderAPI3LWithCredentials(
 		Auth:        auth,
 		BearerToken: bearer,
 		HubAPIPath:  "/project/v1/hubs",
+		TokenExpireTime: time.Now(),
 	}
 }
 
@@ -52,9 +54,9 @@ func (a FolderAPI3L) GetItemDetailsThreeLegged(bearer oauth.Bearer, projectKey, 
 
 func (a *FolderAPI3L) refreshTokenIfRequired() error {
 	
+	// Check if token has expired
 	now := time.Now()
-	expiryTime := a.BearerToken.ExpireTime
-	
+	expiryTime := a.TokenExpireTime
 	if now.Before(expiryTime){
 		return nil
 	}
@@ -64,14 +66,15 @@ func (a *FolderAPI3L) refreshTokenIfRequired() error {
 		return err
 	}
 
+	// Refresh "now" and add new token expiration time to API struct along with new credentials
+	now = time.Now()
 	newExpiryTime := now.Add(time.Second * time.Duration(refreshedBearer.ExpiresIn))
-	expireTimeFormatted := newExpiryTime.Format(time.RFC3339)
+	a.TokenExpireTime = newExpiryTime
 
 	a.BearerToken.AccessToken = refreshedBearer.AccessToken
 	a.BearerToken.ExpiresIn = refreshedBearer.ExpiresIn
 	a.BearerToken.RefreshToken = refreshedBearer.RefreshToken
 	a.BearerToken.TokenType = refreshedBearer.TokenType
-	a.BearerToken.ExpireTime = expireTimeFormatted
 
 	return nil	
 }
