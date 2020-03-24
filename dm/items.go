@@ -48,7 +48,6 @@ func (api FolderAPI) GetItemVersions(projectKey, itemKey string) (result ForgeRe
 	return getItemVersions(path, projectKey, itemKey, "", "", "", "", "", "", bearer.AccessToken)
 }
 
-
 /*
  *	SUPPORT FUNCTIONS
  */

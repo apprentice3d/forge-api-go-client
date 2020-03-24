@@ -7,7 +7,7 @@ import (
 
 // ListBuckets returns a list of all buckets created or associated with Forge secrets used for token creation
 func (api HubAPI) ListProjects(hubKey string) (result ForgeResponseArray, err error) {
-	
+
 	// TO DO: take in optional arguments for query params: id, ext, page, limit
 	// https://forge.autodesk.com/en/docs/data/v2/reference/http/hubs-hub_id-projects-GET/
 	bearer, err := api.Authenticate("data:read")
@@ -77,11 +77,11 @@ func listProjects(path, hubKey, id, extension, page, limit string, token string)
 		return
 	}
 	defer response.Body.Close()
-  	
-  	decoder := json.NewDecoder(response.Body)
+
+	decoder := json.NewDecoder(response.Body)
 	if response.StatusCode != http.StatusOK {
-    	err = &ErrorResult{StatusCode:response.StatusCode}
-    	decoder.Decode(err)
+		err = &ErrorResult{StatusCode: response.StatusCode}
+		decoder.Decode(err)
 		return
 	}
 
@@ -109,10 +109,10 @@ func getProjectDetails(path, hubKey, projectKey, token string) (result ForgeResp
 	}
 	defer response.Body.Close()
 
-  	decoder := json.NewDecoder(response.Body)
+	decoder := json.NewDecoder(response.Body)
 	if response.StatusCode != http.StatusOK {
-    	err = &ErrorResult{StatusCode:response.StatusCode}
-    	decoder.Decode(err)
+		err = &ErrorResult{StatusCode: response.StatusCode}
+		decoder.Decode(err)
 		return
 	}
 
@@ -140,10 +140,10 @@ func getTopFolders(path, hubKey, projectKey, token string) (result ForgeResponse
 	}
 	defer response.Body.Close()
 
-  	decoder := json.NewDecoder(response.Body)
+	decoder := json.NewDecoder(response.Body)
 	if response.StatusCode != http.StatusOK {
-    	err = &ErrorResult{StatusCode:response.StatusCode}
-    	decoder.Decode(err)
+		err = &ErrorResult{StatusCode: response.StatusCode}
+		decoder.Decode(err)
 		return
 	}
 

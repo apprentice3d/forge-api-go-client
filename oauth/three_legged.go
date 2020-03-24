@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"time"
 )
 
 // ThreeLeggedAuth struct holds data necessary for making requests in 3-legged context
@@ -31,6 +32,7 @@ func NewThreeLeggedClient(clientID, clientSecret, redirectURI string) ThreeLegge
 			clientSecret,
 			"https://developer.api.autodesk.com",
 			"/authentication/v1",
+			time.Now(),
 		},
 		redirectURI,
 	}
@@ -110,7 +112,6 @@ func (a ThreeLeggedAuth) GetToken(code string) (bearer Bearer, err error) {
 
 // RefreshToken is used to get a new access token by using the refresh token provided by GetToken
 func (a ThreeLeggedAuth) RefreshToken(refreshToken string, scope string) (bearer Bearer, err error) {
-
 	task := http.Client{}
 
 	body := url.Values{}
@@ -128,6 +129,7 @@ func (a ThreeLeggedAuth) RefreshToken(refreshToken string, scope string) (bearer
 	if err != nil {
 		return
 	}
+
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	response, err := task.Do(req)
 

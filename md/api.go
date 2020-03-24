@@ -46,12 +46,13 @@ func NewAPIWithCredentials(ClientID string, ClientSecret string) ModelDerivative
 
 //TranslationParams is used when specifying the translation jobs
 type TranslationParams struct {
-	Input struct {
-		URN           string  `json:"urn"`
-		CompressedURN *bool   `json:"compressedUrn,omitempty"`
-		RootFileName  *string `json:"rootFileName,omitempty"`
-	} `json:"input"`
-	Output OutputSpec `json:"output"`
+	Input  TranslationInput `json:"input"`
+	Output OutputSpec       `json:"output"`
+}
+type TranslationInput struct {
+	URN           string  `json:"urn"`
+	CompressedURN *bool   `json:"compressedUrn,omitempty"`
+	RootFileName  *string `json:"rootFileName,omitempty"`
 }
 
 // TranslationResult reflects data received upon successful creation of translation job
@@ -99,13 +100,13 @@ type OutputSpec struct {
 
 // DestSpec is used within OutputSpecs and is useful when specifying the region for translation results
 type DestSpec struct {
-	Region string `json:"region"`
+	Region string `json:"region,omitempty"`
 }
 
 // FormatSpec is used within OutputSpecs and should be used when specifying the expected format and views (2d or/and 3d)
 type FormatSpec struct {
 	Type  string   `json:"type"`
-	Views []string `json:"views"`
+	Views []string `json:"views,omitempty"`
 }
 
 type MetadataResult struct {
@@ -176,7 +177,7 @@ func (a ModelDerivativeAPI) TranslateToSVF(objectID string) (result TranslationR
 	}
 	path := a.Host + a.ModelDerivativePath
 	params := TranslationSVFPreset
-	params.Input.URN = base64.RawStdEncoding.EncodeToString([]byte(objectID))
+	params.Input.URN = base64.RawURLEncoding.EncodeToString([]byte(objectID))
 
 	result, err = translate(path, params, bearer.AccessToken)
 

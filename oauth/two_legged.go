@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"time"
 )
 
 // TwoLeggedAuth struct holds data necessary for making requests in 2-legged context
@@ -28,6 +29,7 @@ func NewTwoLeggedClient(clientID, clientSecret string) TwoLeggedAuth {
 			clientSecret,
 			"https://developer.api.autodesk.com",
 			"/authentication/v1",
+			time.Now(),
 		},
 	}
 }
