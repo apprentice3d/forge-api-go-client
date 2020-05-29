@@ -9,7 +9,7 @@
 package recap
 
 import (
-	"github.com/apprentice3d/forge-api-go-client/oauth"
+	"github.com/BUCKU/forge-api-go-client/oauth"
 )
 
 // API struct holds all paths necessary to access ReCap API

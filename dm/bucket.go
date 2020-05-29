@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/apprentice3d/forge-api-go-client/oauth"
+	"forge-api-go-client/oauth"
 )
 
 // BucketAPI holds the necessary data for making Bucket related calls to Forge Data Management service
