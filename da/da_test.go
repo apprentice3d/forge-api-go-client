@@ -84,7 +84,7 @@ func TestAPI_AppBundle(t *testing.T) {
 
 	testAppName := "GolangSDKTest"
 	testEngine := "Autodesk.3dsMax+2019"
-	var testAlias da.Alias
+	//var testAlias da.Alias
 	var app da.AppBundle
 
 	nickname, err := daApi.UserId()
@@ -100,7 +100,7 @@ func TestAPI_AppBundle(t *testing.T) {
 
 		if app.ID != nickname+"."+testAppName {
 			t.Fatalf("The id of created app mismatch: expect '%s', got '%s'",
-				testAppName,
+				nickname+"."+testAppName,
 				app.ID)
 		}
 	})
@@ -124,7 +124,7 @@ func TestAPI_AppBundle(t *testing.T) {
 	})
 
 	t.Run("Create alias for app", func(t *testing.T) {
-		testAlias, err = app.CreateAlias("test", 1)
+		_, err := app.CreateAlias("test", 1)
 		if err != nil {
 			t.Fatalf("Could not create alias: %s", err.Error())
 		}
@@ -507,7 +507,7 @@ func TestAPI_Activity(t *testing.T) {
 
 		}
 
-		testActivity, err := daApi.CreateActivity(config)
+		testActivity, err = daApi.CreateActivity(config)
 		if err != nil {
 			t.Fatal(err.Error())
 		}

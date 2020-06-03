@@ -119,7 +119,7 @@ type ErrorMessage struct {
 
 // BUG(apprentice3d) Frequently the operation succeeded with returning code 200, meaning that the task was
 // received successfully, but failed to execute due to reasons specified in message
-// (g.e. uploading a file by specifying an wrong link: POST request is successful,
+// (g.e. uploading a file by specifying a wrong link: POST request is successful,
 // but internally it failed to download the file because of the wrongly provided link)
 
 // Error is inner struct encountered in cases when the server reported status OK, but still contains details
