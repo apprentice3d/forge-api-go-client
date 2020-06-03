@@ -357,11 +357,11 @@ func NewProjectsAPIWithCredentials(ClientID, ClientSecret, ProjectId string) Pro
 	}
 }
 
-func (api *ProjectsAPI) GetFolderContents(FolderId string) (result FolderContents, err error){
+func (api *ProjectsAPI) GetFolderContents(FolderId string) (result *FolderContents, err error){
 	//bearer, err := api.Authenticate("data:read")
 	bearer, err := api.AuthenticateIfNecessary("data:read")
 	if err != nil {
-		return FolderContents{}, err
+		return nil, err
 	}
 
 	path := fmt.Sprintf("%s%sfolders/%s", api.Host, api.ProjectsAPIPath, FolderId)
@@ -369,13 +369,13 @@ func (api *ProjectsAPI) GetFolderContents(FolderId string) (result FolderContent
 	return result, err
 }
 
-func getFolderContents(path string, token string) (result FolderContents, err error) {
+func getFolderContents(path string, token string) (result *FolderContents, err error) {
 	task := http.Client{}
 
 	req, err := http.NewRequest("GET", path+"/contents", nil)
 
 	if err != nil {
-		return FolderContents{}, err
+		return nil, err
 	}
 
 	req.Header.Set("Content-Type", "application/json")
@@ -383,13 +383,13 @@ func getFolderContents(path string, token string) (result FolderContents, err er
 
 	response, err := task.Do(req)
 	if err != nil {
-		return FolderContents{}, err
+		return nil, err
 	}
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
 		err = errors.New(strconv.Itoa(response.StatusCode))
-		return FolderContents{}, err
+		return nil, err
 	}
 
 	decoder := json.NewDecoder(response.Body)
@@ -397,11 +397,11 @@ func getFolderContents(path string, token string) (result FolderContents, err er
 	return result, nil
 }
 
-func (api *ProjectsAPI) GetItemData(itemId string) (result ItemData, err error){
+func (api *ProjectsAPI) GetItemData(itemId string) (result *ItemData, err error){
 	//bearer, err := api.Authenticate("data:read")
 	bearer, err := api.AuthenticateIfNecessary("data:read")
 	if err != nil {
-		return ItemData{}, err
+		return nil, err
 	}
 
 	path := fmt.Sprintf("%s%sitems/%s", api.Host, api.ProjectsAPIPath, itemId)
@@ -409,13 +409,13 @@ func (api *ProjectsAPI) GetItemData(itemId string) (result ItemData, err error){
 	return result, err
 }
 
-func getItemData(path string, token string) (result ItemData, err error) {
+func getItemData(path string, token string) (result *ItemData, err error) {
 	task := http.Client{}
 
 	req, err := http.NewRequest("GET", path, nil)
 
 	if err != nil {
-		return ItemData{}, err
+		return nil, err
 	}
 
 	req.Header.Set("Content-Type", "application/json")
@@ -424,13 +424,13 @@ func getItemData(path string, token string) (result ItemData, err error) {
 	response, err := task.Do(req)
 	if err != nil {
 		log.Printf("Error at request: %v", err.Error())
-		return ItemData{}, err
+		return nil, err
 	}
 
 	if response.StatusCode != http.StatusOK {
 		err = errors.New(strconv.Itoa(response.StatusCode))
 		log.Printf("Error at request: %v", err.Error())
-		return ItemData{}, err
+		return nil, err
 	}
 
 	defer response.Body.Close()
