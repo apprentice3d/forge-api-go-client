@@ -2,7 +2,7 @@ package oauth_test
 
 import (
 	"fmt"
-	"github.com/apprentice3d/forge-api-go-client/oauth"
+	"forge-api-go-client/oauth"
 	"log"
 	"os"
 	"testing"

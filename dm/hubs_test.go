@@ -16,7 +16,7 @@ func TestHubsAPI_ListHubs(t *testing.T) {
 	hubsAPI := dm.NewHubsAPIWithCredentials(clientID, clientSecret)
 
 	t.Run("List Hubs", func(t *testing.T) {
-		hubs, err := hubsAPI.ListHubs()
+		hubs, err := hubsAPI.GetHubs()
 		if err!=nil{
 			t.Fatalf("Failed to list hubs: %s\n", err.Error())
 		}

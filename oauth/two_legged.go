@@ -5,14 +5,18 @@ import (
 	"encoding/json"
 	"errors"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/url"
 	"strconv"
+	"time"
 )
 
 // TwoLeggedAuth struct holds data necessary for making requests in 2-legged context
 type TwoLeggedAuth struct {
 	AuthData
+	token Bearer
+	expires time.Time
 }
 
 // TwoLeggedAuthenticator interface defines the method necessary to qualify as 2-legged authenticator
@@ -29,11 +33,30 @@ func NewTwoLeggedClient(clientID, clientSecret string) TwoLeggedAuth {
 			"https://developer.api.autodesk.com",
 			"/authentication/v1",
 		},
+		Bearer{},
+		time.Time{},
 	}
 }
 
+func (a *TwoLeggedAuth) AuthenticateIfNecessary(scope string) (bearer Bearer, err error){
+	if a.token.AccessToken != "" {
+		now := time.Now()
+
+		if now.After(a.expires){
+			log.Printf("Authenticate cause expired")
+			return a.Authenticate(scope)
+		} else {
+			//log.Printf("Return exist auth token")
+			return a.token, nil
+		}
+	} else {
+		log.Printf("Authenticate cause no token")
+		return a.Authenticate(scope)
+	}
+
+}
 // Authenticate allows getting a token with a given scope
-func (a TwoLeggedAuth) Authenticate(scope string) (bearer Bearer, err error) {
+func (a *TwoLeggedAuth) Authenticate(scope string) (bearer Bearer, err error) {
 
 	task := http.Client{}
 
@@ -67,6 +90,12 @@ func (a TwoLeggedAuth) Authenticate(scope string) (bearer Bearer, err error) {
 
 	decoder := json.NewDecoder(response.Body)
 	err = decoder.Decode(&bearer)
+
+	if err == nil {
+		a.token = bearer
+		exp := time.Duration(a.token.ExpiresIn)*time.Second
+		a.expires = time.Now().Add(exp)
+	}
 
 	return
 }

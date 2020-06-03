@@ -125,7 +125,7 @@ type Projects struct {
 }
 
 
-func (api *HubsAPI) ListHubs() (result Hubs, err error){
+func (api *HubsAPI) GetHubs() (result Hubs, err error){
 	bearer, err := api.Authenticate("data:read")
 	if err != nil {
 		return Hubs{}, err
