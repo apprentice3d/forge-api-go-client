@@ -270,7 +270,7 @@ type ItemData struct {
 			VersionNumber        int       `json:"versionNumber,omitempty"`
 			MimeType             string    `json:"mimeType,omitempty"`
 			FileType             string    `json:"fileType,omitempty"`
-			StorageSize          int       `json:"storageSize,omitempty"`
+			StorageSize          uint64       `json:"storageSize,omitempty"`
 			Extension            struct {
 				Type    string `json:"type,omitempty"`
 				Version string `json:"version,omitempty"`
