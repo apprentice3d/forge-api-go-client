@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"forge-api-go-client/oauth"
+	"io"
 	"log"
 	"net/http"
 	"strconv"
@@ -437,4 +438,41 @@ func getItemData(path string, token string) (result *ItemData, err error) {
 	decoder := json.NewDecoder(response.Body)
 	err = decoder.Decode(&result)
 	return result, nil
+}
+
+func (api *ProjectsAPI) GetItemReader(itemStorageLink string) (result *io.ReadCloser, err error) {
+	bearer, err := api.AuthenticateIfNecessary("data:read")
+	if err != nil {
+		return nil, err
+	}
+
+	result, err = getItemReader(itemStorageLink, bearer.AccessToken)
+	return result, err
+}
+
+func getItemReader(link string, token string) (*io.ReadCloser, error) {
+	task := http.Client{}
+
+	req, err := http.NewRequest("GET", link, nil)
+
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+token)
+
+	response, err := task.Do(req)
+	if err != nil {
+		log.Printf("Error at request: %v", err.Error())
+		return nil, err
+	}
+
+	if response.StatusCode != http.StatusOK {
+		err = errors.New(strconv.Itoa(response.StatusCode))
+		log.Printf("Error at request: %v", err.Error())
+		return nil, err
+	}
+
+	return &response.Body, nil
 }
