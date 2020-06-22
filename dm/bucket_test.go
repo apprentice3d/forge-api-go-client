@@ -2,7 +2,7 @@ package dm_test
 
 import (
 	"fmt"
-	"github.com/apprentice3d/forge-api-go-client/dm"
+	"forge-api-go-client/dm"
 	"log"
 	"os"
 	"testing"

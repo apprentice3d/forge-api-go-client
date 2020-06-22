@@ -1,7 +1,7 @@
 package oauth_test
 
 import (
-	"github.com/apprentice3d/forge-api-go-client/oauth"
+	"forge-api-go-client/oauth"
 	"os"
 	"testing"
 )
