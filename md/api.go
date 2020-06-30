@@ -44,6 +44,22 @@ func NewAPIWithCredentials(ClientID string, ClientSecret string) ModelDerivative
 	}
 }
 
+// API struct holds all paths necessary to access Model Derivative API
+type ModelDerivativeAPI3L struct {
+	Auth            	oauth.ThreeLeggedAuth
+	Token          		TokenRefresher
+	ModelDerivativePath string
+}
+
+// NewAPIWithCredentials returns a Model Derivative API client with default configurations
+func NewAPI3LWithCredentials(auth oauth.ThreeLeggedAuth, token TokenRefresher,) *ModelDerivativeAPI {
+	return &ModelDerivativeAPI3L{
+		Auth:            auth,
+		Token:           token,
+		ProjectsAPIPath: "/modelderivative/v2/designdata",
+	}
+}
+
 //TranslationParams is used when specifying the translation jobs
 type TranslationParams struct {
 	Input  TranslationInput `json:"input"`
@@ -254,6 +270,18 @@ func (a ModelDerivativeAPI) GetThumbnail(urn string) (reader io.ReadCloser, err 
 
 	return
 }
+
+func (a ModelDerivativeAPI3L) GetThumbnail3L(urn string) (reader io.ReadCloser, err error) {
+	if err = a.Token.RefreshTokenIfRequired(a.Auth); err != nil {
+		return
+	}
+
+	path := a.Auth.Host + a.ModelDerivativePath
+	reader, err = getThumbnail(path, urn, a.Token.Bearer().AccessToken)
+
+	return
+}
+
 
 /*
  *	SUPPORT FUNCTIONS
