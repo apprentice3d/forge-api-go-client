@@ -52,7 +52,7 @@ type ModelDerivativeAPI3L struct {
 }
 
 // NewAPIWithCredentials returns a Model Derivative API client with default configurations
-func NewAPI3LWithCredentials(auth oauth.ThreeLeggedAuth, token TokenRefresher,) *ModelDerivativeAPI3L {
+func NewAPI3LWithCredentials(auth oauth.ThreeLeggedAuth, token *oauth.RefreshableToken,) *ModelDerivativeAPI3L {
 	return &ModelDerivativeAPI3L{
 		Auth:            auth,
 		Token:           token,
