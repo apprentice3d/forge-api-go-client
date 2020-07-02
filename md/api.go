@@ -212,6 +212,17 @@ func (a ModelDerivativeAPI) GetManifest(urn string) (result ManifestResult, err 
 	return
 }
 
+func (a ModelDerivativeAPI) GetManifest3L(urn string) (result ManifestResult, err error) {
+	if err = a.Token.RefreshTokenIfRequired(a.Auth); err != nil {
+		return
+	}
+
+	path := a.Auth.Host + a.ModelDerivativePath
+	result, err = getManifest(path, urn, a.Token.Bearer().AccessToken)
+
+	return
+}
+
 func (a ModelDerivativeAPI) GetMetadata(urn string) (result MetadataResult, err error) {
 	bearer, err := a.Authenticate("data:read")
 	if err != nil {
@@ -220,6 +231,17 @@ func (a ModelDerivativeAPI) GetMetadata(urn string) (result MetadataResult, err 
 
 	path := a.Host + a.ModelDerivativePath
 	result, err = getMetadata(path, urn, bearer.AccessToken)
+
+	return
+}
+
+func (a ModelDerivativeAPI) GetMetadata3L(urn string) (result MetadataResult, err error) {
+	if err = a.Token.RefreshTokenIfRequired(a.Auth); err != nil {
+		return
+	}
+
+	path := a.Auth.Host + a.ModelDerivativePath
+	result, err = getMetadata(path, urn, a.Token.Bearer().AccessToken)
 
 	return
 }
@@ -236,6 +258,19 @@ func (a ModelDerivativeAPI) GetObjectTree(urn string, viewId string) (status int
 	return
 }
 
+func (a ModelDerivativeAPI) GetObjectTree3L(urn string, viewId string) (status int, result TreeResult, err error) {
+	if err = a.Token.RefreshTokenIfRequired(a.Auth); err != nil {
+		return
+	}
+
+	path := a.Auth.Host + a.ModelDerivativePath
+	status, result, err = getObjectTree(path, urn, viewId, a.Token.Bearer().AccessToken)
+
+	return
+}
+
+
+
 func (a ModelDerivativeAPI) GetPropertiesStream(urn string, viewId string) (status int,
 	result io.ReadCloser, err error) {
 	bearer, err := a.Authenticate("data:read")
@@ -245,6 +280,17 @@ func (a ModelDerivativeAPI) GetPropertiesStream(urn string, viewId string) (stat
 
 	path := a.Host + a.ModelDerivativePath
 	status, result, err = getPropertiesStream(path, urn, viewId, bearer.AccessToken)
+	return
+}
+
+func (a ModelDerivativeAPI) GetPropertiesStream3L(urn string, viewId string) (status int,
+	result io.ReadCloser, err error) {
+	if err = a.Token.RefreshTokenIfRequired(a.Auth); err != nil {
+		return
+	}
+
+	path := a.Auth.Host + a.ModelDerivativePath
+	status, result, err = getPropertiesStream(path, urn, viewId, a.Token.Bearer().AccessToken)
 	return
 }
 

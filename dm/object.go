@@ -40,6 +40,16 @@ func (api BucketAPI) UploadObject(bucketKey string, objectName string, reader io
 	return uploadObject(path, bucketKey, objectName, reader, bearer.AccessToken)
 }
 
+func (api BucketAPI) UploadObject3L(bucketKey string, objectName string, reader io.Reader) (result ObjectDetails, err error) {
+	if err = api.Token.RefreshTokenIfRequired(api.Auth); err != nil {
+		return
+	}
+
+	path := api.Auth.Host + api.ModelDerivativePath
+
+	return uploadObject(path, bucketKey, objectName, reader, api.Token.Bearer().AccessToken)
+}
+
 // DownloadObject returns the reader stream of the response body
 // Don't forget to close it!
 func (api BucketAPI) DownloadObject(bucketKey string, objectName string) (reader io.ReadCloser, err error) {
@@ -51,6 +61,17 @@ func (api BucketAPI) DownloadObject(bucketKey string, objectName string) (reader
 
 	return downloadObject(path, bucketKey, objectName, bearer.AccessToken)
 }
+
+func (api BucketAPI) DownloadObject3L(bucketKey string, objectName string) (reader io.ReadCloser, err error) {
+	if err = api.Token.RefreshTokenIfRequired(api.Auth); err != nil {
+		return
+	}
+
+	path := api.Auth.Host + api.ModelDerivativePath
+
+	return downloadObject(path, bucketKey, objectName, api.Token.Bearer().AccessToken)
+}
+
 
 // ListObjects returns the bucket contains along with details on each item.
 func (api BucketAPI) ListObjects(bucketKey, limit, beginsWith, startAt string) (result BucketContent, err error) {

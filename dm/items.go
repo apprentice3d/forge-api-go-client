@@ -20,6 +20,20 @@ func (api FolderAPI) GetItemDetails(projectKey, itemKey string) (result ForgeRes
 	return getItemDetails(path, projectKey, itemKey, bearer.AccessToken)
 }
 
+// ListBuckets returns a list of all buckets created or associated with Forge secrets used for token creation
+func (api FolderAPI) GetItemDetails3L(projectKey, itemKey string) (result ForgeResponseObject, err error) {
+	
+	// TO DO: take in optional header argument
+	// https://forge.autodesk.com/en/docs/data/v2/reference/http/projects-project_id-items-item_id-GET/
+	if err = api.Token.RefreshTokenIfRequired(api.Auth); err != nil {
+		return
+	}
+
+	path := api.Auth.Host + api.ModelDerivativePath
+
+	return getItemDetails(path, projectKey, itemKey, api.Token.Bearer().AccessToken)
+}
+
 func (api FolderAPI) GetItemTip(projectKey, itemKey string) (result ForgeResponseObject, err error) {
 	
 	// TO DO: take in optional header argument
