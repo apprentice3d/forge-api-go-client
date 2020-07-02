@@ -212,7 +212,7 @@ func (a ModelDerivativeAPI) GetManifest(urn string) (result ManifestResult, err 
 	return
 }
 
-func (a ModelDerivativeAPI) GetManifest3L(urn string) (result ManifestResult, err error) {
+func (a ModelDerivativeAPI3L) GetManifest3L(urn string) (result ManifestResult, err error) {
 	if err = a.Token.RefreshTokenIfRequired(a.Auth); err != nil {
 		return
 	}
@@ -235,7 +235,7 @@ func (a ModelDerivativeAPI) GetMetadata(urn string) (result MetadataResult, err 
 	return
 }
 
-func (a ModelDerivativeAPI) GetMetadata3L(urn string) (result MetadataResult, err error) {
+func (a ModelDerivativeAPI3L) GetMetadata3L(urn string) (result MetadataResult, err error) {
 	if err = a.Token.RefreshTokenIfRequired(a.Auth); err != nil {
 		return
 	}
@@ -258,7 +258,7 @@ func (a ModelDerivativeAPI) GetObjectTree(urn string, viewId string) (status int
 	return
 }
 
-func (a ModelDerivativeAPI) GetObjectTree3L(urn string, viewId string) (status int, result TreeResult, err error) {
+func (a ModelDerivativeAPI3L) GetObjectTree3L(urn string, viewId string) (status int, result TreeResult, err error) {
 	if err = a.Token.RefreshTokenIfRequired(a.Auth); err != nil {
 		return
 	}
@@ -283,7 +283,7 @@ func (a ModelDerivativeAPI) GetPropertiesStream(urn string, viewId string) (stat
 	return
 }
 
-func (a ModelDerivativeAPI) GetPropertiesStream3L(urn string, viewId string) (status int,
+func (a ModelDerivativeAPI3L) GetPropertiesStream3L(urn string, viewId string) (status int,
 	result io.ReadCloser, err error) {
 	if err = a.Token.RefreshTokenIfRequired(a.Auth); err != nil {
 		return

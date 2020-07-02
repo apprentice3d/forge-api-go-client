@@ -78,6 +78,18 @@ func (api BucketAPI) CreateBucket(bucketKey, policyKey string) (result BucketDet
 	return
 }
 
+// CreateBucket creates and returns details of created bucket, or an error on failure
+func (api BucketAPI3L) CreateBucket3L(bucketKey, policyKey string) (result BucketDetails, err error) {
+	bearer, err := api.Authenticate("bucket:create")
+	if err != nil {
+		return
+	}
+	path := api.Host + api.BucketAPIPath
+	result, err = createBucket(path, bucketKey, policyKey, bearer.AccessToken)
+
+	return
+}
+
 // DeleteBucket deletes bucket given its key.
 // 	WARNING: The bucket delete call is undocumented.
 func (api BucketAPI) DeleteBucket(bucketKey string) error {
