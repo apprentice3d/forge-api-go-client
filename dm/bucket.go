@@ -14,11 +14,6 @@ type BucketAPI struct {
 	BucketAPIPath string
 }
 
-type BucketAPI3L struct {
-	oauth.ThreeLeggedAuth
-	BucketAPIPath string
-}
-
 // NewBucketAPIWithCredentials returns a Bucket API client with default configurations
 func NewBucketAPIWithCredentials(ClientID string, ClientSecret string) BucketAPI {
 	return BucketAPI{
@@ -68,18 +63,6 @@ type ListedBuckets struct {
 
 // CreateBucket creates and returns details of created bucket, or an error on failure
 func (api BucketAPI) CreateBucket(bucketKey, policyKey string) (result BucketDetails, err error) {
-	bearer, err := api.Authenticate("bucket:create")
-	if err != nil {
-		return
-	}
-	path := api.Host + api.BucketAPIPath
-	result, err = createBucket(path, bucketKey, policyKey, bearer.AccessToken)
-
-	return
-}
-
-// CreateBucket creates and returns details of created bucket, or an error on failure
-func (api BucketAPI3L) CreateBucket3L(bucketKey, policyKey string) (result BucketDetails, err error) {
 	bearer, err := api.Authenticate("bucket:create")
 	if err != nil {
 		return
