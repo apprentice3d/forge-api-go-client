@@ -1,15 +1,14 @@
 package recap_test
 
 import (
-	"fmt"
-	"github.com/apprentice3d/forge-api-go-client/recap"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 	"strconv"
 	"testing"
 	"time"
+
+	"github.com/apprentice3d/forge-api-go-client/recap"
 )
 
 func TestReCapAPIWorkflowUsingRemoteLinks(t *testing.T) {
@@ -31,6 +30,10 @@ func TestReCapAPIWorkflowUsingRemoteLinks(t *testing.T) {
 	// prepare the credentials
 	clientID := os.Getenv("FORGE_CLIENT_ID")
 	clientSecret := os.Getenv("FORGE_CLIENT_SECRET")
+
+	if clientID == "" || clientSecret == "" {
+		t.Skipf("No Forge credentials present; skipping test")
+	}
 
 	recapAPI := recap.NewAPIWithCredentials(clientID, clientSecret)
 
@@ -88,7 +91,6 @@ func TestReCapAPIWorkflowUsingRemoteLinks(t *testing.T) {
 		}
 	})
 
-
 	t.Run("Check the result file size for normal size", func(t *testing.T) {
 		response, err := recapAPI.GetSceneResults(scene.ID, testingFormat)
 		if err != nil {
@@ -127,7 +129,6 @@ func TestReCapAPIWorkflowUsingRemoteLinks(t *testing.T) {
 
 	})
 
-
 	t.Run("Delete the scene", func(t *testing.T) {
 		_, err := recapAPI.DeleteScene(scene.ID)
 		if err != nil {
@@ -158,6 +159,10 @@ func TestReCapAPIWorkflowUsingLocalFiles(t *testing.T) {
 	// prepare the credentials
 	clientID := os.Getenv("FORGE_CLIENT_ID")
 	clientSecret := os.Getenv("FORGE_CLIENT_SECRET")
+
+	if clientID == "" || clientSecret == "" {
+		t.Skipf("No Forge credentials present; skipping test")
+	}
 
 	recapAPI := recap.NewAPIWithCredentials(clientID, clientSecret)
 
@@ -282,6 +287,10 @@ func TestCreatePhotoScene(t *testing.T) {
 	// prepare the credentials
 	clientID := os.Getenv("FORGE_CLIENT_ID")
 	clientSecret := os.Getenv("FORGE_CLIENT_SECRET")
+
+	if clientID == "" || clientSecret == "" {
+		t.Skipf("No Forge credentials present; skipping test")
+	}
 	recapAPI := recap.NewAPIWithCredentials(clientID, clientSecret)
 	var sceneID string
 
@@ -321,13 +330,9 @@ func ExampleAPI_CreatePhotoScene() {
 
 	photoScene, err := recap.CreatePhotoScene("test_scene", nil, "object")
 	if err != nil {
-		log.Fatal(err.Error())
+		// handle error
 	}
 
 	if len(photoScene.ID) != 0 {
-		fmt.Println("Scene was successfully created")
 	}
-
-	//Output:
-	//Scene was successfully created
 }

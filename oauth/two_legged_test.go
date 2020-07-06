@@ -2,10 +2,11 @@ package oauth_test
 
 import (
 	"fmt"
-	"github.com/apprentice3d/forge-api-go-client/oauth"
 	"log"
 	"os"
 	"testing"
+
+	"github.com/apprentice3d/forge-api-go-client/oauth"
 )
 
 func TestAuthenticate(t *testing.T) {
@@ -14,7 +15,7 @@ func TestAuthenticate(t *testing.T) {
 	clientSecret := os.Getenv("FORGE_CLIENT_SECRET")
 
 	if len(clientID) == 0 || len(clientSecret) == 0 {
-		t.Fatalf("Could not get from env the Forge secrets")
+		t.Skipf("Could not get from env the Forge secrets")
 	}
 
 	t.Run("Valid Forge Secrets", func(t *testing.T) {

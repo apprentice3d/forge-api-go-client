@@ -10,6 +10,9 @@ func TestFolderAPI_GetItemDetails(t *testing.T) {
 	// prepare the credentials
 	clientID := os.Getenv("FORGE_CLIENT_ID")
 	clientSecret := os.Getenv("FORGE_CLIENT_SECRET")
+	if clientID == "" || clientSecret == "" {
+		t.Skipf("No Forge credentials present; skipping test")
+	}
 
 	folderAPI := NewFolderAPIWithCredentials(clientID, clientSecret)
 
@@ -30,6 +33,9 @@ func TestFolderAPI_GetItemTip(t *testing.T) {
 	// prepare the credentials
 	clientID := os.Getenv("FORGE_CLIENT_ID")
 	clientSecret := os.Getenv("FORGE_CLIENT_SECRET")
+	if clientID == "" || clientSecret == "" {
+		t.Skipf("No Forge credentials present; skipping test")
+	}
 
 	folderAPI := NewFolderAPIWithCredentials(clientID, clientSecret)
 
@@ -50,6 +56,9 @@ func TestFolderAPI_GetItemVersions(t *testing.T) {
 	// prepare the credentials
 	clientID := os.Getenv("FORGE_CLIENT_ID")
 	clientSecret := os.Getenv("FORGE_CLIENT_SECRET")
+	if clientID == "" || clientSecret == "" {
+		t.Skipf("No Forge credentials present; skipping test")
+	}
 
 	folderAPI := NewFolderAPIWithCredentials(clientID, clientSecret)
 

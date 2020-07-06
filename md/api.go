@@ -46,16 +46,16 @@ func NewAPIWithCredentials(ClientID string, ClientSecret string) ModelDerivative
 
 // API struct holds all paths necessary to access Model Derivative API
 type ModelDerivativeAPI3L struct {
-	Auth            	oauth.ThreeLeggedAuth
-	Token          		TokenRefresher
+	Auth                oauth.ThreeLeggedAuth
+	Token               TokenRefresher
 	ModelDerivativePath string
 }
 
 // NewAPIWithCredentials returns a Model Derivative API client with default configurations
-func NewAPI3LWithCredentials(auth oauth.ThreeLeggedAuth, token *oauth.RefreshableToken,) *ModelDerivativeAPI3L {
+func NewAPI3LWithCredentials(auth oauth.ThreeLeggedAuth, token *oauth.RefreshableToken) *ModelDerivativeAPI3L {
 	return &ModelDerivativeAPI3L{
-		Auth:            auth,
-		Token:           token,
+		Auth:                auth,
+		Token:               token,
 		ModelDerivativePath: "/modelderivative/v2/designdata",
 	}
 }
@@ -327,7 +327,6 @@ func (a ModelDerivativeAPI3L) GetThumbnail3L(urn string) (reader io.ReadCloser, 
 
 	return
 }
-
 
 /*
  *	SUPPORT FUNCTIONS

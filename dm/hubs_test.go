@@ -3,6 +3,7 @@ package dm_test
 import (
 	"os"
 	"testing"
+
 	"github.com/outer-labs/forge-api-go-client/dm"
 )
 
@@ -11,6 +12,10 @@ func TestHubAPI_GetHubDetails(t *testing.T) {
 	// prepare the credentials
 	clientID := os.Getenv("FORGE_CLIENT_ID")
 	clientSecret := os.Getenv("FORGE_CLIENT_SECRET")
+
+	if clientID == "" || clientSecret == "" {
+		t.Skipf("No Forge credentials present; skipping test")
+	}
 
 	hubAPI := dm.NewHubAPIWithCredentials(clientID, clientSecret)
 
@@ -33,5 +38,3 @@ func TestHubAPI_GetHubDetails(t *testing.T) {
 		}
 	})
 }
-
-

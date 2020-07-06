@@ -1,9 +1,10 @@
 package oauth_test
 
 import (
-	"github.com/apprentice3d/forge-api-go-client/oauth"
 	"os"
 	"testing"
+
+	"github.com/apprentice3d/forge-api-go-client/oauth"
 )
 
 func TestThreeLeggedAuth_Authorize(t *testing.T) {
@@ -11,6 +12,9 @@ func TestThreeLeggedAuth_Authorize(t *testing.T) {
 	//prepare the credentials
 	clientID := os.Getenv("FORGE_CLIENT_ID")
 	clientSecret := os.Getenv("FORGE_CLIENT_SECRET")
+	if clientID == "" || clientSecret == "" {
+		t.Skipf("No Forge credentials present; skipping test")
+	}
 
 	if len(clientID) == 0 || len(clientSecret) == 0 {
 		t.Fatal("Could not get Forge env vars")

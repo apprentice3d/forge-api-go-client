@@ -1,20 +1,26 @@
 package md_test
 
 import (
-	"testing"
+	"bytes"
+	"encoding/base64"
+	"encoding/json"
+	"io/ioutil"
 	"os"
+	"testing"
+
 	"github.com/apprentice3d/forge-api-go-client/dm"
 	"github.com/apprentice3d/forge-api-go-client/md"
-	"io/ioutil"
-	"encoding/json"
-	"encoding/base64"
-	"bytes"
 )
 
 func TestAPI_TranslateToSVF(t *testing.T) {
 	// prepare the credentials
 	clientID := os.Getenv("FORGE_CLIENT_ID")
 	clientSecret := os.Getenv("FORGE_CLIENT_SECRET")
+
+	if clientID == "" || clientSecret == "" {
+		t.Skipf("No Forge credentials present; skipping test")
+	}
+
 	bucketAPI := dm.NewBucketAPIWithCredentials(clientID, clientSecret)
 	mdAPI := md.NewAPIWithCredentials(clientID, clientSecret)
 
