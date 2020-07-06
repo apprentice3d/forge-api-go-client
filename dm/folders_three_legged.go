@@ -5,9 +5,9 @@ import (
 )
 
 type FolderAPI3L struct {
-	Auth            oauth.ThreeLeggedAuth
-	Token           TokenRefresher
-	ProjectsAPIPath string
+	Auth          oauth.ThreeLeggedAuth
+	Token         TokenRefresher
+	FolderAPIPath string
 }
 
 func NewFolderAPI3LWithCredentials(
@@ -15,9 +15,9 @@ func NewFolderAPI3LWithCredentials(
 	token TokenRefresher,
 ) *FolderAPI3L {
 	return &FolderAPI3L{
-		Auth:            auth,
-		Token:           token,
-		ProjectsAPIPath: "/data/v1/projects",
+		Auth:          auth,
+		Token:         token,
+		FolderAPIPath: "/data/v1/projects",
 	}
 }
 
@@ -27,7 +27,7 @@ func (a FolderAPI3L) GetFolderDetailsThreeLegged(projectKey, folderKey string) (
 		return
 	}
 
-	path := a.Auth.Host + a.ProjectsAPIPath
+	path := a.Auth.Host + a.FolderAPIPath
 	return getFolderDetails(path, projectKey, folderKey, a.Token.Bearer().AccessToken)
 }
 
@@ -36,7 +36,7 @@ func (a FolderAPI3L) GetFolderContentsThreeLegged(projectKey, folderKey string) 
 		return
 	}
 
-	path := a.Auth.Host + a.ProjectsAPIPath
+	path := a.Auth.Host + a.FolderAPIPath
 	return getFolderContents(path, projectKey, folderKey, a.Token.Bearer().AccessToken)
 }
 
@@ -45,6 +45,6 @@ func (a FolderAPI3L) GetItemDetailsThreeLegged(projectKey, itemKey string) (resu
 		return
 	}
 
-	path := a.Auth.Host + a.ProjectsAPIPath
+	path := a.Auth.Host + a.FolderAPIPath
 	return getItemDetails(path, projectKey, itemKey, a.Token.Bearer().AccessToken)
 }

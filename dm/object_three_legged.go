@@ -1,12 +1,7 @@
 package dm
 
 import (
-	"encoding/json"
-	"errors"
-	"io/ioutil"
 	"io"
-	"net/http"
-	"strconv"
 )
 
 // UploadObject adds to specified bucket the given data (can originate from a multipart-form or direct file read).
@@ -16,7 +11,7 @@ func (api BucketAPI3L) UploadObject3L(bucketKey string, objectName string, reade
 		return
 	}
 
-	path := api.Auth.Host + api.ModelDerivativePath
+	path := api.Auth.Host + api.BucketsAPIPath
 	return uploadObject(path, bucketKey, objectName, reader, api.Token.Bearer().AccessToken)
 }
 
@@ -27,10 +22,9 @@ func (api BucketAPI3L) DownloadObject3L(bucketKey string, objectName string) (re
 		return
 	}
 
-	path := api.Auth.Host + api.ModelDerivativePath
+	path := api.Auth.Host + api.BucketsAPIPath
 	return downloadObject(path, bucketKey, objectName, api.Token.Bearer().AccessToken)
 }
-
 
 // ListObjects returns the bucket contains along with details on each item.
 func (api BucketAPI3L) ListObjects3L(bucketKey, limit, beginsWith, startAt string) (result BucketContent, err error) {
@@ -38,6 +32,6 @@ func (api BucketAPI3L) ListObjects3L(bucketKey, limit, beginsWith, startAt strin
 		return
 	}
 
-	path := api.Auth.Host + api.ModelDerivativePath
+	path := api.Auth.Host + api.BucketsAPIPath
 	return listObjects(path, bucketKey, limit, beginsWith, startAt, api.Token.Bearer().AccessToken)
 }

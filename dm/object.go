@@ -3,8 +3,8 @@ package dm
 import (
 	"encoding/json"
 	"errors"
-	"io/ioutil"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"strconv"
 )
@@ -40,16 +40,6 @@ func (api BucketAPI) UploadObject(bucketKey string, objectName string, reader io
 	return uploadObject(path, bucketKey, objectName, reader, bearer.AccessToken)
 }
 
-func (api BucketAPI) UploadObject3L(bucketKey string, objectName string, reader io.Reader) (result ObjectDetails, err error) {
-	if err = api.Token.RefreshTokenIfRequired(api.Auth); err != nil {
-		return
-	}
-
-	path := api.Auth.Host + api.ModelDerivativePath
-
-	return uploadObject(path, bucketKey, objectName, reader, api.Token.Bearer().AccessToken)
-}
-
 // DownloadObject returns the reader stream of the response body
 // Don't forget to close it!
 func (api BucketAPI) DownloadObject(bucketKey string, objectName string) (reader io.ReadCloser, err error) {
@@ -62,17 +52,6 @@ func (api BucketAPI) DownloadObject(bucketKey string, objectName string) (reader
 	return downloadObject(path, bucketKey, objectName, bearer.AccessToken)
 }
 
-func (api BucketAPI) DownloadObject3L(bucketKey string, objectName string) (reader io.ReadCloser, err error) {
-	if err = api.Token.RefreshTokenIfRequired(api.Auth); err != nil {
-		return
-	}
-
-	path := api.Auth.Host + api.ModelDerivativePath
-
-	return downloadObject(path, bucketKey, objectName, api.Token.Bearer().AccessToken)
-}
-
-
 // ListObjects returns the bucket contains along with details on each item.
 func (api BucketAPI) ListObjects(bucketKey, limit, beginsWith, startAt string) (result BucketContent, err error) {
 	bearer, err := api.Authenticate("data:read")
@@ -84,8 +63,6 @@ func (api BucketAPI) ListObjects(bucketKey, limit, beginsWith, startAt string) (
 	return listObjects(path, bucketKey, limit, beginsWith, startAt, bearer.AccessToken)
 }
 
-
-
 /*
  *	SUPPORT FUNCTIONS
  */
@@ -94,7 +71,7 @@ func listObjects(path, bucketKey, limit, beginsWith, startAt, token string) (res
 	task := http.Client{}
 
 	req, err := http.NewRequest("GET",
-		path + "/" + bucketKey + "/objects",
+		path+"/"+bucketKey+"/objects",
 		nil,
 	)
 
@@ -140,7 +117,7 @@ func uploadObject(path, bucketKey, objectName string, dataContent io.Reader, tok
 
 	//dataContent := bytes.NewReader(data)
 	req, err := http.NewRequest("PUT",
-		path+"/"+ bucketKey + "/objects/" + objectName,
+		path+"/"+bucketKey+"/objects/"+objectName,
 		dataContent)
 
 	if err != nil {
@@ -172,7 +149,7 @@ func downloadObject(path, bucketKey, objectName string, token string) (result io
 	task := http.Client{}
 
 	req, err := http.NewRequest("GET",
-		path+"/"+ bucketKey + "/objects/" + objectName,
+		path+"/"+bucketKey+"/objects/"+objectName,
 		nil)
 
 	if err != nil {
