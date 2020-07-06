@@ -2,10 +2,10 @@ package dm_test
 
 import (
 	"fmt"
-	"github.com/outer-labs/forge-api-go-client/dm"
-	"log"
 	"os"
 	"testing"
+
+	"github.com/outer-labs/forge-api-go-client/dm"
 )
 
 func TestBucketAPI_CreateBucket(t *testing.T) {
@@ -13,6 +13,10 @@ func TestBucketAPI_CreateBucket(t *testing.T) {
 	// prepare the credentials
 	clientID := os.Getenv("FORGE_CLIENT_ID")
 	clientSecret := os.Getenv("FORGE_CLIENT_SECRET")
+
+	if clientID == "" || clientSecret == "" {
+		t.Skipf("No Forge credentials present; skipping test")
+	}
 
 	bucketAPI := dm.NewBucketAPIWithCredentials(clientID, clientSecret)
 
@@ -54,6 +58,10 @@ func TestBucketAPI_GetBucketDetails(t *testing.T) {
 	// prepare the credentials
 	clientID := os.Getenv("FORGE_CLIENT_ID")
 	clientSecret := os.Getenv("FORGE_CLIENT_SECRET")
+
+	if clientID == "" || clientSecret == "" {
+		t.Skipf("No Forge credentials present; skipping test")
+	}
 
 	bucketAPI := dm.NewBucketAPIWithCredentials(clientID, clientSecret)
 
@@ -98,6 +106,10 @@ func TestBucketAPI_ListBuckets(t *testing.T) {
 	clientID := os.Getenv("FORGE_CLIENT_ID")
 	clientSecret := os.Getenv("FORGE_CLIENT_SECRET")
 
+	if clientID == "" || clientSecret == "" {
+		t.Skipf("No Forge credentials present; skipping test")
+	}
+
 	bucketAPI := dm.NewBucketAPIWithCredentials(clientID, clientSecret)
 
 	t.Run("List available buckets", func(t *testing.T) {
@@ -111,9 +123,9 @@ func TestBucketAPI_ListBuckets(t *testing.T) {
 	t.Run("Create a bucket and find it among listed", func(t *testing.T) {
 
 		testBucketKey := "just_for_testing"
-		
+
 		_, err := bucketAPI.CreateBucket(testBucketKey, "transient")
-		
+
 		if err != nil {
 			t.Errorf("Failed to create a bucket: %s\n", err.Error())
 		}
@@ -156,7 +168,7 @@ func ExampleBucketAPI_CreateBucket() {
 	bucket, err := bucketAPI.CreateBucket("some_unique_name", "transient")
 
 	if err != nil {
-		log.Fatalf("Failed to create a bucket: %s\n", err.Error())
+		// handle error
 	}
 
 	fmt.Printf("Bucket %s was created with policy %s\n",

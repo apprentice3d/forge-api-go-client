@@ -4,6 +4,7 @@ import (
 	"io"
 	"os"
 	"testing"
+
 	"github.com/outer-labs/forge-api-go-client/dm"
 )
 
@@ -11,6 +12,9 @@ func TestBucketAPI_ListObjects(t *testing.T) {
 	// prepare the credentials
 	clientID := os.Getenv("FORGE_CLIENT_ID")
 	clientSecret := os.Getenv("FORGE_CLIENT_SECRET")
+	if clientID == "" || clientSecret == "" {
+		t.Skipf("No Forge credentials present; skipping test")
+	}
 
 	bucketAPI := dm.NewBucketAPIWithCredentials(clientID, clientSecret)
 
@@ -39,6 +43,9 @@ func TestBucketAPI_UploadObject(t *testing.T) {
 	// prepare the credentials
 	clientID := os.Getenv("FORGE_CLIENT_ID")
 	clientSecret := os.Getenv("FORGE_CLIENT_SECRET")
+	if clientID == "" || clientSecret == "" {
+		t.Skipf("No Forge credentials present; skipping test")
+	}
 
 	bucketAPI := dm.NewBucketAPIWithCredentials(clientID, clientSecret)
 
@@ -97,6 +104,9 @@ func TestBucketAPI_DownloadObject(t *testing.T) {
 	// prepare the credentials
 	clientID := os.Getenv("FORGE_CLIENT_ID")
 	clientSecret := os.Getenv("FORGE_CLIENT_SECRET")
+	if clientID == "" || clientSecret == "" {
+		t.Skipf("No Forge credentials present; skipping test")
+	}
 
 	bucketAPI := dm.NewBucketAPIWithCredentials(clientID, clientSecret)
 
