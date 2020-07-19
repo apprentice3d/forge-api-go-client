@@ -49,7 +49,7 @@ type AppBundle struct {
 	Parameters AppParameters `json:"uploadParameters"`
 	AppData
 
-	authenticator *oauth.TwoLeggedAuth
+	authenticator oauth.ForgeAuthenticator
 	path          string
 	name          string
 	uploadURL	string
@@ -82,7 +82,7 @@ type AppUploadError struct {
 // Delete removes the AppBundle, including all versions and aliases.
 func (app *AppBundle) Delete() (err error) {
 
-	bearer, err := app.authenticator.Authenticate("code:all")
+	bearer, err := app.authenticator.GetToken("code:all")
 	if err != nil {
 		return
 	}
@@ -104,7 +104,7 @@ func (app *AppBundle) Delete() (err error) {
 
 //Details gets the details of the specified AppBundle, providing an alias
 func (app *AppBundle) Details(alias string) (details AppDetails, err error) {
-	bearer, err := app.authenticator.Authenticate("code:all")
+	bearer, err := app.authenticator.GetToken("code:all")
 	if err != nil {
 		return
 	}
@@ -115,7 +115,7 @@ func (app *AppBundle) Details(alias string) (details AppDetails, err error) {
 
 //Aliases lists all aliases for the specified AppBundle.
 func (app AppBundle) Aliases() (list AliasesList, err error) {
-	bearer, err := app.authenticator.Authenticate("code:all")
+	bearer, err := app.authenticator.GetToken("code:all")
 	if err != nil {
 		return
 	}
@@ -127,7 +127,7 @@ func (app AppBundle) Aliases() (list AliasesList, err error) {
 //CreateAlias creates a new alias for this AppBundle.
 //	Limit: 1. Number of aliases (LimitAliases).
 func (app AppBundle) CreateAlias(alias string, version uint) (result Alias, err error) {
-	bearer, err := app.authenticator.Authenticate("code:all")
+	bearer, err := app.authenticator.GetToken("code:all")
 	if err != nil {
 		return
 	}
@@ -138,7 +138,7 @@ func (app AppBundle) CreateAlias(alias string, version uint) (result Alias, err 
 
 //ModifyAlias will switch the given alias to another existing version
 func (app AppBundle) ModifyAlias(alias string, version uint) (result Alias, err error) {
-	bearer, err := app.authenticator.Authenticate("code:all")
+	bearer, err := app.authenticator.GetToken("code:all")
 	if err != nil {
 		return
 	}
@@ -149,7 +149,7 @@ func (app AppBundle) ModifyAlias(alias string, version uint) (result Alias, err 
 
 //AliasDetail gets the details on given alias
 func (app *AppBundle) AliasDetail(alias string) (details Alias, err error) {
-	bearer, err := app.authenticator.Authenticate("code:all")
+	bearer, err := app.authenticator.GetToken("code:all")
 	if err != nil {
 		return
 	}
@@ -160,7 +160,7 @@ func (app *AppBundle) AliasDetail(alias string) (details Alias, err error) {
 
 //DeleteAlias the alias for this AppBundle.
 func (app AppBundle) DeleteAlias(alias string) (err error) {
-	bearer, err := app.authenticator.Authenticate("code:all")
+	bearer, err := app.authenticator.GetToken("code:all")
 	if err != nil {
 		return
 	}
@@ -171,7 +171,7 @@ func (app AppBundle) DeleteAlias(alias string) (err error) {
 
 //Versions lists all aliases for the specified AppBundle.
 func (app AppBundle) Versions() (list VersionList, err error) {
-	bearer, err := app.authenticator.Authenticate("code:all")
+	bearer, err := app.authenticator.GetToken("code:all")
 	if err != nil {
 		return
 	}
@@ -181,7 +181,7 @@ func (app AppBundle) Versions() (list VersionList, err error) {
 }
 
 func (app AppBundle) CreateVersion(engine string) (result AppBundle, err error) {
-	bearer, err := app.authenticator.Authenticate("code:all")
+	bearer, err := app.authenticator.GetToken("code:all")
 	if err != nil {
 		return
 	}
@@ -195,7 +195,7 @@ func (app AppBundle) CreateVersion(engine string) (result AppBundle, err error) 
 
 
 func (app *AppBundle) VersionDetails(version uint) (details AppData, err error) {
-	bearer, err := app.authenticator.Authenticate("code:all")
+	bearer, err := app.authenticator.GetToken("code:all")
 	if err != nil {
 		return
 	}
@@ -206,7 +206,7 @@ func (app *AppBundle) VersionDetails(version uint) (details AppData, err error) 
 
 
 func (app AppBundle) DeleteVersion(version uint) (err error) {
-	bearer, err := app.authenticator.Authenticate("code:all")
+	bearer, err := app.authenticator.GetToken("code:all")
 	if err != nil {
 		return
 	}

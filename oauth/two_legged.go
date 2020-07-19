@@ -10,30 +10,21 @@ import (
 	"strconv"
 )
 
-// TwoLeggedAuth struct holds data necessary for making requests in 2-legged context
-type TwoLeggedAuth struct {
-	AuthData
-}
-
-// TwoLeggedAuthenticator interface defines the method necessary to qualify as 2-legged authenticator
-type TwoLeggedAuthenticator interface {
-	Authenticate(scope string) (Bearer, error)
-}
-
-// NewTwoLeggedClient returns a 2-legged authenticator with default host and authPath
-func NewTwoLeggedClient(clientID, clientSecret string) TwoLeggedAuth {
-	return TwoLeggedAuth{
+// NewTwoLegged returns a 2-legged authenticator with default host and authPath
+func NewTwoLegged(clientID, clientSecret string) TwoLeggedAuth {
+	return TwoLeggedAuth {
 		AuthData{
 			clientID,
 			clientSecret,
 			"https://developer.api.autodesk.com",
 			"/authentication/v1",
 		},
+
 	}
 }
 
-// Authenticate allows getting a token with a given scope
-func (a TwoLeggedAuth) Authenticate(scope string) (bearer Bearer, err error) {
+// GetToken allows getting a token with a given scope
+func (a TwoLeggedAuth) GetToken(scope string) (bearer Bearer, err error) {
 
 	task := http.Client{}
 
@@ -44,7 +35,7 @@ func (a TwoLeggedAuth) Authenticate(scope string) (bearer Bearer, err error) {
 	body.Add("scope", scope)
 
 	req, err := http.NewRequest("POST",
-		a.Host+a.AuthPath+"/authenticate",
+		a.Host+a.authPath+"/authenticate",
 		bytes.NewBufferString(body.Encode()),
 	)
 
@@ -69,4 +60,15 @@ func (a TwoLeggedAuth) Authenticate(scope string) (bearer Bearer, err error) {
 	err = decoder.Decode(&bearer)
 
 	return
+}
+
+
+// GetHostPath returns host path, usually different in case of prd stg and dev environments
+func (a AuthData) GetHostPath() string {
+	return a.Host
+}
+
+// SetHostPath allows changing the host, usually useful for switching between prd stg and dev environments
+func (a *AuthData) SetHostPath(host string) {
+	a.Host = host
 }

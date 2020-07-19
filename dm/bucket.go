@@ -4,69 +4,31 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"github.com/apprentice3d/forge-api-go-client/oauth"
 	"io/ioutil"
 	"net/http"
 	"strconv"
-
-	"github.com/apprentice3d/forge-api-go-client/oauth"
 )
 
-// BucketAPI holds the necessary data for making Bucket related calls to Forge Data Management service
-type BucketAPI struct {
-	oauth.TwoLeggedAuth
-	BucketAPIPath string
-}
+
 
 // NewBucketAPIWithCredentials returns a Bucket API client with default configurations
-func NewBucketAPIWithCredentials(ClientID string, ClientSecret string) BucketAPI {
+func NewBucketAPI(authenticator oauth.ForgeAuthenticator) BucketAPI {
 	return BucketAPI{
-		oauth.NewTwoLeggedClient(ClientID, ClientSecret),
+		authenticator,
 		"/oss/v2/buckets",
 	}
-}
-
-// CreateBucketRequest contains the data necessary to be passed upon bucket creation
-type CreateBucketRequest struct {
-	BucketKey string `json:"bucketKey"`
-	PolicyKey string `json:"policyKey"`
-}
-
-// BucketDetails reflects the body content received upon creation of a bucket
-type BucketDetails struct {
-	BucketKey   string `json:"bucketKey"`
-	BucketOwner string `json:"bucketOwner"`
-	CreateDate  int64 `json:"createDate"`
-	Permissions []struct {
-		AuthID string `json:"authId"`
-		Access string `json:"access"`
-	} `json:"permissions"`
-	PolicyKey string `json:"policyKey"`
-}
-
-// ErrorResult reflects the body content when a request failed (g.e. Bad request or key conflict)
-type ErrorResult struct {
-	Reason string `json:"reason"`
-}
-
-// ListedBuckets reflects the response when query Data Management API for buckets associated with current Forge secrets.
-type ListedBuckets struct {
-	Items []struct {
-		BucketKey   string `json:"bucketKey"`
-		CreatedDate int64 `json:"createdDate"`
-		PolicyKey   string `json:"policyKey"`
-	} `json:"items"`
-	Next string `json:"next"`
 }
 
 
 // CreateBucket creates and returns details of created bucket, or an error on failure
 func (api BucketAPI) CreateBucket(bucketKey, policyKey string) (result BucketDetails, err error) {
 
-	bearer, err := api.Authenticate("bucket:create")
+	bearer, err := api.Authenticator.GetToken("bucket:create")
 	if err != nil {
 		return
 	}
-	path := api.Host + api.BucketAPIPath
+	path := api.Authenticator.GetHostPath() + api.BucketAPIPath
 	result, err = createBucket(path, bucketKey, policyKey, bearer.AccessToken)
 
 	return
@@ -75,38 +37,36 @@ func (api BucketAPI) CreateBucket(bucketKey, policyKey string) (result BucketDet
 // DeleteBucket deletes bucket given its key.
 // 	WARNING: The bucket delete call is undocumented.
 func (api BucketAPI) DeleteBucket(bucketKey string) error {
-	bearer, err := api.Authenticate("bucket:delete")
+	bearer, err := api.Authenticator.GetToken("bucket:delete")
 	if err != nil {
 		return err
 	}
-	path := api.Host + api.BucketAPIPath
+	path := api.Authenticator.GetHostPath() + api.BucketAPIPath
 
 	return deleteBucket(path, bucketKey, bearer.AccessToken)
 }
 
 // ListBuckets returns a list of all buckets created or associated with Forge secrets used for token creation
 func (api BucketAPI) ListBuckets(region, limit, startAt string) (result ListedBuckets, err error) {
-	bearer, err := api.Authenticate("bucket:read")
+	bearer, err := api.Authenticator.GetToken("bucket:read")
 	if err != nil {
 		return
 	}
-	path := api.Host + api.BucketAPIPath
+	path := api.Authenticator.GetHostPath()+ api.BucketAPIPath
 
 	return listBuckets(path, region, limit, startAt, bearer.AccessToken)
 }
 
 // GetBucketDetails returns information associated to a bucket. See BucketDetails struct.
 func (api BucketAPI) GetBucketDetails(bucketKey string) (result BucketDetails, err error) {
-	bearer, err := api.Authenticate("bucket:read")
+	bearer, err := api.Authenticator.GetToken("bucket:read")
 	if err != nil {
 		return
 	}
-	path := api.Host + api.BucketAPIPath
+	path := api.Authenticator.GetHostPath() + api.BucketAPIPath
 
 	return getBucketDetails(path, bucketKey, bearer.AccessToken)
 }
-
-
 
 
 
@@ -185,6 +145,7 @@ func listBuckets(path, region, limit, startAt, token string) (result ListedBucke
 	decoder := json.NewDecoder(response.Body)
 	err = decoder.Decode(&result)
 
+	//TODO: address the pagination of buckets
 	return
 }
 

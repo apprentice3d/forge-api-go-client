@@ -28,22 +28,33 @@ type UserProfile struct {
 // Information struct is holding the host and path used when making queries
 // for profile of an authorizing end user in a 3-legged context
 type Information struct {
-	Host        string `json:"host,omitempty"`
-	ProfilePath string `json:"profile_path"`
+	Authenticator        ForgeAuthenticator
+	InformationalAPIPath string
+	//Host        string `json:"host,omitempty"`
+	//ProfilePath string `json:"profile_path"`
 }
 
+//// NewInformationQuerier returns an Informational API accessor with default host and profilePath
+//func NewInformationQuerier(clientId, clientSecret, redirectURI string) Information {
+//	authenticator := NewTwoLegged(clientId, clientSecret)
+//	return Information{
+//		authenticator,
+//		"/userprofile/v1/users/@me",
+//	}
+//}
+
 // NewInformationQuerier returns an Informational API accessor with default host and profilePath
-func NewInformationQuerier() Information {
+func NewInformationQuerier(authenticator ForgeAuthenticator) Information {
 	return Information{
-		"https://developer.api.autodesk.com",
+		authenticator,
 		"/userprofile/v1/users/@me",
 	}
 }
 
-//AboutMe is used to get the profile of an authorizing end user, given the token obtained via 3-legged OAuth flow
-func (a Information) AboutMe(token string) (profile UserProfile, err error) {
+//AboutMe is used to get the profile of an authorizing end user
+func (i Information) AboutMe() (profile UserProfile, err error) {
 
-	requestPath := a.Host + a.ProfilePath
+	requestPath := i.Authenticator.GetHostPath() + i.InformationalAPIPath
 	task := http.Client{}
 
 	req, err := http.NewRequest("GET",
@@ -55,7 +66,12 @@ func (a Information) AboutMe(token string) (profile UserProfile, err error) {
 		return
 	}
 
-	req.Header.Set("Authorization", "Bearer "+token)
+	bearer, err := i.Authenticator.GetToken("user-profile:read")
+	if err != nil {
+		return
+	}
+
+	req.Header.Set("Authorization", "Bearer "+bearer.AccessToken)
 	response, err := task.Do(req)
 
 	if err != nil {

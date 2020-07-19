@@ -9,44 +9,27 @@ import (
 	"strconv"
 )
 
-// ObjectDetails reflects the data presented when uploading an object to a bucket or requesting details on object.
-type ObjectDetails struct {
-	BucketKey   string            `json:"bucketKey"`
-	ObjectID    string            `json:"objectID"`
-	ObjectKey   string            `json:"objectKey"`
-	SHA1        string            `json:"sha1"`
-	Size        uint64            `json:"size"`
-	ContentType string            `json:"contentType, omitempty"`
-	Location    string            `json:"location"`
-	BlockSizes  []int64           `json:"blockSizes, omitempty"`
-	Deltas      map[string]string `json:"deltas, omitempty"`
-}
 
-// BucketContent reflects the response when query Data Management API for bucket content.
-type BucketContent struct {
-	Items []ObjectDetails `json:"items"`
-	Next  string          `json:"next"`
-}
 
 // UploadObject adds to specified bucket the given data (can originate from a multipart-form or direct file read).
 // Return details on uploaded object, including the object URN. Check ObjectDetails struct.
 func (api BucketAPI) UploadObject(bucketKey string, objectName string, data []byte) (result ObjectDetails, err error) {
-	bearer, err := api.Authenticate("data:write")
+	bearer, err := api.Authenticator.GetToken("data:write")
 	if err != nil {
 		return
 	}
-	path := api.Host + api.BucketAPIPath
+	path := api.Authenticator.GetHostPath() + api.BucketAPIPath
 
 	return uploadObject(path, bucketKey, objectName, data, bearer.AccessToken)
 }
 
 // ListObjects returns the bucket contains along with details on each item.
 func (api BucketAPI) ListObjects(bucketKey, limit, beginsWith, startAt string) (result BucketContent, err error) {
-	bearer, err := api.Authenticate("data:read")
+	bearer, err := api.Authenticator.GetToken("data:read")
 	if err != nil {
 		return
 	}
-	path := api.Host + api.BucketAPIPath
+	path := api.Authenticator.GetHostPath() + api.BucketAPIPath
 
 	return listObjects(path, bucketKey, limit, beginsWith, startAt, bearer.AccessToken)
 }
@@ -54,11 +37,11 @@ func (api BucketAPI) ListObjects(bucketKey, limit, beginsWith, startAt string) (
 
 // DownloadObject downloads an on object, given the URL-encoded object name.
 func (api BucketAPI) DownloadObject(bucketKey string, objectName string) (result []byte, err error) {
-	bearer, err := api.Authenticate("data:read")
+	bearer, err := api.Authenticator.GetToken("data:read")
 	if err != nil {
 		return
 	}
-	path := api.Host + api.BucketAPIPath
+	path := api.Authenticator.GetHostPath() + api.BucketAPIPath
 
 	return downloadObject(path, bucketKey, objectName,  bearer.AccessToken)
 }

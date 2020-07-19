@@ -4,15 +4,15 @@ import "github.com/apprentice3d/forge-api-go-client/oauth"
 
 // API struct holds all paths necessary to access Design Automation API
 type API struct {
-	oauth.TwoLeggedAuth
+	Authenticator oauth.ForgeAuthenticator
 	DesignAutomationPath string
 	UploadAppURL string
 }
 
-// NewAPIWithCredentials returns a DesignAutomation API client with default configurations
-func NewAPIWithCredentials(ClientID string, ClientSecret string) API {
+// NewAPI returns a DesignAutomation API client with default configurations
+func NewAPI(authenticator oauth.ForgeAuthenticator) API {
 	return API{
-		oauth.NewTwoLeggedClient(ClientID, ClientSecret),
+		authenticator,
 		"/da/us-east/v3",
 		"https://dasprod-store.s3.amazonaws.com",
 	}
@@ -21,11 +21,11 @@ func NewAPIWithCredentials(ClientID string, ClientSecret string) API {
 
 // UserId gives you the id used to identify the user
 func (api API) UserId() (nickname string, err error) {
-	bearer, err := api.Authenticate("code:all")
+	bearer, err := api.Authenticator.GetToken("code:all")
 	if err != nil {
 		return
 	}
-	path := api.Host + api.DesignAutomationPath
+	path := api.Authenticator.GetHostPath() + api.DesignAutomationPath
 	nickname, err = getUserID(path, bearer.AccessToken)
 
 	return
@@ -36,11 +36,11 @@ func (api API) UserId() (nickname string, err error) {
 // EngineList lists all available Engines.
 func (api API) EngineList() (list EngineList, err error) {
 
-	bearer, err := api.Authenticate("code:all")
+	bearer, err := api.Authenticator.GetToken("code:all")
 	if err != nil {
 		return
 	}
-	path := api.Host + api.DesignAutomationPath
+	path := api.Authenticator.GetHostPath() + api.DesignAutomationPath
 	list, err = listEngines(path, bearer.AccessToken)
 
 	return
@@ -49,11 +49,11 @@ func (api API) EngineList() (list EngineList, err error) {
 // EngineDetails gives details on an engine providing it's id.
 func (api API) EngineDetails(id string) (list EngineDetails, err error) {
 
-	bearer, err := api.Authenticate("code:all")
+	bearer, err := api.Authenticator.GetToken("code:all")
 	if err != nil {
 		return
 	}
-	path := api.Host + api.DesignAutomationPath
+	path := api.Authenticator.GetHostPath() + api.DesignAutomationPath
 	list, err = getEngineDetails(path, id, bearer.AccessToken)
 
 	return
@@ -65,14 +65,14 @@ func (api API) EngineDetails(id string) (list EngineDetails, err error) {
 // 	engine - engineId to be used by this app (check EngineList)
 func (api API) CreateApp(name, engine string) (app AppBundle, err error) {
 
-	bearer, err := api.Authenticate("code:all")
+	bearer, err := api.Authenticator.GetToken("code:all")
 	if err != nil {
 		return
 	}
-	path := api.Host + api.DesignAutomationPath
+	path := api.Authenticator.GetHostPath() + api.DesignAutomationPath
 	app, err = createApp(path, name, engine, bearer.AccessToken)
 
-	app.authenticator = &api.TwoLeggedAuth
+	app.authenticator = api.Authenticator
 	app.path = path
 	app.name = name
 	app.uploadURL = api.UploadAppURL
@@ -92,11 +92,11 @@ func (api API) CreateApp(name, engine string) (app AppBundle, err error) {
 // AppList lists all available appbundles.
 func (api API) AppList() (list AppList, err error) {
 
-	bearer, err := api.Authenticate("code:all")
+	bearer, err := api.Authenticator.GetToken("code:all")
 	if err != nil {
 		return
 	}
-	path := api.Host + api.DesignAutomationPath
+	path := api.Authenticator.GetHostPath() + api.DesignAutomationPath
 	list, err = listApps(path, bearer.AccessToken)
 
 	return
@@ -107,14 +107,14 @@ func (api API) AppList() (list AppList, err error) {
 // 	engine - engineId to be used by this app (check EngineList)
 func (api API) CreateActivity(config ActivityConfig) (activity Activity, err error) {
 
-	bearer, err := api.Authenticate("code:all")
+	bearer, err := api.Authenticator.GetToken("code:all")
 	if err != nil {
 		return
 	}
-	path := api.Host + api.DesignAutomationPath
+	path := api.Authenticator.GetHostPath() + api.DesignAutomationPath
 	activity, err = createActivity(path, config, bearer.AccessToken)
 
-	activity.authenticator = &api.TwoLeggedAuth
+	activity.authenticator = api.Authenticator
 	activity.path = path
 	activity.name = config.ID
 
@@ -149,7 +149,7 @@ func (api API) CreateActivity(config ActivityConfig) (activity Activity, err err
 // AppDelete will delete the app with specified id
 //func (api API) AppDelete(id string) (err error) {
 //
-//	bearer, err := api.Authenticate("code:all")
+//	bearer, err := api.GetToken("code:all")
 //	if err != nil {
 //		return
 //	}

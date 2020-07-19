@@ -10,21 +10,10 @@ import (
 	"strconv"
 )
 
-// ThreeLeggedAuth struct holds data necessary for making requests in 3-legged context
-type ThreeLeggedAuth struct {
-	AuthData
-	RedirectURI string `json:"redirect_uri,omitempty"`
-}
 
-// ThreeLeggedAuthenticator interface defines the method necessary to qualify as 3-legged authenticator
-type ThreeLeggedAuthenticator interface {
-	Authorize(scope string, state string) (string, error)
-	GetToken(code string) (Bearer, error)
-	RefreshToken(refreshToken string, scope string) (Bearer, error)
-}
-
-// NewThreeLeggedClient returns a 3-legged authenticator with default host and authPath
-func NewThreeLeggedClient(clientID, clientSecret, redirectURI string) ThreeLeggedAuth {
+// NewThreeLegged returns a 3-legged authenticator with default host and authPath,
+// giving client secrets, redirectURI and optionally with a starting refresh token (useful for CLI apps)
+func NewThreeLegged(clientID, clientSecret, redirectURI, refreshToken string) ThreeLeggedAuth {
 	return ThreeLeggedAuth{
 		AuthData{
 			clientID,
@@ -33,8 +22,47 @@ func NewThreeLeggedClient(clientID, clientSecret, redirectURI string) ThreeLegge
 			"/authentication/v1",
 		},
 		redirectURI,
+		refreshToken,
 	}
 }
+
+//// NewThreeLeggedWithRefreshToken returns a 3-legged authenticator with default host and authPath,
+//// and with a starting refresh token (useful for CLI apps)
+//func NewThreeLeggedWithAuthCode(clientID, clientSecret, redirectURI, code string) ThreeLeggedAuth {
+//
+//	result := ThreeLeggedAuth{
+//		AuthData{
+//			clientID,
+//			clientSecret,
+//			"https://developer.api.autodesk.com",
+//			"/authentication/v1",
+//		},
+//		redirectURI,
+//		"",
+//	}
+//
+//	//TODO: implement graceful error handling
+//	token, err := result.ExchangeCode(code)
+//
+//	if err != nil {
+//		result.refreshToken = token.RefreshToken
+//	}
+//
+//	return result
+//}
+
+//// NewThreeLeggedWithRefreshToken returns a 3-legged authenticator with default host and authPath,
+//// and with a starting refresh token (useful for CLI apps)
+//func NewThreeLeggedWithRefreshToken(clientID, clientSecret, redirectURI, refreshToken string) ForgeAuthenticator {
+//	return ForgeAuth{
+//		clientID,
+//		clientSecret,
+//		"https://developer.api.autodesk.com",
+//		"/authentication/v1",
+//		redirectURI,
+//		refreshToken,
+//	}
+//}
 
 // Authorize method returns an URL to redirect an end user, where it will be asked to give his consent for app to
 //access the specified resources.
@@ -47,7 +75,7 @@ func NewThreeLeggedClient(clientID, clientSecret, redirectURI string) ThreeLegge
 func (a ThreeLeggedAuth) Authorize(scope string, state string) (string, error) {
 
 	request, err := http.NewRequest("GET",
-		a.Host+a.AuthPath+"/authorize",
+		a.Host+a.authPath+"/authorize",
 		nil,
 	)
 
@@ -67,8 +95,12 @@ func (a ThreeLeggedAuth) Authorize(scope string, state string) (string, error) {
 	return request.URL.String(), nil
 }
 
-//GetToken is used to exchange the authorization code for a token and an exchange token
-func (a ThreeLeggedAuth) GetToken(code string) (bearer Bearer, err error) {
+func (a *ThreeLeggedAuth) SetRefreshToken(refreshtoken string) {
+	a.refreshToken = refreshtoken
+}
+
+//ExchangeCode is used to exchange the authorization code for a token and an exchange token
+func (a ThreeLeggedAuth) ExchangeCode(code string) (bearer Bearer, err error) {
 
 	task := http.Client{}
 
@@ -80,7 +112,7 @@ func (a ThreeLeggedAuth) GetToken(code string) (bearer Bearer, err error) {
 	body.Add("redirect_uri", a.RedirectURI)
 
 	req, err := http.NewRequest("POST",
-		a.Host+a.AuthPath+"/gettoken",
+		a.Host+a.authPath+"/gettoken",
 		bytes.NewBufferString(body.Encode()),
 	)
 
@@ -108,7 +140,13 @@ func (a ThreeLeggedAuth) GetToken(code string) (bearer Bearer, err error) {
 	return
 }
 
-// RefreshToken is used to get a new access token by using the refresh token provided by GetToken
+func (a ThreeLeggedAuth) GetToken(scope string) (token Bearer, err error) {
+	token, err = a.RefreshToken(a.refreshToken, scope)
+	a.SetRefreshToken(token.RefreshToken)
+	return
+}
+
+// RefreshToken is used to get a new access token by using the refresh token provided by ExchangeCode
 func (a ThreeLeggedAuth) RefreshToken(refreshToken string, scope string) (bearer Bearer, err error) {
 
 	task := http.Client{}
@@ -121,7 +159,7 @@ func (a ThreeLeggedAuth) RefreshToken(refreshToken string, scope string) (bearer
 	body.Add("scope", scope)
 
 	req, err := http.NewRequest("POST",
-		a.Host+a.AuthPath+"/refreshtoken",
+		a.Host+a.authPath+"/refreshtoken",
 		bytes.NewBufferString(body.Encode()),
 	)
 

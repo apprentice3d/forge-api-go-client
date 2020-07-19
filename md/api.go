@@ -7,25 +7,25 @@ import (
 
 // API struct holds all paths necessary to access Model Derivative API
 type ModelDerivativeAPI struct {
-	oauth.TwoLeggedAuth
+	Authenticator oauth.ForgeAuthenticator
 	ModelDerivativePath string
 }
 
-// NewAPIWithCredentials returns a Model Derivative API client with default configurations
-func NewAPIWithCredentials(ClientID string, ClientSecret string) ModelDerivativeAPI {
+// NewMDAPI returns a Model Derivative API client with default configurations
+func NewMDAPI(authenticator oauth.ForgeAuthenticator) ModelDerivativeAPI {
 	return ModelDerivativeAPI{
-		oauth.NewTwoLeggedClient(ClientID, ClientSecret),
+		authenticator,
 		"/modelderivative/v2/designdata",
 	}
 }
 
 // TranslateWithParams triggers translation job with settings specified in given TranslationParams
 func (a ModelDerivativeAPI) TranslateWithParams(params TranslationParams) (result TranslationResult, err error) {
-	bearer, err := a.Authenticate("data:write data:read")
+	bearer, err := a.Authenticator.GetToken("data:write data:read")
 	if err != nil {
 		return
 	}
-	path := a.Host + a.ModelDerivativePath
+	path := a.Authenticator.GetHostPath() + a.ModelDerivativePath
 	result, err = translate(path, params, bearer.AccessToken)
 
 	return
@@ -48,11 +48,11 @@ var TranslationSVFPreset = TranslationParams{
 // TranslateToSVF is a helper function that will use the TranslationSVFPreset for translating into svf a given ObjectID.
 // It will also take care of converting objectID into Base64 (URL Safe) encoded URN.
 func (a ModelDerivativeAPI) TranslateToSVF(objectID string) (result TranslationResult, err error) {
-	bearer, err := a.Authenticate("data:write data:read")
+	bearer, err := a.Authenticator.GetToken("data:write data:read")
 	if err != nil {
 		return
 	}
-	path := a.Host + a.ModelDerivativePath
+	path := a.Authenticator.GetHostPath() + a.ModelDerivativePath
 	params := TranslationSVFPreset
 	params.Input.URN = base64.RawStdEncoding.EncodeToString([]byte(objectID))
 
@@ -65,11 +65,11 @@ func (a ModelDerivativeAPI) TranslateToSVF(objectID string) (result TranslationR
 // GetManifest returns information about derivatives that correspond to a specific source file,
 // including derivative URNs and statuses.
 func (a ModelDerivativeAPI) GetManifest(urn string) (result Manifest, err error) {
-	bearer, err := a.Authenticate("data:read")
+	bearer, err := a.Authenticator.GetToken("data:read")
 	if err != nil {
 		return
 	}
-	path := a.Host + a.ModelDerivativePath
+	path := a.Authenticator.GetHostPath() + a.ModelDerivativePath
 	result, err = getManifest(path, urn, bearer.AccessToken)
 
 	return
@@ -79,11 +79,11 @@ func (a ModelDerivativeAPI) GetManifest(urn string) (result Manifest, err error)
 // GetDerivative downloads a selected derivative. To download the file, you need to specify the file’s URN,
 // which you retrieve by calling the GET :urn/manifest endpoint.
 func (a ModelDerivativeAPI) GetDerivative(urn, derivativeUrn string) (data []byte, err error) {
-	bearer, err := a.Authenticate("data:read")
+	bearer, err := a.Authenticator.GetToken("data:read")
 	if err != nil {
 		return
 	}
-	path := a.Host + a.ModelDerivativePath
+	path := a.Authenticator.GetHostPath() + a.ModelDerivativePath
 	data, err = getDerivative(path, urn, derivativeUrn, bearer.AccessToken)
 
 	return

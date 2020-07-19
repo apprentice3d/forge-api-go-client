@@ -36,14 +36,14 @@ type ActivityConfig struct {
 type Activity struct {
 	ActivityConfig
 
-	authenticator *oauth.TwoLeggedAuth
+	authenticator oauth.ForgeAuthenticator
 	path          string
 	name          string
 
 }
 
 func (activity *Activity) Delete() (err error) {
-	bearer, err := activity.authenticator.Authenticate("code:all")
+	bearer, err := activity.authenticator.GetToken("code:all")
 	if err != nil {
 		return
 	}
@@ -67,7 +67,7 @@ func (activity *Activity) Delete() (err error) {
 
 //CreateAlias creates a new alias for this Activity.
 func (activity Activity) CreateAlias(alias string, version uint) (result Alias, err error) {
-	bearer, err := activity.authenticator.Authenticate("code:all")
+	bearer, err := activity.authenticator.GetToken("code:all")
 	if err != nil {
 		return
 	}
