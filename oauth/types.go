@@ -27,7 +27,7 @@ type TwoLeggedAuth struct {
 type ThreeLeggedAuth struct {
 	AuthData
 	RedirectURI  string
-	refreshToken string
+	RefreshToken string
 }
 
 

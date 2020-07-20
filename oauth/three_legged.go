@@ -58,7 +58,7 @@ func (a ThreeLeggedAuth) Authorize(scope string, state string) (string, error) {
 }
 
 func (a *ThreeLeggedAuth) SetRefreshToken(refreshtoken string) {
-	a.refreshToken = refreshtoken
+	a.RefreshToken = refreshtoken
 }
 
 //ExchangeCode is used to exchange the authorization code for a token and an exchange token
@@ -103,13 +103,13 @@ func (a ThreeLeggedAuth) ExchangeCode(code string) (bearer Bearer, err error) {
 }
 
 func (a *ThreeLeggedAuth) GetToken(scope string) (token Bearer, err error) {
-	token, err = a.RefreshToken(a.refreshToken, scope)
-	a.refreshToken = token.RefreshToken
+	token, err = a.GetNewRefreshToken(a.RefreshToken, scope)
+	a.RefreshToken = token.RefreshToken
 	return
 }
 
-// RefreshToken is used to get a new access token by using the refresh token provided by ExchangeCode
-func (a ThreeLeggedAuth) RefreshToken(refreshToken string, scope string) (bearer Bearer, err error) {
+// GetNewRefreshToken is used to get a new access token by using the refresh token provided by ExchangeCode
+func (a ThreeLeggedAuth) GetNewRefreshToken(refreshToken string, scope string) (bearer Bearer, err error) {
 
 	task := http.Client{}
 
