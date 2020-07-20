@@ -11,8 +11,8 @@ import (
 )
 
 // NewTwoLegged returns a 2-legged authenticator with default host and authPath
-func NewTwoLegged(clientID, clientSecret string) TwoLeggedAuth {
-	return TwoLeggedAuth {
+func NewTwoLegged(clientID, clientSecret string) *TwoLeggedAuth {
+	return &TwoLeggedAuth {
 		AuthData{
 			clientID,
 			clientSecret,

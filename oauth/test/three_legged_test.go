@@ -22,7 +22,7 @@ func TestThreeLeggedAuthentication(t *testing.T) {
 		clientSecret,
 		"http://localhost:3009/callback", "")
 
-	authCode := "5lkz1M6F5PVYixQru7trYK52fRV-rpN1hO5QtFP-"
+	authCode := ""
 
 	t.Run("Get the authorisation link", func(t *testing.T) {
 
@@ -77,7 +77,7 @@ func TestThreeLeggedAuthWithRefreshToken(t *testing.T) {
 		t.Fatal("Could not get Forge env vars")
 	}
 
-	refreshToken := "nuoIGpmiOzDTNdEWo433i8u6zwDjT7POHiOO0mudc5"
+	refreshToken := ""
 
 	client := oauth.NewThreeLegged(clientID, clientSecret,
 		"http://localhost:3009/callback", refreshToken)

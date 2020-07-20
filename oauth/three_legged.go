@@ -13,8 +13,8 @@ import (
 
 // NewThreeLegged returns a 3-legged authenticator with default host and authPath,
 // giving client secrets, redirectURI and optionally with a starting refresh token (useful for CLI apps)
-func NewThreeLegged(clientID, clientSecret, redirectURI, refreshToken string) ThreeLeggedAuth {
-	return ThreeLeggedAuth{
+func NewThreeLegged(clientID, clientSecret, redirectURI, refreshToken string) *ThreeLeggedAuth {
+	return &ThreeLeggedAuth{
 		AuthData{
 			clientID,
 			clientSecret,
@@ -25,44 +25,6 @@ func NewThreeLegged(clientID, clientSecret, redirectURI, refreshToken string) Th
 		refreshToken,
 	}
 }
-
-//// NewThreeLeggedWithRefreshToken returns a 3-legged authenticator with default host and authPath,
-//// and with a starting refresh token (useful for CLI apps)
-//func NewThreeLeggedWithAuthCode(clientID, clientSecret, redirectURI, code string) ThreeLeggedAuth {
-//
-//	result := ThreeLeggedAuth{
-//		AuthData{
-//			clientID,
-//			clientSecret,
-//			"https://developer.api.autodesk.com",
-//			"/authentication/v1",
-//		},
-//		redirectURI,
-//		"",
-//	}
-//
-//	//TODO: implement graceful error handling
-//	token, err := result.ExchangeCode(code)
-//
-//	if err != nil {
-//		result.refreshToken = token.RefreshToken
-//	}
-//
-//	return result
-//}
-
-//// NewThreeLeggedWithRefreshToken returns a 3-legged authenticator with default host and authPath,
-//// and with a starting refresh token (useful for CLI apps)
-//func NewThreeLeggedWithRefreshToken(clientID, clientSecret, redirectURI, refreshToken string) ForgeAuthenticator {
-//	return ForgeAuth{
-//		clientID,
-//		clientSecret,
-//		"https://developer.api.autodesk.com",
-//		"/authentication/v1",
-//		redirectURI,
-//		refreshToken,
-//	}
-//}
 
 // Authorize method returns an URL to redirect an end user, where it will be asked to give his consent for app to
 //access the specified resources.
@@ -140,9 +102,9 @@ func (a ThreeLeggedAuth) ExchangeCode(code string) (bearer Bearer, err error) {
 	return
 }
 
-func (a ThreeLeggedAuth) GetToken(scope string) (token Bearer, err error) {
+func (a *ThreeLeggedAuth) GetToken(scope string) (token Bearer, err error) {
 	token, err = a.RefreshToken(a.refreshToken, scope)
-	a.SetRefreshToken(token.RefreshToken)
+	a.refreshToken = token.RefreshToken
 	return
 }
 
