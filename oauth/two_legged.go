@@ -63,6 +63,10 @@ func (a TwoLeggedAuth) GetToken(scope string) (bearer Bearer, err error) {
 }
 
 
+func (a TwoLeggedAuth) GetRefreshToken() string {
+	return ""
+}
+
 // GetHostPath returns host path, usually different in case of prd stg and dev environments
 func (a AuthData) GetHostPath() string {
 	return a.Host
@@ -72,3 +76,4 @@ func (a AuthData) GetHostPath() string {
 func (a *AuthData) SetHostPath(host string) {
 	a.Host = host
 }
+

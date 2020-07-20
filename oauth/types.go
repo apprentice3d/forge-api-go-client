@@ -5,6 +5,7 @@ package oauth
 type ForgeAuthenticator interface {
 	GetToken(scope string) (Bearer, error)
 	GetHostPath() string
+	GetRefreshToken() string
 	//SetHostPath(path string)
 }
 

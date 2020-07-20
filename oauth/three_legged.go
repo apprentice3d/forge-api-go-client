@@ -147,3 +147,8 @@ func (a ThreeLeggedAuth) GetNewRefreshToken(refreshToken string, scope string) (
 
 	return
 }
+
+
+func (a ThreeLeggedAuth) GetRefreshToken() string {
+	return a.RefreshToken
+}
