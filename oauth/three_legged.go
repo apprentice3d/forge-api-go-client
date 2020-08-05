@@ -62,7 +62,7 @@ func (a *ThreeLeggedAuth) SetRefreshToken(refreshtoken string) {
 }
 
 //ExchangeCode is used to exchange the authorization code for a token and an exchange token
-func (a ThreeLeggedAuth) ExchangeCode(code string) (bearer Bearer, err error) {
+func (a *ThreeLeggedAuth) ExchangeCode(code string) (bearer Bearer, err error) {
 
 	task := http.Client{}
 
@@ -98,6 +98,8 @@ func (a ThreeLeggedAuth) ExchangeCode(code string) (bearer Bearer, err error) {
 
 	decoder := json.NewDecoder(response.Body)
 	err = decoder.Decode(&bearer)
+
+	a.RefreshToken = bearer.RefreshToken
 
 	return
 }
