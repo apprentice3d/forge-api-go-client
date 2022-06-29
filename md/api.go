@@ -94,3 +94,19 @@ func (a ModelDerivativeAPI) GetDerivative(urn, derivativeUrn string) (data []byt
 
 	return
 }
+
+// GetMetadata returns a list of model views (Viewables) in the source design specified by the urn URI parameter.
+// It also returns the ID that uniquely identifies the model view.
+// You can use this ID with other metadata endpoints to obtain information about the objects within model view.
+//  NOTE:
+// You can retrieve metadata only from an input file that has been translated to SVF or SVF2.
+func (a ModelDerivativeAPI) GetMetadata(urn string, xHeaders XHeaders) (result MetadataResponse, err error) {
+	bearer, err := a.Authenticator.GetToken("data:read")
+	if err != nil {
+		return
+	}
+	path := a.Authenticator.GetHostPath() + a.ModelDerivativePath
+	result, err = getMetadata(path, urn, bearer.AccessToken, xHeaders)
+
+	return
+}
