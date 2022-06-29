@@ -1,13 +1,14 @@
 package md
 
 import (
-	"github.com/apprentice3d/forge-api-go-client/oauth"
 	"encoding/base64"
+
+	"github.com/apprentice3d/forge-api-go-client/oauth"
 )
 
 // API struct holds all paths necessary to access Model Derivative API
 type ModelDerivativeAPI struct {
-	Authenticator oauth.ForgeAuthenticator
+	Authenticator       oauth.ForgeAuthenticator
 	ModelDerivativePath string
 }
 
@@ -20,15 +21,22 @@ func NewMDAPI(authenticator oauth.ForgeAuthenticator) ModelDerivativeAPI {
 }
 
 // TranslateWithParams triggers translation job with settings specified in given TranslationParams
-func (a ModelDerivativeAPI) TranslateWithParams(params TranslationParams) (result TranslationResult, err error) {
+func (a ModelDerivativeAPI) TranslateWithParamsAndXHeaders(params TranslationParams, xHeaders XHeaders) (result TranslationResult, err error) {
 	bearer, err := a.Authenticator.GetToken("data:write data:read")
 	if err != nil {
 		return
 	}
 	path := a.Authenticator.GetHostPath() + a.ModelDerivativePath
-	result, err = translate(path, params, bearer.AccessToken)
+	result, err = translate(path, params, xHeaders, bearer.AccessToken)
 
 	return
+}
+
+// TranslateWithParams triggers translation job with settings specified in given TranslationParams
+func (a ModelDerivativeAPI) TranslateWithParams(params TranslationParams) (result TranslationResult, err error) {
+
+	return a.TranslateWithParamsAndXHeaders(params, DefaultXHeaders())
+
 }
 
 // TranslationSVFPreset specifies the minimum necessary for translating a generic (single file, uncompressed)
@@ -37,7 +45,7 @@ var TranslationSVFPreset = TranslationParams{
 	Output: OutputSpec{
 		Destination: DestSpec{"us"},
 		Formats: []FormatSpec{
-			FormatSpec{
+			{
 				"svf",
 				[]string{"2d", "3d"},
 			},
@@ -56,11 +64,10 @@ func (a ModelDerivativeAPI) TranslateToSVF(objectID string) (result TranslationR
 	params := TranslationSVFPreset
 	params.Input.URN = base64.RawStdEncoding.EncodeToString([]byte(objectID))
 
-	result, err = translate(path, params, bearer.AccessToken)
+	result, err = translate(path, params, DefaultXHeaders(), bearer.AccessToken)
 
 	return
 }
-
 
 // GetManifest returns information about derivatives that correspond to a specific source file,
 // including derivative URNs and statuses.
@@ -74,7 +81,6 @@ func (a ModelDerivativeAPI) GetManifest(urn string) (result Manifest, err error)
 
 	return
 }
-
 
 // GetDerivative downloads a selected derivative. To download the file, you need to specify the file’s URN,
 // which you retrieve by calling the GET :urn/manifest endpoint.

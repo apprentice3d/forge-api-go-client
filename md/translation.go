@@ -1,12 +1,12 @@
 package md
 
 import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io/ioutil"
 	"log"
 	"net/http"
-	"bytes"
-	"io/ioutil"
-	"errors"
-	"encoding/json"
 	"strconv"
 )
 
@@ -20,14 +20,48 @@ type TranslationParams struct {
 	Output OutputSpec `json:"output"`
 }
 
+// XHeaders is used when specifying the translation jobs
+type XHeaders struct {
+	// Format => x-ads-derivative-format header, "latest" (Default) or "fallback"
+	Format DerivativeFormat
+	// Overwrite => x-ads-force header: false (default) or true
+	Overwrite bool
+}
+
+// DefaultXHeaders gets XHeaders with default values
+func DefaultXHeaders() XHeaders {
+	xHeaders := XHeaders{}
+	xHeaders.Format = Latest
+	xHeaders.Overwrite = false
+	return xHeaders
+}
+
+// NewXHeaders gets XHeaders with the given values
+func NewXHeaders(format DerivativeFormat, overwrite bool) XHeaders {
+	xHeaders := XHeaders{}
+	xHeaders.Format = format
+	xHeaders.Overwrite = overwrite
+	return xHeaders
+}
+
+// Indicates the value for the xAdsHeaders.Format
+type DerivativeFormat string
+
+const (
+	Latest   DerivativeFormat = "latest"
+	FallBack DerivativeFormat = "fallback"
+)
+
 // TranslationResult reflects data received upon successful creation of translation job
 type TranslationResult struct {
-	Result string `json:"result"`
-	URN    string `json:"urn"`
+	Result       string `json:"result"`
+	URN          string `json:"urn"`
 	AcceptedJobs struct {
 		Output OutputSpec `json:"output"`
 	}
 }
+
+// AdvancedSpec
 
 // OutputSpec reflects data found upon creation translation job and receiving translation job status
 type OutputSpec struct {
@@ -46,8 +80,7 @@ type FormatSpec struct {
 	Views []string `json:"views"`
 }
 
-
-func translate(path string, params TranslationParams, token string) (result TranslationResult, err error) {
+func translate(path string, params TranslationParams, xHeaders XHeaders, token string) (result TranslationResult, err error) {
 
 	byteParams, err := json.Marshal(params)
 	if err != nil {
@@ -65,6 +98,8 @@ func translate(path string, params TranslationParams, token string) (result Tran
 
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Authorization", "Bearer "+token)
+	req.Header.Add("x-ads-derivative-format", string(xHeaders.Format))
+	req.Header.Add("x-ads-force", strconv.FormatBool(xHeaders.Overwrite))
 
 	response, err := http.DefaultClient.Do(req)
 	if err != nil {

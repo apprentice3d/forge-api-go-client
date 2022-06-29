@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
-	"github.com/apprentice3d/forge-api-go-client/dm"
-	"github.com/apprentice3d/forge-api-go-client/md"
-	"github.com/apprentice3d/forge-api-go-client/oauth"
 	"io/ioutil"
 	"os"
 	"testing"
+
+	"github.com/apprentice3d/forge-api-go-client/dm"
+	"github.com/apprentice3d/forge-api-go-client/md"
+	"github.com/apprentice3d/forge-api-go-client/oauth"
 )
 
 func TestAPI_TranslateToSVF(t *testing.T) {
@@ -128,7 +129,7 @@ func TestAPI_TranslateToSVF2_JSON_Creation(t *testing.T) {
 		t.Fatal("Could not marshal the reference example into JSON: ", err.Error())
 	}
 
-	if bytes.Compare(expected, output) != 0 {
+	if !bytes.Equal(expected, output) {
 		t.Fatalf("The translation params are not correct:\nexpected: %s\n created: %s",
 			string(expected),
 			string(output))
@@ -136,7 +137,6 @@ func TestAPI_TranslateToSVF2_JSON_Creation(t *testing.T) {
 	}
 
 }
-
 
 func TestModelDerivativeAPI_GetManifest(t *testing.T) {
 	// prepare the credentials
@@ -222,7 +222,6 @@ func TestModelDerivativeAPI_GetManifest(t *testing.T) {
 			t.Errorf("Got unexpected status: %s", status)
 		}
 
-
 		if status == "success" && len(manifest.Derivatives) != 2 {
 			t.Errorf("Expecting to have 2 derivative, got %d", len(manifest.Derivatives))
 		}
@@ -242,8 +241,6 @@ func TestModelDerivativeAPI_GetManifest(t *testing.T) {
 		}
 	})
 }
-
-
 
 func TestParseManifest(t *testing.T) {
 	t.Run("Parse pending manifest", func(t *testing.T) {
@@ -926,4 +923,3 @@ func TestParseManifest(t *testing.T) {
 	})
 
 }
-
