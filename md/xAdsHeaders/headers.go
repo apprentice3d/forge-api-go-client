@@ -1,4 +1,4 @@
-package xAds
+package xAdsHeaders
 
 // Headers are used when specifying the translation jobs
 type Headers struct {
@@ -13,19 +13,19 @@ type Headers struct {
 	Overwrite bool
 }
 
-// Default gets Headers with default values
-func Default() Headers {
-	xHeaders := Headers{}
-	xHeaders.Format = Latest
-	xHeaders.Overwrite = false
-	return xHeaders
-}
-
 // New gets Headers with the given values
 func New(format DerivativeFormat, overwrite bool) Headers {
 	xHeaders := Headers{}
 	xHeaders.Format = format
 	xHeaders.Overwrite = overwrite
+	return xHeaders
+}
+
+// Default gets Headers with default values
+func Default() Headers {
+	xHeaders := Headers{}
+	xHeaders.Format = Latest
+	xHeaders.Overwrite = false
 	return xHeaders
 }
 

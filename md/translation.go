@@ -4,14 +4,15 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"github.com/apprentice3d/forge-api-go-client/md/advanced/ifc"
-	"github.com/apprentice3d/forge-api-go-client/md/advanced/obj"
-	"github.com/apprentice3d/forge-api-go-client/md/advanced/revit"
-	"github.com/apprentice3d/forge-api-go-client/md/xAds"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"strconv"
+
+	"github.com/apprentice3d/forge-api-go-client/md/advanced/ifc"
+	"github.com/apprentice3d/forge-api-go-client/md/advanced/obj"
+	"github.com/apprentice3d/forge-api-go-client/md/advanced/revit"
+	"github.com/apprentice3d/forge-api-go-client/md/xAdsHeaders"
 )
 
 // TranslationParams is used when specifying the translation jobs
@@ -79,7 +80,7 @@ type AdvancedSpec struct {
 	// SVF/SVF2 option to be specified when the input file type is _Navisworks_.
 	AutodeskMaterialProperties bool `json:"autodeskMaterialProperties,omitempty"`
 	// SVF/SVF2 option to be specified when the input file type is _Navisworks_.
-	TimelinerProperties bool `json:"timelinerProperties,omitempty"`
+	TimeLinerProperties bool `json:"timelinerProperties,omitempty"`
 	// OBJ option for creating a single or multiple OBJ files.
 	ExportFileStructure obj.ExportFileStructure `json:"exportFileStructure,omitempty"`
 	// OBJ option for translating models into different units.
@@ -93,7 +94,7 @@ type AdvancedSpec struct {
 	ObjectIds []int `json:"objectIds,omitempty"`
 }
 
-func translate(path string, params TranslationParams, xAdsHeaders xAds.Headers, token string) (result TranslationResult, err error) {
+func translate(path string, params TranslationParams, xAdsHeaders xAdsHeaders.Headers, token string) (result TranslationResult, err error) {
 
 	byteParams, err := json.Marshal(params)
 	if err != nil {

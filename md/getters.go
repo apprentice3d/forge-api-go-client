@@ -6,6 +6,8 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strconv"
+
+	"github.com/apprentice3d/forge-api-go-client/md/xAdsHeaders"
 )
 
 func getDerivative(path string, urn, derivativeUrn, token string) (result []byte, err error) {
@@ -131,7 +133,7 @@ type MetadataResponse struct {
 	} `json:"data,omitempty"`
 }
 
-func getMetadata(path string, urn, token string, xHeaders XHeaders) (result MetadataResponse, err error) {
+func getMetadata(path string, urn, token string, xHeaders xAdsHeaders.Headers) (result MetadataResponse, err error) {
 	task := http.Client{}
 
 	req, err := http.NewRequest("GET",

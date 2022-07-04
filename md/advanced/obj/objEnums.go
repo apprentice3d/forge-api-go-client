@@ -20,5 +20,5 @@ const (
 	Foot       Unit = "foot"
 	Inch       Unit = "inch"
 	Mil        Unit = "mil"
-	Microinch  Unit = "microinch"
+	MicroInch  Unit = "microinch"
 )

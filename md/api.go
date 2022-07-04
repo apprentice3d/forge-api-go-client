@@ -3,10 +3,11 @@ package md
 import (
 	"encoding/base64"
 
+	"github.com/apprentice3d/forge-api-go-client/md/xAdsHeaders"
 	"github.com/apprentice3d/forge-api-go-client/oauth"
 )
 
-// API struct holds all paths necessary to access Model Derivative API
+// ModelDerivativeAPI struct holds all paths necessary to access Model Derivative API
 type ModelDerivativeAPI struct {
 	Authenticator       oauth.ForgeAuthenticator
 	ModelDerivativePath string
@@ -20,8 +21,8 @@ func NewMDAPI(authenticator oauth.ForgeAuthenticator) ModelDerivativeAPI {
 	}
 }
 
-// TranslateWithParams triggers translation job with settings specified in given TranslationParams
-func (a ModelDerivativeAPI) TranslateWithParamsAndXHeaders(params TranslationParams, xHeaders XHeaders) (result TranslationResult, err error) {
+// TranslateWithParamsAndXHeaders triggers translation job with settings specified in given TranslationParams
+func (a ModelDerivativeAPI) TranslateWithParamsAndXHeaders(params TranslationParams, xHeaders xAdsHeaders.Headers) (result TranslationResult, err error) {
 	bearer, err := a.Authenticator.GetToken("data:write data:read")
 	if err != nil {
 		return
@@ -34,9 +35,7 @@ func (a ModelDerivativeAPI) TranslateWithParamsAndXHeaders(params TranslationPar
 
 // TranslateWithParams triggers translation job with settings specified in given TranslationParams
 func (a ModelDerivativeAPI) TranslateWithParams(params TranslationParams) (result TranslationResult, err error) {
-
-	return a.TranslateWithParamsAndXHeaders(params, DefaultXHeaders())
-
+	return a.TranslateWithParamsAndXHeaders(params, xAdsHeaders.Default())
 }
 
 // TranslationSVFPreset specifies the minimum necessary for translating a generic (single file, uncompressed)
@@ -46,8 +45,8 @@ var TranslationSVFPreset = TranslationParams{
 		Destination: DestSpec{"us"},
 		Formats: []FormatSpec{
 			{
-				"svf",
-				[]string{"2d", "3d"},
+				Type:  "svf",
+				Views: []string{"2d", "3d"},
 			},
 		},
 	},
@@ -64,7 +63,7 @@ func (a ModelDerivativeAPI) TranslateToSVF(objectID string) (result TranslationR
 	params := TranslationSVFPreset
 	params.Input.URN = base64.RawStdEncoding.EncodeToString([]byte(objectID))
 
-	result, err = translate(path, params, DefaultXHeaders(), bearer.AccessToken)
+	result, err = translate(path, params, xAdsHeaders.Default(), bearer.AccessToken)
 
 	return
 }
@@ -100,7 +99,7 @@ func (a ModelDerivativeAPI) GetDerivative(urn, derivativeUrn string) (data []byt
 // You can use this ID with other metadata endpoints to obtain information about the objects within model view.
 //  NOTE:
 // You can retrieve metadata only from an input file that has been translated to SVF or SVF2.
-func (a ModelDerivativeAPI) GetMetadata(urn string, xHeaders XHeaders) (result MetadataResponse, err error) {
+func (a ModelDerivativeAPI) GetMetadata(urn string, xHeaders xAdsHeaders.Headers) (result MetadataResponse, err error) {
 	bearer, err := a.Authenticator.GetToken("data:read")
 	if err != nil {
 		return
