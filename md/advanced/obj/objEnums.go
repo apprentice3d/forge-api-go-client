@@ -1,3 +1,4 @@
+// Package obj provides types and consts for OBJ specific advanced translation options.
 package obj
 
 type ExportFileStructure string // An option for creating a single or multiple OBJ files.

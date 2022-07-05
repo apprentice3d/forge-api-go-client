@@ -1,3 +1,4 @@
+// Package ifc provides types and consts for IFC specific advanced translation options.
 package ifc
 
 type ConversionMethod string // An option to be specified when the input file type is IFC. Specifies what IFC loader to use during translation.
@@ -8,7 +9,8 @@ const (
 	V3     ConversionMethod = "v3"     // Use the newer revit IFC loader (recommended over the older modern option)
 )
 
-type Option string // An option to be specified when the input file type is IFC. Specifies how elements (BuildingStoreys, Spaces or OpeningElements) are translated.
+type Option string /* IFC specific option that specifies how elements (BuildingStoreys, Spaces or OpeningElements) are translated.
+NOTE: These options are applicable only when conversionMethod is set to modern or v3. */
 
 const (
 	Hide Option = "hide" // (default) elements are extracted but not visible by default.

@@ -1,3 +1,4 @@
+// Package revit provides types and consts for Revit specific advanced translation options.
 package revit
 
 type MaterialMode string // An option to be specified when the input file type is Revit. Specifies the materials to apply to the generated SVF/SVF2 derivatives.
