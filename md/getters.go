@@ -97,7 +97,7 @@ type Child struct {
 	Children     []Child   `json:"children,omitempty"`
 	Camera       []float32 `json:"camera,omitempty"`
 	ModelGUID    *string   `json:"modelGuid,omitempty"`
-	ObjectIDS    []int64   `json:"objectIds,omitempty"`
+	ObjectIDs    []int     `json:"objectIds,omitempty"`
 	Messages     []struct {
 		Type    string   `json:"type"`
 		Message []string `json:"message"`
