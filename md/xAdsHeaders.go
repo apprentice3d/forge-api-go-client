@@ -1,7 +1,7 @@
-package xAdsHeaders
+package md
 
-// Headers (x-ads-...) are used when specifying the translation jobs
-type Headers struct {
+// XAdsHeaders (x-ads-...) are used when specifying the translation jobs
+type XAdsHeaders struct {
 	// Format => x-ads-derivative-format header, "latest" (Default) or "fallback"
 	// Specifies how to interpret the formats.advanced.objectIds request body parameter for OBJ output.
 	// If you use this header with one derivative (URN), you must use it consistently across the following endpoints, whenever you reference the same derivative.
@@ -13,21 +13,21 @@ type Headers struct {
 	Overwrite bool
 }
 
-// New gets Headers with the given values.
+// NewXAdsHeaders gets XAdsHeaders with the given values.
 //  - format  =>  x-ads-derivative-format header:
 //    Possible values are: "latest" or "fallback"
 //  - overwrite  =>  x-ads-force header;
 //    Possible values are: false or true
-func New(format DerivativeFormat, overwrite bool) Headers {
-	xHeaders := Headers{}
-	xHeaders.Format = format
-	xHeaders.Overwrite = overwrite
-	return xHeaders
+func NewXAdsHeaders(format DerivativeFormat, overwrite bool) XAdsHeaders {
+	xAdsHeaders := XAdsHeaders{}
+	xAdsHeaders.Format = format
+	xAdsHeaders.Overwrite = overwrite
+	return xAdsHeaders
 }
 
-// Default gets Headers with default values
-func Default() Headers {
-	xHeaders := Headers{}
+// DefaultXAdsHeaders gets XAdsHeaders with default values
+func DefaultXAdsHeaders() XAdsHeaders {
+	xHeaders := XAdsHeaders{}
 	xHeaders.Format = Latest
 	xHeaders.Overwrite = false
 	return xHeaders

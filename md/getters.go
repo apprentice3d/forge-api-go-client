@@ -6,8 +6,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strconv"
-
-	"github.com/apprentice3d/forge-api-go-client/md/xAdsHeaders"
 )
 
 func getDerivative(path string, urn, derivativeUrn, token string) (result []byte, err error) {
@@ -57,14 +55,14 @@ type Derivative struct {
 	Progress     string `json:"progress"`
 	Messages     []struct {
 		Type string `json:"type"`
-		//Message string `json:"message"`
+		// Message string `json:"message"`
 		Code string `json:"code"`
 	} `json:"messages,omitempty"`
 	OutputType string  `json:"outputType"`
 	Children   []Child `json:"children"`
 }
 
-//BUG: When translating a non-Revit model, the
+// BUG: When translating a non-Revit model, the
 // Manifest will contain an array of strings as message,
 // while in case of others it is just a string
 
@@ -133,7 +131,7 @@ type MetadataResponse struct {
 	} `json:"data,omitempty"`
 }
 
-func getMetadata(path string, urn, token string, xHeaders xAdsHeaders.Headers) (result MetadataResponse, err error) {
+func getMetadata(path string, urn, token string, xHeaders XAdsHeaders) (result MetadataResponse, err error) {
 	task := http.Client{}
 
 	req, err := http.NewRequest("GET",
