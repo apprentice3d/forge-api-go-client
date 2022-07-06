@@ -45,6 +45,7 @@ type Manifest struct {
 	Progress     string       `json:"progress"`
 	Region       string       `json:"region"`
 	URN          string       `json:"urn"`
+	Version      string       `json:"version"`
 	Derivatives  []Derivative `json:"derivatives"`
 }
 
@@ -58,8 +59,21 @@ type Derivative struct {
 		// Message string `json:"message"`
 		Code string `json:"code"`
 	} `json:"messages,omitempty"`
-	OutputType string  `json:"outputType"`
-	Children   []Child `json:"children"`
+	OutputType string      `json:"outputType"`
+	Properties *Properties `json:"properties,omitempty"`
+	Children   []Child     `json:"children"`
+}
+
+type Properties struct {
+	DocumentInformation DocumentInformation `json:"Document Information"`
+}
+
+type DocumentInformation struct {
+	NavisworksFileCreator string `json:"Navisworks File Creator"`
+	IFCApplicationName    string `json:"IFC Application Name"`
+	IFCApplicationVersion string `json:"IFC Application Version"`
+	IFCSchema             string `json:"IFC Schema"`
+	IFCLoader             string `json:"IFC Loader"`
 }
 
 // BUG: When translating a non-Revit model, the
@@ -74,6 +88,7 @@ type Child struct {
 	Status       string    `json:"status,omitempty"`
 	Progress     string    `json:"progress,omitempty"`
 	Mime         string    `json:"mime,omitempty"`
+	UseAsDefault *bool     `json:"useAsDefault,omitempty"`
 	HasThumbnail string    `json:"hasThumbnail,omitempty"`
 	URN          string    `json:"urn,omitempty"`
 	ViewableID   string    `json:"viewableID,omitempty"`
@@ -81,6 +96,8 @@ type Child struct {
 	Resolution   []float32 `json:"resolution,omitempty"`
 	Children     []Child   `json:"children,omitempty"`
 	Camera       []float32 `json:"camera,omitempty"`
+	ModelGUID    *string   `json:"modelGuid,omitempty"`
+	ObjectIDS    []int64   `json:"objectIds,omitempty"`
 	Messages     []struct {
 		Type    string   `json:"type"`
 		Message []string `json:"message"`
