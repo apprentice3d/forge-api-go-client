@@ -60,11 +60,11 @@ var TranslationSVFPreset = TranslationParams{
 
 // IfcAdvancedSpec returns an IFC specific AdvancedSpec.
 //   NOTE: The storeys, spaces, and openings options are applicable only when conversionMethod is set to modern or v3.
-func IfcAdvancedSpec(conversionMethod ConversionMethod, storeys, spaces, openings Option) AdvancedSpec {
+func IfcAdvancedSpec(conversionMethod ConversionMethod, storeys, spaces, openings Option) *AdvancedSpec {
 	if conversionMethod == Legacy {
-		return AdvancedSpec{ConversionMethod: conversionMethod}
+		return &AdvancedSpec{ConversionMethod: conversionMethod}
 	}
-	return AdvancedSpec{
+	return &AdvancedSpec{
 		ConversionMethod: conversionMethod,
 		BuildingStoreys:  storeys,
 		Spaces:           spaces,
@@ -72,15 +72,15 @@ func IfcAdvancedSpec(conversionMethod ConversionMethod, storeys, spaces, opening
 }
 
 // RevitAdvancedSpec returns a Revit specific AdvancedSpec.
-func RevitAdvancedSpec(generateMasterViews *bool, materialMode MaterialMode) AdvancedSpec {
-	return AdvancedSpec{
+func RevitAdvancedSpec(generateMasterViews *bool, materialMode MaterialMode) *AdvancedSpec {
+	return &AdvancedSpec{
 		GenerateMasterViews: generateMasterViews,
 		MaterialMode:        materialMode}
 }
 
 // NavisworksAdvancedSpec returns a Navisworks specific AdvancedSpec.
-func NavisworksAdvancedSpec(hiddenObjects, basicMaterialProperties, autodeskMaterialProperties, timeLinerProperties *bool) AdvancedSpec {
-	return AdvancedSpec{
+func NavisworksAdvancedSpec(hiddenObjects, basicMaterialProperties, autodeskMaterialProperties, timeLinerProperties *bool) *AdvancedSpec {
+	return &AdvancedSpec{
 		HiddenObjects:              hiddenObjects,
 		BasicMaterialProperties:    basicMaterialProperties,
 		AutodeskMaterialProperties: autodeskMaterialProperties,
@@ -88,8 +88,8 @@ func NavisworksAdvancedSpec(hiddenObjects, basicMaterialProperties, autodeskMate
 }
 
 // ObjAdvancedSpec returns a OBJ specific AdvancedSpec.
-func ObjAdvancedSpec(exportFileStructure ExportFileStructure, unit Unit, modelGuid string, objectIds *[]int) AdvancedSpec {
-	return AdvancedSpec{
+func ObjAdvancedSpec(exportFileStructure ExportFileStructure, unit Unit, modelGuid string, objectIds *[]int) *AdvancedSpec {
+	return &AdvancedSpec{
 		ExportFileStructure: exportFileStructure,
 		Unit:                unit,
 		ModelGuid:           modelGuid,
