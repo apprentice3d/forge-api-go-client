@@ -38,6 +38,10 @@ func getDerivative(path string, urn, derivativeUrn, token string) (result []byte
 	return
 }
 
+// BUG: When translating a non-Revit model, the
+// Manifest will contain an array of strings as message,
+// while in case of others it is just a string
+
 type Manifest struct {
 	Type         string       `json:"type"`
 	HasThumbnail string       `json:"hasThumbnail"`
@@ -54,11 +58,12 @@ type Derivative struct {
 	HasThumbnail string `json:"hasThumbnail"`
 	Status       string `json:"status"`
 	Progress     string `json:"progress"`
-	Messages     []struct {
-		Type string `json:"type"`
-		// Message string `json:"message"`
-		Code string `json:"code"`
-	} `json:"messages,omitempty"`
+	// messages BUG: disable for the time being
+	//Messages     []struct {
+	//	Type string `json:"type"`
+	//	// Message string `json:"message"`
+	//	Code string `json:"code"`
+	//} `json:"messages,omitempty"`
 	OutputType string      `json:"outputType"`
 	Properties *Properties `json:"properties,omitempty"`
 	Children   []Child     `json:"children"`
@@ -75,10 +80,6 @@ type DocumentInformation struct {
 	IFCSchema             string `json:"IFC Schema"`
 	IFCLoader             string `json:"IFC Loader"`
 }
-
-// BUG: When translating a non-Revit model, the
-// Manifest will contain an array of strings as message,
-// while in case of others it is just a string
 
 type Child struct {
 	GUID         string    `json:"guid"`
@@ -98,11 +99,12 @@ type Child struct {
 	Camera       []float32 `json:"camera,omitempty"`
 	ModelGUID    *string   `json:"modelGuid,omitempty"`
 	ObjectIDs    []int     `json:"objectIds,omitempty"`
-	Messages     []struct {
-		Type    string   `json:"type"`
-		Message []string `json:"message"`
-		Code    string   `json:"code"`
-	} `json:"messages,omitempty"`
+	// messages BUG: disable for the time being
+	//Messages     []struct {
+	//	Type    string   `json:"type"`
+	//	Message []string `json:"message"`
+	//	Code    string   `json:"code"`
+	//} `json:"messages,omitempty"`
 }
 
 func getManifest(path string, urn, token string) (result Manifest, err error) {
