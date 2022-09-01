@@ -1,10 +1,12 @@
 package dm
 
-import "github.com/apprentice3d/forge-api-go-client/oauth"
+import (
+	"time"
 
+	"github.com/apprentice3d/forge-api-go-client/oauth"
+)
 
 /* BUCKET API TYPES */
-
 
 // BucketAPI holds the necessary data for making Bucket related calls to Forge Data Management service
 type BucketAPI struct {
@@ -22,7 +24,7 @@ type CreateBucketRequest struct {
 type BucketDetails struct {
 	BucketKey   string `json:"bucketKey"`
 	BucketOwner string `json:"bucketOwner"`
-	CreateDate  int64 `json:"createDate"`
+	CreateDate  int64  `json:"createDate"`
 	Permissions []struct {
 		AuthID string `json:"authId"`
 		Access string `json:"access"`
@@ -39,12 +41,11 @@ type ErrorResult struct {
 type ListedBuckets struct {
 	Items []struct {
 		BucketKey   string `json:"bucketKey"`
-		CreatedDate int64 `json:"createdDate"`
+		CreatedDate int64  `json:"createdDate"`
 		PolicyKey   string `json:"policyKey"`
 	} `json:"items"`
 	Next string `json:"next"`
 }
-
 
 // ObjectDetails reflects the data presented when uploading an object to a bucket or requesting details on object.
 type ObjectDetails struct {
@@ -63,4 +64,11 @@ type ObjectDetails struct {
 type BucketContent struct {
 	Items []ObjectDetails `json:"items"`
 	Next  string          `json:"next"`
+}
+
+type PreSignedUploadUrls struct {
+	UploadKey        string    `json:"uploadKey"`
+	UploadExpiration time.Time `json:"uploadExpiration"`
+	UrlExpiration    time.Time `json:"urlExpiration"`
+	Urls             []string  `json:"urls"`
 }

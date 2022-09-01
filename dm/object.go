@@ -9,18 +9,27 @@ import (
 	"strconv"
 )
 
-
-
 // UploadObject adds to specified bucket the given data (can originate from a multipart-form or direct file read).
 // Return details on uploaded object, including the object URN. Check ObjectDetails struct.
-func (api BucketAPI) UploadObject(bucketKey string, objectName string, data []byte) (result ObjectDetails, err error) {
-	bearer, err := api.Authenticator.GetToken("data:write")
+func (api BucketAPI) UploadObject(bucketKey, objectName, fileToUpload string) (result ObjectDetails, err error) {
+	bearer, err := api.Authenticator.GetToken("data:write data:read")
 	if err != nil {
 		return
 	}
 	path := api.Authenticator.GetHostPath() + api.BucketAPIPath
 
-	return uploadObject(path, bucketKey, objectName, data, bearer.AccessToken)
+	// Step 1, generate signed S3 upload url(s)
+
+	// Step 2, upload the file(s) to the signed url(s)
+	// - https://forge.autodesk.com/en/docs/data/v2/tutorials/upload-file/#step-5-upload-a-file-to-the-signed-url
+	// - https://forge.autodesk.com/en/docs/data/v2/tutorials/app-managed-bucket/#step-3-split-the-file-and-upload
+
+	// Step 3, complete the upload
+	// - https://forge.autodesk.com/en/docs/data/v2/tutorials/upload-file/#step-6-complete-the-upload
+	// - https://forge.autodesk.com/en/docs/data/v2/tutorials/app-managed-bucket/#step-4-complete-the-upload
+	// - https://forge.autodesk.com/en/docs/data/v2/reference/http/buckets-:bucketKey-objects-:objectKey-signeds3upload-POST/
+
+	return
 }
 
 // ListObjects returns the bucket contains along with details on each item.
@@ -34,7 +43,6 @@ func (api BucketAPI) ListObjects(bucketKey, limit, beginsWith, startAt string) (
 	return listObjects(path, bucketKey, limit, beginsWith, startAt, bearer.AccessToken)
 }
 
-
 // DownloadObject downloads an on object, given the URL-encoded object name.
 func (api BucketAPI) DownloadObject(bucketKey string, objectName string) (result []byte, err error) {
 	bearer, err := api.Authenticator.GetToken("data:read")
@@ -43,9 +51,8 @@ func (api BucketAPI) DownloadObject(bucketKey string, objectName string) (result
 	}
 	path := api.Authenticator.GetHostPath() + api.BucketAPIPath
 
-	return downloadObject(path, bucketKey, objectName,  bearer.AccessToken)
+	return downloadObject(path, bucketKey, objectName, bearer.AccessToken)
 }
-
 
 /*
  *	SUPPORT FUNCTIONS
@@ -55,7 +62,7 @@ func listObjects(path, bucketKey, limit, beginsWith, startAt, token string) (res
 	task := http.Client{}
 
 	req, err := http.NewRequest("GET",
-		path + "/" + bucketKey + "/objects",
+		path+"/"+bucketKey+"/objects",
 		nil,
 	)
 
@@ -95,13 +102,26 @@ func listObjects(path, bucketKey, limit, beginsWith, startAt, token string) (res
 	return
 }
 
+func getSignedUploadUrls(path, bucketKey, objectName, fileToUpload string, minutesExpiration int) (result PreSignedUploadUrls, err error) {
+
+	// - https://forge.autodesk.com/en/docs/data/v2/tutorials/upload-file/#step-4-generate-a-signed-s3-url
+	// - https://forge.autodesk.com/en/docs/data/v2/tutorials/app-managed-bucket/#step-2-initiate-a-direct-to-s3-multipart-upload
+	// - https://forge.autodesk.com/en/docs/data/v2/reference/http/buckets-:bucketKey-objects-:objectKey-signeds3upload-GET/
+
+	// 1 - determine the required number of parts
+	// In the examples, typically a chunk size of 5 or 10 MB is used.
+	// In the old API, the boundary for multipart uploads was 100 MB.
+
+	return
+}
+
 func uploadObject(path, bucketKey, objectName string, data []byte, token string) (result ObjectDetails, err error) {
 
 	task := http.Client{}
 
 	dataContent := bytes.NewReader(data)
 	req, err := http.NewRequest("PUT",
-		path+"/"+ bucketKey + "/objects/" + objectName,
+		path+"/"+bucketKey+"/objects/"+objectName,
 		dataContent)
 
 	if err != nil {
@@ -126,7 +146,6 @@ func uploadObject(path, bucketKey, objectName string, data []byte, token string)
 	err = decoder.Decode(&result)
 
 	return
-
 }
 
 func downloadObject(path, bucketKey, objectName string, token string) (result []byte, err error) {
@@ -134,7 +153,7 @@ func downloadObject(path, bucketKey, objectName string, token string) (result []
 	task := http.Client{}
 
 	req, err := http.NewRequest("GET",
-		path+"/"+ bucketKey + "/objects/" + objectName,
+		path+"/"+bucketKey+"/objects/"+objectName,
 		nil)
 
 	if err != nil {
@@ -155,7 +174,7 @@ func downloadObject(path, bucketKey, objectName string, token string) (result []
 		return
 	}
 
-	result,err = ioutil.ReadAll(response.Body)
+	result, err = ioutil.ReadAll(response.Body)
 
 	return
 
