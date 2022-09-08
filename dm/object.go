@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -14,6 +15,9 @@ import (
 const (
 	// megaByte is 1048576 bytes
 	megaByte = 1 << 20
+	// the maximum number of parts returned by the "signeds3upload" endpoint
+	maxParts               = 25
+	signedS3UploadEndpoint = "signeds3upload"
 )
 
 var (
@@ -22,13 +26,8 @@ var (
 )
 
 // UploadObject adds to specified bucket the given data (can originate from a multipart-form or direct file read).
-// Return details on uploaded object, including the object URN. Check ObjectDetails struct.
-func (api BucketAPI) UploadObject(bucketKey, objectName, fileToUpload string) (result ObjectDetails, err error) {
-	bearer, err := api.Authenticator.GetToken("data:write data:read")
-	if err != nil {
-		return
-	}
-	path := api.Authenticator.GetHostPath() + api.BucketAPIPath
+// Return details on uploaded object, including the object URN (> ObjectId). Check UploadResult struct.
+func (api BucketAPI) UploadObject(bucketKey, objectName, fileToUpload string) (result UploadResult, err error) {
 
 	// Instructions for the S3 update:
 	// https://forge.autodesk.com/blog/data-management-oss-object-storage-service-migrating-direct-s3-approach
@@ -57,16 +56,34 @@ func (api BucketAPI) UploadObject(bucketKey, objectName, fileToUpload string) (r
 			4. Finalize the upload using the POST buckets/:bucketKey/objects/:objectKey/signeds3upload endpoint, using the uploadKey value from step #2
 	*/
 
-	// Step 1, generate signed S3 upload url(s)
+	bearer, err := api.Authenticator.GetToken("data:write data:read")
+	if err != nil {
+		return
+	}
 
-	// Step 2, upload the file(s) to the signed url(s)
-	// - https://forge.autodesk.com/en/docs/data/v2/tutorials/upload-file/#step-5-upload-a-file-to-the-signed-url
-	// - https://forge.autodesk.com/en/docs/data/v2/tutorials/app-managed-bucket/#step-3-split-the-file-and-upload
+	// initialize the uploadJob
+	job := uploadJob{}
+	job.bucketKey = bucketKey
+	job.objectName = objectName
+	job.fileToUpload = fileToUpload
+	job.token = bearer.AccessToken
+	job.apiPath = api.Authenticator.GetHostPath() + api.BucketAPIPath
+	job.minutesExpiration = 60
 
-	// Step 3, complete the upload
-	// - https://forge.autodesk.com/en/docs/data/v2/tutorials/upload-file/#step-6-complete-the-upload
-	// - https://forge.autodesk.com/en/docs/data/v2/tutorials/app-managed-bucket/#step-4-complete-the-upload
-	// - https://forge.autodesk.com/en/docs/data/v2/reference/http/buckets-:bucketKey-objects-:objectKey-signeds3upload-POST/
+	// Steps 1 & 2: Calculate the number of parts & generate signed URLs
+	err = job.calculatePartsAndGetSignedUrls()
+	if err != nil {
+		return
+	}
+
+	// Step 3, upload the file(s) to the signed url(s)
+	err = job.uploadFile()
+	if err != nil {
+		return
+	}
+
+	// Step 4, complete the upload
+	result, err = job.completeUpload()
 
 	return
 }
@@ -141,7 +158,52 @@ func listObjects(path, bucketKey, limit, beginsWith, startAt, token string) (res
 	return
 }
 
-func getSignedUploadUrls(path, bucketKey, objectName, fileToUpload string, minutesExpiration int) (result PreSignedUploadUrls, err error) {
+func (job *uploadJob) calculatePartsAndGetSignedUrls() (err error) {
+
+	fileInfo, err := os.Stat(job.fileToUpload)
+	if err != nil {
+		return
+	}
+
+	job.fileSize = fileInfo.Size()
+	job.totalParts = int((job.fileSize / defaultSize) + 1)
+	job.numberOfBatches = (job.totalParts / maxParts) + 1
+	job.batch = make([]signedUploadUrls, job.numberOfBatches)
+
+	partsCounter := 0
+	for i := 0; i < job.numberOfBatches; i++ {
+		// Step 1, generate signed S3 upload url(s)
+		firstPart := (i * maxParts) + 1
+
+		parts := maxParts
+		if job.totalParts < (partsCounter + maxParts) {
+			// Say totalParts = 20:  part[0]=20, firstPart[0]=1
+			// Say totalParts = 30:  part[0]=25, firstPart[0]=1, part[1]= 5, firstPart[1]=26
+			// Say totalParts = 40:  part[0]=25, firstPart[0]=1, part[1]=15, firstPart[1]=26
+			// Say totalParts = 50:  part[0]=25, firstPart[0]=1, part[1]=25, firstPart[1]=26
+			parts = job.totalParts - partsCounter
+		}
+
+		uploadKey := ""
+		if i > 0 {
+			uploadKey = job.batch[i-1].UploadKey
+		}
+
+		uploadUrls, err := job.getSignedUploadUrls(uploadKey, firstPart, parts)
+		if err != nil {
+			err = fmt.Errorf("Error getting signed URLs for parts %v-%v :\n%w", firstPart, firstPart+parts-1, err)
+			return
+		}
+		job.batch = append(job.batch, uploadUrls)
+
+		partsCounter += maxParts
+	}
+
+	return
+}
+
+// getSignedUploadUrls calls the signedS3UploadEndpoint
+func (job *uploadJob) getSignedUploadUrls(uploadKey string, firstPart, parts int) (result signedUploadUrls, err error) {
 
 	// - https://forge.autodesk.com/en/docs/data/v2/tutorials/upload-file/#step-4-generate-a-signed-s3-url
 	// - https://forge.autodesk.com/en/docs/data/v2/tutorials/app-managed-bucket/#step-2-initiate-a-direct-to-s3-multipart-upload
@@ -151,36 +213,110 @@ func getSignedUploadUrls(path, bucketKey, objectName, fileToUpload string, minut
 	// In the examples, typically a chunk size of 5 or 10 MB is used.
 	// In the old API, the boundary for multipart uploads was 100 MB.
 
-	fileInfo, err := os.Stat(fileToUpload)
-	if err != nil {
-		return
-	}
-
-	parts, err := getNumberOfParts(fileInfo.Size())
-	if err != nil {
-		return
-	}
-
 	// request the signed urls
+	url := job.apiPath + "/" + job.bucketKey + "/objects/" + job.objectName + "/" + signedS3UploadEndpoint
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return
+	}
+
+	addOrSetHeader(req, "Authorization", "Bearer "+job.token)
+
+	// appending to existing query args
+	q := req.URL.Query()
+	q.Add("uploadKey", uploadKey)
+	q.Add("firstPart", strconv.Itoa(firstPart))
+	q.Add("parts", strconv.Itoa(parts))
+	q.Add("minutesExpiration", strconv.Itoa(job.minutesExpiration))
+	// assign encoded query string to http request
+	req.URL.RawQuery = q.Encode()
+
+	task := http.Client{}
+	response, err := task.Do(req)
+	if err != nil {
+		return
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusOK {
+		content, _ := ioutil.ReadAll(response.Body)
+		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
+		return
+	}
+
+	decoder := json.NewDecoder(response.Body)
+	err = decoder.Decode(&result)
 
 	return
 }
 
-// getNumberOfParts calculates the number of upload parts
-func getNumberOfParts(fileSize int64) (parts int64, err error) {
+func (job *uploadJob) uploadFile() (err error) {
 
-	if fileSize <= defaultSize {
-		// use just one part
-		parts = 1
+	// - https://forge.autodesk.com/en/docs/data/v2/tutorials/upload-file/#step-5-upload-a-file-to-the-signed-url
+	// - https://forge.autodesk.com/en/docs/data/v2/tutorials/app-managed-bucket/#step-3-split-the-file-and-upload
+
+	file, err := os.Open(job.fileToUpload)
+	if err != nil {
+		return
+	}
+	defer file.Close()
+
+	// TODO: Calculate sha1 checksum
+
+	for _, uploadUrls := range job.batch {
+		for _, url := range uploadUrls.Urls {
+			buffer := make([]byte, defaultSize)
+			bytesRead, err := file.Read(buffer)
+			if err != nil {
+				if err != io.EOF {
+					return
+				}
+				break
+			}
+			if bytesRead > 0 {
+				sendBytes(url, buffer[:bytesRead])
+			}
+		}
+	}
+
+	return
+}
+
+func sendBytes(signedUrl string, bytesToSend []byte) (err error) {
+
+	req, err := http.NewRequest("PUT", signedUrl, bytes.NewBuffer(bytesToSend))
+	if err != nil {
 		return
 	}
 
-	parts = fileSize / defaultSize
-	if parts > 25 {
-		err = fmt.Errorf("file is too large to upload (%d byte)", fileSize)
+	addOrSetHeader(req, "Content-Type", "application/octet-stream")
+	addOrSetHeader(req, "Content-Length", strconv.Itoa(len(bytesToSend)))
+	req.ContentLength = int64(len(bytesToSend))
+
+	task := http.Client{}
+	response, err := task.Do(req)
+	if err != nil {
+		return
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode == http.StatusOK {
 		return
 	}
 
+	content, _ := ioutil.ReadAll(response.Body)
+	err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
+
+	return
+}
+
+func (job *uploadJob) completeUpload() (result UploadResult, err error) {
+
+	// - https://forge.autodesk.com/en/docs/data/v2/tutorials/upload-file/#step-6-complete-the-upload
+	// - https://forge.autodesk.com/en/docs/data/v2/tutorials/app-managed-bucket/#step-4-complete-the-upload
+	// - https://forge.autodesk.com/en/docs/data/v2/reference/http/buckets-:bucketKey-objects-:objectKey-signeds3upload-POST/
+
+	// TODO: Send the request to complete the upload, check the sha1 checksum
 	return
 }
 
@@ -247,4 +383,12 @@ func downloadObject(path, bucketKey, objectName string, token string) (result []
 
 	return
 
+}
+
+func addOrSetHeader(req *http.Request, key, value string) {
+	if req.Header.Get(key) == "" {
+		req.Header.Add(key, value)
+	} else {
+		req.Header.Set(key, value)
+	}
 }

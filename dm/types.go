@@ -50,7 +50,7 @@ type ListedBuckets struct {
 // ObjectDetails reflects the data presented when uploading an object to a bucket or requesting details on object.
 type ObjectDetails struct {
 	BucketKey   string            `json:"bucketKey"`
-	ObjectID    string            `json:"objectID"`
+	ObjectID    string            `json:"objectID"` // => urn = base64.RawStdEncoding.EncodeToString([]byte(ObjectID))
 	ObjectKey   string            `json:"objectKey"`
 	SHA1        string            `json:"sha1"`
 	Size        uint64            `json:"size"`
@@ -60,15 +60,54 @@ type ObjectDetails struct {
 	Deltas      map[string]string `json:"deltas, omitempty"`
 }
 
+// UploadResult provides the result of the BucketAPI.UploadObject method.
+// This provides similar data as ObjectDetails.
+type UploadResult struct {
+	BucketKey   string `json:"bucketKey"`
+	ObjectId    string `json:"objectId"` // => urn = base64.RawStdEncoding.EncodeToString([]byte(ObjectID))
+	ObjectKey   string `json:"objectKey"`
+	Sha1        string `json:"sha1"`
+	Size        int    `json:"size"`
+	ContentType string `json:"content-type"`
+	Location    string `json:"location"`
+}
+
 // BucketContent reflects the response when query Data Management API for bucket content.
 type BucketContent struct {
 	Items []ObjectDetails `json:"items"`
 	Next  string          `json:"next"`
 }
 
-type PreSignedUploadUrls struct {
+// signedUploadUrls provides the response from the signedS3UploadEndpoint
+type signedUploadUrls struct {
 	UploadKey        string    `json:"uploadKey"`
 	UploadExpiration time.Time `json:"uploadExpiration"`
 	UrlExpiration    time.Time `json:"urlExpiration"`
 	Urls             []string  `json:"urls"`
+}
+
+// uploadJob provides information for uploading a file
+type uploadJob struct {
+	// the name/key of the bucket where the file shall be stored
+	bucketKey string
+	// the name of the file in the Autodesk cloud (OSS)
+	objectName string
+	// the path of the file to upload
+	fileToUpload string
+	// the access token
+	token string
+	// the current path of the DM API
+	apiPath string
+	// The custom expiration time within the 1 to 60 minutes range.
+	minutesExpiration int
+	// the size of the file to upload
+	fileSize int64
+	// the total number of parts to process
+	totalParts int
+	// if totalParts > maxParts, then we need to request signedUploadUrls multiple times
+	numberOfBatches int
+	// sha1 checksum of the uploaded file
+	checkSum string
+	// the slice with all signedUploadUrls that need processing
+	batch []signedUploadUrls
 }
