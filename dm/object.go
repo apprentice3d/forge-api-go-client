@@ -189,8 +189,7 @@ func (job *uploadJob) calculatePartsAndGetSignedUrls() (err error) {
 
 		uploadUrls, err := job.getSignedUploadUrls(uploadKey, firstPart, parts)
 		if err != nil {
-			err = fmt.Errorf("Error getting signed URLs for parts %v-%v :\n%w", firstPart, firstPart+parts-1, err)
-			return
+			return fmt.Errorf("Error getting signed URLs for parts %v-%v :\n%w", firstPart, firstPart+parts-1, err)
 		}
 		job.batch = append(job.batch, uploadUrls)
 
@@ -274,7 +273,7 @@ func (job *uploadJob) uploadFile() (err error) {
 			bytesRead, err := file.Read(bytesSlice)
 			if err != nil {
 				if err != io.EOF {
-					return
+					return err
 				}
 				break
 			}
