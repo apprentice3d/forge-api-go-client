@@ -11,7 +11,7 @@ import (
 // BucketAPI holds the necessary data for making Bucket related calls to Forge Data Management service
 type BucketAPI struct {
 	Authenticator oauth.ForgeAuthenticator
-	BucketAPIPath string
+	BucketAPIPath string // = "/oss/v2/buckets", populate in NewBucketAPI
 }
 
 // CreateBucketRequest contains the data necessary to be passed upon bucket creation
@@ -60,13 +60,12 @@ type ObjectDetails struct {
 	Deltas      map[string]string `json:"deltas, omitempty"`
 }
 
-// UploadResult provides the result of the BucketAPI.UploadObject method.
-// This provides similar data as ObjectDetails.
+// UploadResult provides the OK/200 result of the completeUpload POST.
 type UploadResult struct {
 	BucketKey   string `json:"bucketKey"`
 	ObjectId    string `json:"objectId"` // => urn = base64.RawStdEncoding.EncodeToString([]byte(ObjectID))
 	ObjectKey   string `json:"objectKey"`
-	Sha1        string `json:"sha1"`
+	Sha1        string `json:"sha1"` // this is only shown in an example, it's not in the documentation?!?!
 	Size        int    `json:"size"`
 	ContentType string `json:"content-type"`
 	Location    string `json:"location"`
@@ -88,16 +87,14 @@ type signedUploadUrls struct {
 
 // uploadJob provides information for uploading a file
 type uploadJob struct {
-	// the name/key of the bucket where the file shall be stored
+	// the instance of the BucketAPI
+	api BucketAPI
+	// the key (= name) of the bucket where the file shall be stored
 	bucketKey string
-	// the name of the file in the Autodesk cloud (OSS)
-	objectName string
+	// the key (= name) of the file in the Autodesk cloud (OSS)
+	objectKey string
 	// the path of the file to upload
 	fileToUpload string
-	// the access token
-	token string
-	// the current path of the DM API
-	apiPath string
 	// The custom expiration time within the 1 to 60 minutes range.
 	minutesExpiration int
 	// the size of the file to upload

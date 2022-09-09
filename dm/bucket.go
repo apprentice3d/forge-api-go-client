@@ -4,22 +4,21 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"github.com/apprentice3d/forge-api-go-client/oauth"
 	"io/ioutil"
 	"net/http"
 	"strconv"
+
+	"github.com/apprentice3d/forge-api-go-client/oauth"
 )
 
-
-
-// NewBucketAPIWithCredentials returns a Bucket API client with default configurations
+// NewBucketAPI returns a Bucket API client with default configurations
+// and populates the BucketAPIPath.
 func NewBucketAPI(authenticator oauth.ForgeAuthenticator) BucketAPI {
 	return BucketAPI{
 		authenticator,
 		"/oss/v2/buckets",
 	}
 }
-
 
 // CreateBucket creates and returns details of created bucket, or an error on failure
 func (api BucketAPI) CreateBucket(bucketKey, policyKey string) (result BucketDetails, err error) {
@@ -52,7 +51,7 @@ func (api BucketAPI) ListBuckets(region, limit, startAt string) (result ListedBu
 	if err != nil {
 		return
 	}
-	path := api.Authenticator.GetHostPath()+ api.BucketAPIPath
+	path := api.Authenticator.GetHostPath() + api.BucketAPIPath
 
 	return listBuckets(path, region, limit, startAt, bearer.AccessToken)
 }
@@ -67,8 +66,6 @@ func (api BucketAPI) GetBucketDetails(bucketKey string) (result BucketDetails, e
 
 	return getBucketDetails(path, bucketKey, bearer.AccessToken)
 }
-
-
 
 /*
  *	SUPPORT FUNCTIONS
