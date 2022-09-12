@@ -65,7 +65,6 @@ type UploadResult struct {
 	BucketKey   string `json:"bucketKey"`
 	ObjectId    string `json:"objectId"` // => urn = base64.RawStdEncoding.EncodeToString([]byte(ObjectID))
 	ObjectKey   string `json:"objectKey"`
-	Sha1        string `json:"sha1"` // this is only shown in an example, it's not in the documentation?!?!
 	Size        int    `json:"size"`
 	ContentType string `json:"content-type"`
 	Location    string `json:"location"`

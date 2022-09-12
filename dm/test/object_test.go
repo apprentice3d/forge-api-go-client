@@ -17,13 +17,30 @@ const (
 	testFilePath string = "../assets/rst_basic_sample_project.rvt"
 )
 
-func TestBucketAPI_ListObjects(t *testing.T) {
+func getBucketAPI(t *testing.T) dm.BucketAPI {
+
 	// prepare the credentials
 	clientID := os.Getenv("FORGE_CLIENT_ID")
+	if clientID == "" {
+		t.Fatal("clientID is empty")
+	}
+
 	clientSecret := os.Getenv("FORGE_CLIENT_SECRET")
+	if clientSecret == "" {
+		t.Fatal("clientSecret is empty")
+	}
 
 	authenticator := oauth.NewTwoLegged(clientID, clientSecret)
-	bucketAPI := dm.NewBucketAPI(authenticator)
+	if authenticator == nil {
+		t.Fatal("Error authenticating, authenticator is nil.")
+	}
+
+	return dm.NewBucketAPI(authenticator)
+}
+
+func TestBucketAPI_ListObjects(t *testing.T) {
+
+	bucketAPI := getBucketAPI(t)
 
 	_, err := bucketAPI.GetBucketDetails(bucketKey)
 	if err != nil {
@@ -57,12 +74,7 @@ func TestBucketAPI_ListObjects(t *testing.T) {
 
 func TestBucketAPI_UploadObject(t *testing.T) {
 
-	// prepare the credentials
-	clientID := os.Getenv("FORGE_CLIENT_ID")
-	clientSecret := os.Getenv("FORGE_CLIENT_SECRET")
-
-	authenticator := oauth.NewTwoLegged(clientID, clientSecret)
-	bucketAPI := dm.NewBucketAPI(authenticator)
+	bucketAPI := getBucketAPI(t)
 
 	_, err := bucketAPI.GetBucketDetails(bucketKey)
 	if err != nil {
@@ -107,12 +119,7 @@ func TestBucketAPI_UploadObject(t *testing.T) {
 
 func TestBucketAPI_DownloadObject(t *testing.T) {
 
-	// prepare the credentials
-	clientID := os.Getenv("FORGE_CLIENT_ID")
-	clientSecret := os.Getenv("FORGE_CLIENT_SECRET")
-
-	authenticator := oauth.NewTwoLegged(clientID, clientSecret)
-	bucketAPI := dm.NewBucketAPI(authenticator)
+	bucketAPI := getBucketAPI(t)
 
 	t.Run("Create a temp bucket to store an object", func(t *testing.T) {
 		_, err := bucketAPI.CreateBucket(bucketKey, "transient")

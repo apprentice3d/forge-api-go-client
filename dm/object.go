@@ -166,7 +166,7 @@ func (job *uploadJob) calculatePartsAndGetSignedUrls() (err error) {
 	job.fileSize = fileInfo.Size()
 	job.totalParts = int((job.fileSize / defaultSize) + 1)
 	job.numberOfBatches = (job.totalParts / maxParts) + 1
-	job.batch = make([]signedUploadUrls, job.numberOfBatches)
+	job.batch = make([]signedUploadUrls, 0)
 
 	partsCounter := 0
 	for i := 0; i < job.numberOfBatches; i++ {
@@ -226,7 +226,9 @@ func (job *uploadJob) getSignedUploadUrls(uploadKey string, firstPart, parts int
 
 	// appending to existing query args
 	q := req.URL.Query()
-	q.Add("uploadKey", uploadKey)
+	if uploadKey != "" {
+		q.Add("uploadKey", uploadKey)
+	}
 	q.Add("firstPart", strconv.Itoa(firstPart))
 	q.Add("parts", strconv.Itoa(parts))
 	q.Add("minutesExpiration", strconv.Itoa(job.minutesExpiration))
@@ -332,6 +334,8 @@ func (job *uploadJob) completeUpload() (result UploadResult, err error) {
 		return
 	}
 
+	// size	integer: The expected size of the uploaded object.
+	// If provided, OSS will check this against the blob in S3 and return an error if the size does not match.
 	bodyData := struct {
 		UploadKey string `json:"uploadKey"`
 		Size      int    `json:"size"`
