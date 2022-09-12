@@ -4,7 +4,7 @@
 # forge-api-go-client
 
 
-**Forge API:** 
+**Forge API:**  
 [![oAuth2](https://img.shields.io/badge/oAuth2-v2-green.svg)](http://developer-autodesk.github.io/)
 [![Data-Management](https://img.shields.io/badge/Data%20Management-v1-green.svg)](http://autodesk-forge.github.io/)
 [![OSS](https://img.shields.io/badge/OSS-v2-green.svg)](http://autodesk-forge.github.io/)
@@ -14,8 +14,7 @@
 
 Golang SDK for building Forge based applications.
 
-This is a fork of the original Autodesk Forge SDK, that can be found here:
-https://github.com/apprentice3d/forge-api-go-client
+This is a fork of the [Golang SDK by Denis Grigor](https://github.com/apprentice3d/forge-api-go-client).
 
 The SDK has been extended with the following features:
 
@@ -26,8 +25,10 @@ The SDK has been extended with the following features:
 ### Data Management API:
 - Update the upload to use the new direct-to-s3 approach (breaking change!).  
   See:
-  - https://forge.autodesk.com/blog/data-management-oss-object-storage-service-migrating-direct-s3-approach
-  - https://forge.autodesk.com/en/docs/data/v2/reference/http/buckets-:bucketKey-objects-:objectKey-signeds3upload-GET/
+  - https://forge.autodesk.com/blog/data-management-oss-object-storage-service-migrating-direct-s3-approach  
+  - https://forge.autodesk.com/en/docs/data/v2/reference/http/buckets-:bucketKey-objects-:objectKey-signeds3upload-GET/  
+
 
 TODO:
+- Upload: add retry and cancellation
 - Update the download method too. 
