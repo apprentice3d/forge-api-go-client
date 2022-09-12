@@ -35,8 +35,7 @@ func getUserID(path string, token string) (nickname string, err error) {
 	}
 
 	//TODO: Review why the data has quotes in its content and find a more elegant way to remove them
-	nickname = strings.Replace(string(data), "\"", "", -1 )
-
+	nickname = strings.Replace(string(data), "\"", "", -1)
 
 	return
 }

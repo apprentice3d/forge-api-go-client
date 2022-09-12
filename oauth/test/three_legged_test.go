@@ -1,9 +1,10 @@
 package oauth_test
 
 import (
-	"github.com/apprentice3d/forge-api-go-client/oauth"
 	"os"
 	"testing"
+
+	"github.com/woweh/forge-api-go-client/oauth"
 )
 
 func TestThreeLeggedAuthentication(t *testing.T) {
@@ -61,8 +62,6 @@ func TestThreeLeggedAuthentication(t *testing.T) {
 		})
 	}
 
-
-
 }
 
 func TestThreeLeggedAuthWithRefreshToken(t *testing.T) {
@@ -113,7 +112,5 @@ func TestThreeLeggedAuthWithRefreshToken(t *testing.T) {
 			t.Log("Latest refresh token: ", token.RefreshToken)
 		})
 	}
-
-
 
 }

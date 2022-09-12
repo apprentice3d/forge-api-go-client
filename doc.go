@@ -5,7 +5,7 @@
 // Data Management, Model Derivative, Reality Capture and others.
 //
 // The SDK removes the complexity of coding directly against a web service
-// interface and it hides a lot of the lower-level plumbing, such as authentication.
+// interface, and it hides a lot of the lower-level plumbing, such as authentication.
 //
 // Getting More Information
 //
@@ -23,4 +23,3 @@
 //   * oauth - provides common shared types such as Config, Logger,
 //     and utilities to make working with API parameters easier.
 package forge
-

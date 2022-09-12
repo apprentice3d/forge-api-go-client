@@ -10,7 +10,6 @@ import (
 	"strconv"
 )
 
-
 // NewThreeLegged returns a 3-legged authenticator with default host and authPath,
 // giving client secrets, redirectURI and optionally with a starting refresh token (useful for CLI apps)
 func NewThreeLegged(clientID, clientSecret, redirectURI, refreshToken string) *ThreeLeggedAuth {
@@ -149,7 +148,6 @@ func (a ThreeLeggedAuth) GetNewRefreshToken(refreshToken string, scope string) (
 
 	return
 }
-
 
 func (a ThreeLeggedAuth) GetRefreshToken() string {
 	return a.RefreshToken

@@ -2,9 +2,10 @@ package oauth_test
 
 import (
 	"fmt"
-	"github.com/apprentice3d/forge-api-go-client/oauth"
 	"os"
 	"testing"
+
+	"github.com/woweh/forge-api-go-client/oauth"
 )
 
 //TODO: set up a pipeline for auto-creating a 3-legged oauth token
@@ -54,7 +55,7 @@ func ExampleInformation_AboutMe() {
 	clientID := os.Getenv("FORGE_CLIENT_ID")
 	clientSecret := os.Getenv("FORGE_CLIENT_SECRET")
 
-	authenticator := oauth.NewTwoLegged(clientID,clientSecret)
+	authenticator := oauth.NewTwoLegged(clientID, clientSecret)
 	//authenticator := oauth.NewThreeLegged("","", "")
 
 	info := oauth.NewInformationQuerier(authenticator)

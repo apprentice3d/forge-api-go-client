@@ -2,10 +2,11 @@ package oauth_test
 
 import (
 	"fmt"
-	"github.com/apprentice3d/forge-api-go-client/oauth"
 	"log"
 	"os"
 	"testing"
+
+	"github.com/woweh/forge-api-go-client/oauth"
 )
 
 func TestTwoLeggedAuthentication(t *testing.T) {

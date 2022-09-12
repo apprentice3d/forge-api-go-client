@@ -3,7 +3,7 @@ package md
 import (
 	"encoding/base64"
 
-	"github.com/apprentice3d/forge-api-go-client/oauth"
+	"github.com/woweh/forge-api-go-client/oauth"
 )
 
 // ModelDerivativeAPI struct holds all paths necessary to access Model Derivative API

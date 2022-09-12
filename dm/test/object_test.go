@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/apprentice3d/forge-api-go-client/oauth"
+	"github.com/woweh/forge-api-go-client/oauth"
 
-	"github.com/apprentice3d/forge-api-go-client/dm"
+	"github.com/woweh/forge-api-go-client/dm"
 )
 
 const (

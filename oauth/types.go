@@ -17,12 +17,10 @@ type AuthData struct {
 	authPath     string
 }
 
-
 // TwoLeggedAuth struct holds data necessary for making requests in 2-legged context
 type TwoLeggedAuth struct {
 	AuthData
 }
-
 
 // ThreeLeggedAuth struct holds data necessary for making requests in 3-legged context
 type ThreeLeggedAuth struct {
@@ -30,7 +28,6 @@ type ThreeLeggedAuth struct {
 	RedirectURI  string
 	RefreshToken string
 }
-
 
 // Bearer reflects the response when acquiring a 2-legged token or in 3-legged context for exchanging the authorization
 // code for a token + refresh token and when exchanging the refresh token for a new token
@@ -40,7 +37,6 @@ type Bearer struct {
 	AccessToken  string `json:"access_token"`            // The access token
 	RefreshToken string `json:"refresh_token,omitempty"` // The refresh token used in 3-legged oauth
 }
-
 
 // ThreeLeggedAuthenticator interface defines the method necessary to qualify as 3-legged authenticator
 //type ThreeLeggedAuthenticator interface {

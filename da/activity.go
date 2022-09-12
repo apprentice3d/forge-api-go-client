@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"github.com/apprentice3d/forge-api-go-client/oauth"
 	"io/ioutil"
 	"net/http"
 	"strconv"
+
+	"github.com/woweh/forge-api-go-client/oauth"
 )
 
 type Param struct {
@@ -39,7 +40,6 @@ type Activity struct {
 	authenticator oauth.ForgeAuthenticator
 	path          string
 	name          string
-
 }
 
 func (activity *Activity) Delete() (err error) {
@@ -52,9 +52,9 @@ func (activity *Activity) Delete() (err error) {
 
 	activity.Parameters = make(map[string]Param)
 	activity.ID = ""
-	activity.CommandLine = make([]string,0)
+	activity.CommandLine = make([]string, 0)
 	activity.Description = ""
-	activity.AppBundles = make([]string,0)
+	activity.AppBundles = make([]string, 0)
 	activity.Engine = ""
 	activity.Settings = Setting{}
 	activity.authenticator = nil
@@ -63,7 +63,6 @@ func (activity *Activity) Delete() (err error) {
 
 	return
 }
-
 
 //CreateAlias creates a new alias for this Activity.
 func (activity Activity) CreateAlias(alias string, version uint) (result Alias, err error) {
@@ -76,11 +75,9 @@ func (activity Activity) CreateAlias(alias string, version uint) (result Alias, 
 	return
 }
 
-
 /*
  *	SUPPORT FUNCTIONS
  */
-
 
 /*
   ACTIVITY
@@ -148,8 +145,6 @@ func deleteActivity(path string, activityId string, token string) (err error) {
 
 	return
 }
-
-
 
 /*
 	ALIASES
@@ -298,8 +293,6 @@ func getActivityAliasDetails(path, activityId, alias, token string) (result Alia
 	return
 }
 
-
-
 func deleteActivityAlias(path string, activityId, alias, token string) (err error) {
 
 	task := http.Client{}
@@ -323,7 +316,6 @@ func deleteActivityAlias(path string, activityId, alias, token string) (err erro
 
 	return
 }
-
 
 /*
    VERSIONS
@@ -361,7 +353,7 @@ func createActivityVersion(path, activityId, engine string, token string) (resul
 	task := http.Client{}
 
 	body, err := json.Marshal(
-		struct{
+		struct {
 			Engine string `json:"engine"`
 		}{engine})
 	if err != nil {
@@ -397,8 +389,6 @@ func createActivityVersion(path, activityId, engine string, token string) (resul
 	return
 }
 
-
-
 func getActivityVersionDetails(path, activityId string, version uint, token string) (result ActivityConfig, err error) {
 
 	task := http.Client{}
@@ -431,8 +421,6 @@ func getActivityVersionDetails(path, activityId string, version uint, token stri
 
 	return
 }
-
-
 
 func deleteActivityVersion(path, activityId string, version uint, token string) (err error) {
 

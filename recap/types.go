@@ -2,10 +2,10 @@ package recap
 
 // PhotoScene holds data encountered in replies like creation of photoScene
 type PhotoScene struct {
-	ID      string   `json:"photosceneid"`
-	Name    string   `json:"name,omitempty"`
-	Files   []string `json:",omitempty"`
-	Formats []string `json:",omitempty"`
+	ID       string   `json:"photosceneid"`
+	Name     string   `json:"name,omitempty"`
+	Files    []string `json:",omitempty"`
+	Formats  []string `json:",omitempty"`
 	Metadata []struct {
 		Name   string
 		Values string
@@ -41,7 +41,7 @@ type SceneCancelReply struct {
 type FileUploadingReply struct {
 	Usage    string `json:",omitempty"`
 	Resource string `json:",omitempty"`
-	Files *struct {
+	Files    *struct {
 		File struct {
 			FileName string `json:"filename"`
 			FileID   string `json:"fileid"`
@@ -79,8 +79,8 @@ type SceneStartProcessingReply struct {
 
 // SceneProgressReply reflects the response content upon polling for scene status
 type SceneProgressReply struct {
-	Usage    string `json:",omitempty"`
-	Resource string `json:",omitempty"`
+	Usage      string `json:",omitempty"`
+	Resource   string `json:",omitempty"`
 	PhotoScene struct {
 		ID       string `json:"photosceneid"`
 		Message  string `json:"progressmsg"`
@@ -89,8 +89,6 @@ type SceneProgressReply struct {
 
 	Error *Error `json:"Error,omitempty"`
 }
-
-
 
 // SceneResultReply reflects the response content upon requesting the scene results in a certain format
 type SceneResultReply struct {

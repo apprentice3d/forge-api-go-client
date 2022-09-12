@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/apprentice3d/forge-api-go-client/md"
+	"github.com/woweh/forge-api-go-client/md"
 )
 
 func Test_IfcAdvancedSpec_Json(t *testing.T) {

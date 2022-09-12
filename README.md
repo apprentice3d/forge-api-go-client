@@ -1,17 +1,33 @@
-[![Build Status](https://travis-ci.org/apprentice3d/forge-api-go-client.svg?branch=master)](https://travis-ci.org/apprentice3d/forge-api-go-client)
-[![GoDoc](https://godoc.org/github.com/apprentice3d/forge-api-go-client?status.svg)](https://godoc.org/github.com/apprentice3d/forge-api-go-client)
-[![Go Report Card](https://goreportcard.com/badge/github.com/apprentice3d/forge-api-go-client)](https://goreportcard.com/report/github.com/apprentice3d/forge-api-go-client)
+[![GoDoc](https://godoc.org/github.com/woweh/forge-api-go-client?status.svg)](https://godoc.org/github.com/woweh/forge-api-go-client)
+[![Go Report Card](https://goreportcard.com/badge/github.com/woweh/forge-api-go-client)](https://goreportcard.com/report/github.com/woweh/forge-api-go-client)
 
 # forge-api-go-client
 
 
-**Forge API:** [![oAuth2](https://img.shields.io/badge/oAuth2-v2-green.svg)](http://developer-autodesk.github.io/)
+**Forge API:** 
+[![oAuth2](https://img.shields.io/badge/oAuth2-v2-green.svg)](http://developer-autodesk.github.io/)
 [![Data-Management](https://img.shields.io/badge/Data%20Management-v1-green.svg)](http://autodesk-forge.github.io/)
 [![OSS](https://img.shields.io/badge/OSS-v2-green.svg)](http://autodesk-forge.github.io/)
 [![Model-Derivative](https://img.shields.io/badge/Model%20Derivative-v2-green.svg)](http://autodesk-forge.github.io/)
 [![Reality-Capture](https://img.shields.io/badge/Reality%20Capture-v1-green.svg)](http://developer-autodesk.github.io/)
 
 
-Golang SDK for building Forge based applications
+Golang SDK for building Forge based applications.
 
+This is a fork of the original Autodesk Forge SDK, that can be found here:
+https://github.com/apprentice3d/forge-api-go-client
 
+The SDK has been extended with the following features:
+
+### Model Derivative API:
+- Add support for x-ads-headers and advanced translation options.  
+  See: https://forge.autodesk.com/en/docs/model-derivative/v2/reference/http/jobs/job-POST/
+
+### Data Management API:
+- Update the upload to use the new direct-to-s3 approach (breaking change!).  
+  See:
+  - https://forge.autodesk.com/blog/data-management-oss-object-storage-service-migrating-direct-s3-approach
+  - https://forge.autodesk.com/en/docs/data/v2/reference/http/buckets-:bucketKey-objects-:objectKey-signeds3upload-GET/
+
+TODO:
+- Update the download method too. 

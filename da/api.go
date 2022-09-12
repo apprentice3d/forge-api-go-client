@@ -1,12 +1,12 @@
 package da
 
-import "github.com/apprentice3d/forge-api-go-client/oauth"
+import "github.com/woweh/forge-api-go-client/oauth"
 
 // API struct holds all paths necessary to access Design Automation API
 type API struct {
-	Authenticator oauth.ForgeAuthenticator
+	Authenticator        oauth.ForgeAuthenticator
 	DesignAutomationPath string
-	UploadAppURL string
+	UploadAppURL         string
 }
 
 // NewAPI returns a DesignAutomation API client with default configurations
@@ -17,7 +17,6 @@ func NewAPI(authenticator oauth.ForgeAuthenticator) API {
 		"https://dasprod-store.s3.amazonaws.com",
 	}
 }
-
 
 // UserId gives you the id used to identify the user
 func (api API) UserId() (nickname string, err error) {
@@ -30,8 +29,6 @@ func (api API) UserId() (nickname string, err error) {
 
 	return
 }
-
-
 
 // EngineList lists all available Engines.
 func (api API) EngineList() (list EngineList, err error) {
@@ -59,7 +56,6 @@ func (api API) EngineDetails(id string) (list EngineDetails, err error) {
 	return
 }
 
-
 // CreateApp creates an app with given name and using specified engine
 // 	name - should be unique and will be the appID
 // 	engine - engineId to be used by this app (check EngineList)
@@ -85,9 +81,6 @@ func (api API) CreateApp(name, engine string) (app AppBundle, err error) {
 
 	return
 }
-
-
-
 
 // AppList lists all available appbundles.
 func (api API) AppList() (list AppList, err error) {
@@ -127,25 +120,6 @@ func (api API) CreateActivity(config ActivityConfig) (activity Activity, err err
 	return
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // AppDelete will delete the app with specified id
 //func (api API) AppDelete(id string) (err error) {
 //
@@ -158,7 +132,3 @@ func (api API) CreateActivity(config ActivityConfig) (activity Activity, err err
 //
 //	return
 //}
-
-
-
-

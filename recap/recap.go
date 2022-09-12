@@ -9,13 +9,13 @@
 package recap
 
 import (
-	"github.com/apprentice3d/forge-api-go-client/oauth"
+	"github.com/woweh/forge-api-go-client/oauth"
 )
 
 // API struct holds all paths necessary to access ReCap API
 type ReCapAPI struct {
 	Authenticator oauth.ForgeAuthenticator
-	ReCapPath string
+	ReCapPath     string
 }
 
 // NewAPI returns a ReCap API client with default configurations
