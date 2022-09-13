@@ -78,7 +78,7 @@ func TestTwoLeggedAuthentication(t *testing.T) {
 
 func ExampleTwoLeggedAuth_Authenticate() {
 
-	// aquire Forge secrets from environment
+	// acquire Forge secrets from environment
 	clientID := os.Getenv("FORGE_CLIENT_ID")
 	clientSecret := os.Getenv("FORGE_CLIENT_SECRET")
 
