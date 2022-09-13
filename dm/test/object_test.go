@@ -14,7 +14,7 @@ import (
 const (
 	bucketKey    string = "forge_unit_testing"
 	objectKey    string = "rst_basic_sample_project.rvt"
-	testFilePath string = "../assets/rst_basic_sample_project.rvt"
+	testFilePath string = "../assets/" + objectKey
 )
 
 func getBucketAPI(t *testing.T) dm.BucketAPI {
@@ -98,7 +98,7 @@ func TestBucketAPI_UploadObject(t *testing.T) {
 	})
 
 	t.Run("Upload an object into temp bucket", func(t *testing.T) {
-		result, err := bucketAPI.UploadObject(bucketKey, "temp_file.rvt", testFilePath)
+		result, err := bucketAPI.UploadObject(bucketKey, objectKey, testFilePath)
 
 		if err != nil {
 			t.Fatal("Could not upload the test object, got: ", err.Error())

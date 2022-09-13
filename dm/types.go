@@ -86,24 +86,24 @@ type signedUploadUrls struct {
 
 // uploadJob provides information for uploading a file
 type uploadJob struct {
-	// the instance of the BucketAPI
+	// api is the instance of the BucketAPI.
 	api BucketAPI
-	// the key (= name) of the bucket where the file shall be stored
+	// bucketKey is the key (= name) of the bucket where the file shall be stored.
 	bucketKey string
-	// the key (= name) of the file in the Autodesk cloud (OSS)
+	// objectKey is the key (= name) of the file in the Autodesk cloud (OSS).
 	objectKey string
-	// the path of the file to upload
+	// fileToUpload is the path of the file to upload.
 	fileToUpload string
-	// The custom expiration time within the 1 to 60 minutes range.
+	// minutesExpiration is the custom expiration time within a 1 to 60 minutes range.
 	minutesExpiration int
-	// the size of the file to upload
+	// fileSize is the size of the file to upload.
 	fileSize int64
-	// the total number of parts to process
+	// totalParts is the total number of parts to process.
 	totalParts int
-	// if totalParts > maxParts, then we need to request signedUploadUrls multiple times
+	// numberOfBatches indicates the number of 'batches' that must be processed, how often signed URLs must be requested.
+	// If totalParts > maxParts, then we need to request signedUploadUrls multiple times.
 	numberOfBatches int
-	// sha1 checksum of the uploaded file
-	checkSum string
-	// the slice with all signedUploadUrls that need processing
-	batch []signedUploadUrls
+	// uploadKey is the identifier of the upload session, to differentiate multiple attempts to upload data for the same object.
+	// This must be provided when re-requesting chunk URLs for the same blob if they expire, and when calling the Complete Upload endpoint.
+	uploadKey string
 }
