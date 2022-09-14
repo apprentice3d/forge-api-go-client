@@ -30,5 +30,4 @@ The SDK has been extended with the following features:
 
 
 TODO:
-- Upload: add retry and cancellation
 - Update the download method too. 
