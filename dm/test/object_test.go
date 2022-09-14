@@ -1,26 +1,60 @@
 package dm_test
 
 import (
-	"github.com/apprentice3d/forge-api-go-client/oauth"
-	"io/ioutil"
+	"fmt"
 	"os"
 	"testing"
+	"time"
 
-	"github.com/apprentice3d/forge-api-go-client/dm"
+	"github.com/woweh/forge-api-go-client/oauth"
+
+	"github.com/woweh/forge-api-go-client/dm"
 )
 
-func TestBucketAPI_ListObjects(t *testing.T) {
+const (
+	bucketKey    string = "forge_unit_testing"
+	objectKey    string = "rst_basic_sample_project.rvt"
+	testFilePath string = "../assets/" + objectKey
+)
+
+func getBucketAPI(t *testing.T) dm.BucketAPI {
+
 	// prepare the credentials
 	clientID := os.Getenv("FORGE_CLIENT_ID")
+	if clientID == "" {
+		t.Fatal("clientID is empty")
+	}
+
 	clientSecret := os.Getenv("FORGE_CLIENT_SECRET")
+	if clientSecret == "" {
+		t.Fatal("clientSecret is empty")
+	}
 
 	authenticator := oauth.NewTwoLegged(clientID, clientSecret)
-	bucketAPI := dm.NewBucketAPI(authenticator)
+	if authenticator == nil {
+		t.Fatal("Error authenticating, authenticator is nil.")
+	}
 
-	testBucketName := "just_a_test_bucket"
+	return dm.NewBucketAPI(authenticator)
+}
+
+func TestBucketAPI_ListObjects(t *testing.T) {
+
+	bucketAPI := getBucketAPI(t)
+
+	_, err := bucketAPI.GetBucketDetails(bucketKey)
+	if err != nil {
+		// bucket doesn't exist yet, create it
+		t.Run("Create a temp bucket to store an object", func(t *testing.T) {
+			_, err := bucketAPI.CreateBucket(bucketKey, "transient")
+			if err != nil {
+				t.Error("Could not create temp bucket, got: ", err.Error())
+			}
+		})
+	}
 
 	t.Run("List bucket content", func(t *testing.T) {
-		content, err := bucketAPI.ListObjects(testBucketName, "", "", "")
+		content, err := bucketAPI.ListObjects(bucketKey, "", "", "")
 		if err != nil {
 			t.Fatalf("Failed to list bucket content: %s\n", err.Error())
 		}
@@ -29,7 +63,8 @@ func TestBucketAPI_ListObjects(t *testing.T) {
 	})
 
 	t.Run("List bucket content of non-existing bucket", func(t *testing.T) {
-		content, err := bucketAPI.ListObjects(testBucketName+"hz", "", "", "")
+		tmpBucketKey := fmt.Sprintf("%v", time.Now().UnixNano())
+		content, err := bucketAPI.ListObjects(tmpBucketKey, "", "", "")
 		if err == nil {
 			t.Fatalf("Expected to fail upon listing a non-existing bucket, but it didn't, got %#v", content)
 		}
@@ -39,25 +74,21 @@ func TestBucketAPI_ListObjects(t *testing.T) {
 
 func TestBucketAPI_UploadObject(t *testing.T) {
 
-	// prepare the credentials
-	clientID := os.Getenv("FORGE_CLIENT_ID")
-	clientSecret := os.Getenv("FORGE_CLIENT_SECRET")
+	bucketAPI := getBucketAPI(t)
 
-	authenticator := oauth.NewTwoLegged(clientID, clientSecret)
-	bucketAPI := dm.NewBucketAPI(authenticator)
-
-	tempBucket := "some_temp_bucket_for_testings"
-	testFilePath := "../assets/HelloWorld.rvt"
-
-	t.Run("Create a temp bucket to store an object", func(t *testing.T) {
-		_, err := bucketAPI.CreateBucket(tempBucket, "transient")
-		if err != nil {
-			t.Error("Could not create temp bucket, got: ", err.Error())
-		}
-	})
+	_, err := bucketAPI.GetBucketDetails(bucketKey)
+	if err != nil {
+		// bucket doesn't exist yet, create it
+		t.Run("Create a temp bucket to store an object", func(t *testing.T) {
+			_, err := bucketAPI.CreateBucket(bucketKey, "transient")
+			if err != nil {
+				t.Error("Could not create temp bucket, got: ", err.Error())
+			}
+		})
+	}
 
 	t.Run("List objects in temp bucket, to make sure it is empty", func(t *testing.T) {
-		content, err := bucketAPI.ListObjects(tempBucket, "", "", "")
+		content, err := bucketAPI.ListObjects(bucketKey, "", "", "")
 		if err != nil {
 			t.Fatalf("Failed to list bucket content: %s\n", err.Error())
 		}
@@ -67,19 +98,10 @@ func TestBucketAPI_UploadObject(t *testing.T) {
 	})
 
 	t.Run("Upload an object into temp bucket", func(t *testing.T) {
-		file, err := os.Open(testFilePath)
-		if err != nil {
-			t.Fatal("Cannot open testfile for reading")
-		}
-		defer file.Close()
-		data, err := ioutil.ReadAll(file)
-		if err != nil {
-			t.Fatal("Cannot read the testfile")
-		}
-
-		result, err := bucketAPI.UploadObject(tempBucket, "temp_file.rvt", data)
+		result, err := bucketAPI.UploadObject(bucketKey, objectKey, testFilePath)
 
 		if err != nil {
+			t.Error("Could not upload the test object, got: ", err.Error())
 			t.Fatal("Could not upload the test object, got: ", err.Error())
 		}
 
@@ -89,36 +111,26 @@ func TestBucketAPI_UploadObject(t *testing.T) {
 	})
 
 	t.Run("Delete the temp bucket", func(t *testing.T) {
-		err := bucketAPI.DeleteBucket(tempBucket)
+		err := bucketAPI.DeleteBucket(bucketKey)
 		if err != nil {
 			t.Error("Could not delete temp bucket, got: ", err.Error())
 		}
 	})
 }
 
-
 func TestBucketAPI_DownloadObject(t *testing.T) {
 
-	// prepare the credentials
-	clientID := os.Getenv("FORGE_CLIENT_ID")
-	clientSecret := os.Getenv("FORGE_CLIENT_SECRET")
-
-	authenticator := oauth.NewTwoLegged(clientID, clientSecret)
-	bucketAPI := dm.NewBucketAPI(authenticator)
-
-	tempBucket := "some_temp_bucket_for_testings"
-	testFilePath := "../assets/HelloWorld.rvt"
-	const object_name = "temp_file.rvt"
+	bucketAPI := getBucketAPI(t)
 
 	t.Run("Create a temp bucket to store an object", func(t *testing.T) {
-		_, err := bucketAPI.CreateBucket(tempBucket, "transient")
+		_, err := bucketAPI.CreateBucket(bucketKey, "transient")
 		if err != nil {
 			t.Error("Could not create temp bucket, got: ", err.Error())
 		}
 	})
 
 	t.Run("List objects in temp bucket, to make sure it is empty", func(t *testing.T) {
-		content, err := bucketAPI.ListObjects(tempBucket, "", "", "")
+		content, err := bucketAPI.ListObjects(bucketKey, "", "", "")
 		if err != nil {
 			t.Fatalf("Failed to list bucket content: %s\n", err.Error())
 		}
@@ -128,18 +140,7 @@ func TestBucketAPI_DownloadObject(t *testing.T) {
 	})
 
 	t.Run("Upload an object into temp bucket", func(t *testing.T) {
-		file, err := os.Open(testFilePath)
-		if err != nil {
-			t.Fatal("Cannot open testfile for reading")
-		}
-		defer file.Close()
-		data, err := ioutil.ReadAll(file)
-		if err != nil {
-			t.Fatal("Cannot read the testfile")
-		}
-
-
-		result, err := bucketAPI.UploadObject(tempBucket, object_name, data)
+		result, err := bucketAPI.UploadObject(bucketKey, objectKey, testFilePath)
 
 		if err != nil {
 			t.Fatal("Could not upload the test object, got: ", err.Error())
@@ -151,19 +152,19 @@ func TestBucketAPI_DownloadObject(t *testing.T) {
 	})
 
 	t.Run("Download an object from the temp bucket", func(t *testing.T) {
-		result, err := bucketAPI.DownloadObject(tempBucket, object_name)
+		result, err := bucketAPI.DownloadObject(bucketKey, objectKey)
 		if err != nil {
-			t.Errorf("Problems getting the object %s: %s", object_name, err.Error())
+			t.Errorf("Problems getting the object %s: %s", objectKey, err.Error())
 		}
 
 		if len(result) == 0 {
-			t.Errorf("The object %s was downloaded sucessfully, but it is empty.", object_name)
+			t.Errorf("The object %s was downloaded sucessfully, but it is empty.", objectKey)
 		}
 
 	})
 
 	t.Run("Delete the temp bucket", func(t *testing.T) {
-		err := bucketAPI.DeleteBucket(tempBucket)
+		err := bucketAPI.DeleteBucket(bucketKey)
 		if err != nil {
 			t.Error("Could not delete temp bucket, got: ", err.Error())
 		}

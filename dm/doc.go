@@ -1,4 +1,4 @@
-// Package md contains the Go wrappers for calls to Data Management API
+// Package dm contains the Go wrappers for calls to Data Management API
 // https://developer.autodesk.com/en/docs/data/v2/overview/
 //
 // The API offers the following features:

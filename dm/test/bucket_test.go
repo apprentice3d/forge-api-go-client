@@ -2,11 +2,12 @@ package dm_test
 
 import (
 	"fmt"
-	"github.com/apprentice3d/forge-api-go-client/dm"
-	"github.com/apprentice3d/forge-api-go-client/oauth"
 	"log"
 	"os"
 	"testing"
+
+	"github.com/woweh/forge-api-go-client/dm"
+	"github.com/woweh/forge-api-go-client/oauth"
 )
 
 func TestBucketAPI_CreateBucket(t *testing.T) {

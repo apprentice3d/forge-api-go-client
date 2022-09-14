@@ -4,22 +4,21 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"github.com/apprentice3d/forge-api-go-client/oauth"
 	"io/ioutil"
 	"net/http"
 	"strconv"
+
+	"github.com/woweh/forge-api-go-client/oauth"
 )
 
-
-
-// NewBucketAPIWithCredentials returns a Bucket API client with default configurations
+// NewBucketAPI returns a Bucket API client with default configurations
+// and populates the BucketAPIPath.
 func NewBucketAPI(authenticator oauth.ForgeAuthenticator) BucketAPI {
 	return BucketAPI{
 		authenticator,
 		"/oss/v2/buckets",
 	}
 }
-
 
 // CreateBucket creates and returns details of created bucket, or an error on failure
 func (api BucketAPI) CreateBucket(bucketKey, policyKey string) (result BucketDetails, err error) {
@@ -28,7 +27,7 @@ func (api BucketAPI) CreateBucket(bucketKey, policyKey string) (result BucketDet
 	if err != nil {
 		return
 	}
-	path := api.Authenticator.GetHostPath() + api.BucketAPIPath
+	path := api.getPath()
 	result, err = createBucket(path, bucketKey, policyKey, bearer.AccessToken)
 
 	return
@@ -41,7 +40,7 @@ func (api BucketAPI) DeleteBucket(bucketKey string) error {
 	if err != nil {
 		return err
 	}
-	path := api.Authenticator.GetHostPath() + api.BucketAPIPath
+	path := api.getPath()
 
 	return deleteBucket(path, bucketKey, bearer.AccessToken)
 }
@@ -52,7 +51,7 @@ func (api BucketAPI) ListBuckets(region, limit, startAt string) (result ListedBu
 	if err != nil {
 		return
 	}
-	path := api.Authenticator.GetHostPath()+ api.BucketAPIPath
+	path := api.getPath()
 
 	return listBuckets(path, region, limit, startAt, bearer.AccessToken)
 }
@@ -63,16 +62,20 @@ func (api BucketAPI) GetBucketDetails(bucketKey string) (result BucketDetails, e
 	if err != nil {
 		return
 	}
-	path := api.Authenticator.GetHostPath() + api.BucketAPIPath
+	path := api.getPath()
 
 	return getBucketDetails(path, bucketKey, bearer.AccessToken)
 }
 
-
-
 /*
  *	SUPPORT FUNCTIONS
  */
+
+// getPath gets the full bucket API path (= api.Authenticator.GetHostPath() + api.BucketAPIPath).
+func (api BucketAPI) getPath() string {
+	return api.Authenticator.GetHostPath() + api.BucketAPIPath
+}
+
 func getBucketDetails(path, bucketKey, token string) (result BucketDetails, err error) {
 	task := http.Client{}
 

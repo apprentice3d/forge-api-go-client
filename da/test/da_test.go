@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"encoding/xml"
-	"github.com/apprentice3d/forge-api-go-client/da"
-	"github.com/apprentice3d/forge-api-go-client/oauth"
 	"os"
 	"reflect"
 	"testing"
+
+	"github.com/woweh/forge-api-go-client/da"
+	"github.com/woweh/forge-api-go-client/oauth"
 )
 
 func TestAPI_UserId(t *testing.T) {
@@ -82,7 +83,6 @@ func TestAPI_AppBundle(t *testing.T) {
 	// prepare the credentials
 	clientID := os.Getenv("FORGE_CLIENT_ID")
 	clientSecret := os.Getenv("FORGE_CLIENT_SECRET")
-
 
 	authenticator := oauth.NewTwoLegged(clientID, clientSecret)
 	daApi := da.NewAPI(authenticator)
@@ -487,8 +487,6 @@ func TestAppBundle_Upload(t *testing.T) {
 	})
 }
 
-
-
 func TestAPI_Activity(t *testing.T) {
 	// prepare the credentials
 	clientID := os.Getenv("FORGE_CLIENT_ID")
@@ -511,10 +509,9 @@ func TestAPI_Activity(t *testing.T) {
 	t.Run("Create an activity", func(t *testing.T) {
 
 		config := da.ActivityConfig{
-			ID: testActivityName,
-			Engine:testEngine,
-			CommandLine:[]string{"dir"},
-
+			ID:          testActivityName,
+			Engine:      testEngine,
+			CommandLine: []string{"dir"},
 		}
 
 		testActivity, err = daApi.CreateActivity(config)
@@ -600,19 +597,6 @@ func TestAPI_Activity(t *testing.T) {
 
 	})
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 func TestAPI_DataParsing(t *testing.T) {
 	t.Run("Check EngineList struct parsing", func(t *testing.T) {
@@ -808,15 +792,9 @@ func TestAPI_DataParsing(t *testing.T) {
 			t.Fatal(err.Error())
 		}
 
-
 		if !reflect.DeepEqual(result, response) {
 			t.Fatal("failed to properly parse the Activity JSON")
 		}
-
-
-
-
-
 
 	})
 

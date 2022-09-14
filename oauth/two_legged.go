@@ -12,14 +12,13 @@ import (
 
 // NewTwoLegged returns a 2-legged authenticator with default host and authPath
 func NewTwoLegged(clientID, clientSecret string) *TwoLeggedAuth {
-	return &TwoLeggedAuth {
+	return &TwoLeggedAuth{
 		AuthData{
 			clientID,
 			clientSecret,
 			"https://developer.api.autodesk.com",
 			"/authentication/v1",
 		},
-
 	}
 }
 
@@ -62,7 +61,6 @@ func (a TwoLeggedAuth) GetToken(scope string) (bearer Bearer, err error) {
 	return
 }
 
-
 func (a TwoLeggedAuth) GetRefreshToken() string {
 	return ""
 }
@@ -76,4 +74,3 @@ func (a AuthData) GetHostPath() string {
 func (a *AuthData) SetHostPath(host string) {
 	a.Host = host
 }
-

@@ -6,15 +6,14 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
-	"github.com/apprentice3d/forge-api-go-client/oauth"
 	"io/ioutil"
 	"log"
 	"mime/multipart"
 	"net/http"
 	"strconv"
+
+	"github.com/woweh/forge-api-go-client/oauth"
 )
-
-
 
 type AppList struct {
 	InfoList
@@ -35,7 +34,7 @@ type FormData struct {
 }
 
 type AppParameters struct {
-	URL  string `json:"endpointURL"`
+	URL  string   `json:"endpointURL"`
 	Data FormData `json:"formData"`
 }
 
@@ -52,7 +51,7 @@ type AppBundle struct {
 	authenticator oauth.ForgeAuthenticator
 	path          string
 	name          string
-	uploadURL	string
+	uploadURL     string
 }
 
 type AppDetails struct {
@@ -65,19 +64,15 @@ type CreateAppRequest struct {
 	Engine string `json:"engine"`
 }
 
-
-
-
 type AppUploadError struct {
-	Code string `xml:"Code"`
-	Message string `xml:"Message"`
-	Argument string `xml:"Argument"`
+	Code          string `xml:"Code"`
+	Message       string `xml:"Message"`
+	Argument      string `xml:"Argument"`
 	ArgumentValue string `xml:"ArgumentValue"`
-	Condition string `xml:"Condition"`
-	RequestID string `xml:"RequestId"`
-	HostID string `xml:"HostId"`
+	Condition     string `xml:"Condition"`
+	RequestID     string `xml:"RequestId"`
+	HostID        string `xml:"HostId"`
 }
-
 
 // Delete removes the AppBundle, including all versions and aliases.
 func (app *AppBundle) Delete() (err error) {
@@ -108,7 +103,7 @@ func (app *AppBundle) Details(alias string) (details AppDetails, err error) {
 	if err != nil {
 		return
 	}
-	details, err = getAppDetails(app.path, app.ID + "+" + alias, bearer.AccessToken)
+	details, err = getAppDetails(app.path, app.ID+"+"+alias, bearer.AccessToken)
 
 	return
 }
@@ -193,7 +188,6 @@ func (app AppBundle) CreateVersion(engine string) (result AppBundle, err error) 
 	return
 }
 
-
 func (app *AppBundle) VersionDetails(version uint) (details AppData, err error) {
 	bearer, err := app.authenticator.GetToken("code:all")
 	if err != nil {
@@ -203,7 +197,6 @@ func (app *AppBundle) VersionDetails(version uint) (details AppData, err error) 
 
 	return
 }
-
 
 func (app AppBundle) DeleteVersion(version uint) (err error) {
 	bearer, err := app.authenticator.GetToken("code:all")
@@ -215,22 +208,16 @@ func (app AppBundle) DeleteVersion(version uint) (err error) {
 	return
 }
 
-
-
-func (app AppBundle) Upload(data []byte) (err error){
+func (app AppBundle) Upload(data []byte) (err error) {
 
 	err = uploadApp(app.uploadURL, app.Parameters.Data, data)
 
 	return
 }
 
-
-
 /*
  *	SUPPORT FUNCTIONS
  */
-
-
 
 /*
    APPBUNDLE
@@ -361,7 +348,6 @@ func deleteApp(path string, id string, token string) (err error) {
 
 	return
 }
-
 
 /*
 	ALIASES
@@ -510,8 +496,6 @@ func getAliasDetails(path, appName, alias, token string) (result Alias, err erro
 	return
 }
 
-
-
 func deleteAppAlias(path string, appName, alias, token string) (err error) {
 
 	task := http.Client{}
@@ -535,7 +519,6 @@ func deleteAppAlias(path string, appName, alias, token string) (err error) {
 
 	return
 }
-
 
 /*
    VERSIONS
@@ -573,7 +556,7 @@ func createAppVersion(path, appName, engine string, token string) (result AppBun
 	task := http.Client{}
 
 	body, err := json.Marshal(
-		struct{
+		struct {
 			Engine string `json:"engine"`
 		}{engine})
 	if err != nil {
@@ -609,8 +592,6 @@ func createAppVersion(path, appName, engine string, token string) (result AppBun
 	return
 }
 
-
-
 func getVersionDetails(path, appName string, version uint, token string) (result AppData, err error) {
 
 	task := http.Client{}
@@ -644,8 +625,6 @@ func getVersionDetails(path, appName string, version uint, token string) (result
 	return
 }
 
-
-
 func deleteAppVersion(path string, appName string, version uint, token string) (err error) {
 
 	task := http.Client{}
@@ -669,7 +648,6 @@ func deleteAppVersion(path string, appName string, version uint, token string) (
 
 	return
 }
-
 
 func uploadApp(path string, formData FormData, data []byte) (err error) {
 
@@ -721,7 +699,6 @@ func uploadApp(path string, formData FormData, data []byte) (err error) {
 		if err != nil {
 			return
 		}
-
 
 		err = errors.New(fmt.Sprintf("[%d][%s] - %s {%s}",
 			response.StatusCode,

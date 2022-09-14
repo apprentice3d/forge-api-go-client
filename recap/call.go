@@ -6,13 +6,13 @@ import (
 	"errors"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"mime/multipart"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
 	"time"
-	"math/rand"
 )
 
 func createPhotoScene(path string, name string, formats []string, sceneType string, token string) (scene PhotoScene, err error) {
@@ -135,7 +135,7 @@ func addFileToSceneUsingFileData(path string, photoSceneID string, data []byte, 
 	writer := multipart.NewWriter(body)
 	writer.WriteField("photosceneid", photoSceneID)
 	writer.WriteField("type", "image")
-	formFile, err := writer.CreateFormFile("file[0]", "data" + strconv.Itoa(rand.Int()))
+	formFile, err := writer.CreateFormFile("file[0]", "data"+strconv.Itoa(rand.Int()))
 	if err != nil {
 		log.Println(err.Error())
 		return

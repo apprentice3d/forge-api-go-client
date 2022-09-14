@@ -14,12 +14,10 @@ type EngineList struct {
 
 type EngineDetails struct {
 	ProductVersion string `json:"productVersion"`
-	Description string `json:"description"`
-	Version uint `json:"version"`
-	Id string `json:"id"`
+	Description    string `json:"description"`
+	Version        uint   `json:"version"`
+	Id             string `json:"id"`
 }
-
-
 
 func listEngines(path string, token string) (list EngineList, err error) {
 
@@ -47,7 +45,6 @@ func listEngines(path string, token string) (list EngineList, err error) {
 
 	return
 }
-
 
 func getEngineDetails(path string, engineID string, token string) (details EngineDetails, err error) {
 
