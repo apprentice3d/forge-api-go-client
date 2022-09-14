@@ -101,6 +101,7 @@ func TestBucketAPI_UploadObject(t *testing.T) {
 		result, err := bucketAPI.UploadObject(bucketKey, objectKey, testFilePath)
 
 		if err != nil {
+			t.Error("Could not upload the test object, got: ", err.Error())
 			t.Fatal("Could not upload the test object, got: ", err.Error())
 		}
 

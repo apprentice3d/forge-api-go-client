@@ -39,25 +39,29 @@ import (
 	"path"
 	"strconv"
 	"time"
-
-	"github.com/thedevsaddam/retry"
 )
 
 const (
 	// megaByte is 1048576 byte
 	megaByte = 1 << 20
+
 	// maxParts is the maximum number of parts returned by the "signeds3upload" endpoint.
 	maxParts = 25
+
 	// signedS3UploadEndpoint is the name of the signeds3upload endpoint.
 	signedS3UploadEndpoint = "signeds3upload"
+
 	// minutesExpiration is the expiration period of the signed upload URLs.
 	// Autodesk default is 2 minutes (1 to 60 minutes).
 	minutesExpiration = 60
 )
 
 var (
-	// defaultSize is the default size of download/upload chunks.
-	defaultSize = int64(100 * megaByte)
+	// defaultChunkSize is the default size of download/upload chunks.
+	//  NOTE:
+	//  The minimum size seems to be 5 MB!
+	//  Using a value < 5 MB causes errors when completing the upload [400, TooSmall]!
+	defaultChunkSize = int64(100 * megaByte)
 )
 
 func newUploadJob(api BucketAPI, bucketKey, objectName, fileToUpload string) (job uploadJob, err error) {
@@ -78,13 +82,19 @@ func newUploadJob(api BucketAPI, bucketKey, objectName, fileToUpload string) (jo
 	// Determine the required number of parts
 	// - In the examples, typically a chunk size of 5 or 10 MB is used.
 	// - In the old API, the boundary for multipart uploads was 100 MB.
-	//   => See const defaultSize
+	//   => See const defaultChunkSize
 
 	job.fileSize = fileInfo.Size()
-	job.totalParts = int((job.fileSize / defaultSize) + 1)
-	job.numberOfBatches = (job.totalParts / maxParts) + 1
+	job.totalParts = ceilingOfIntDivision(int(job.fileSize), int(defaultChunkSize))
+	job.numberOfBatches = ceilingOfIntDivision(job.totalParts, maxParts)
 
 	return
+}
+
+func ceilingOfIntDivision(x, y int) int {
+	// https://stackoverflow.com/a/54006084
+	// https://stackoverflow.com/a/2745086
+	return 1 + (x-1)/y
 }
 
 func (job *uploadJob) uploadFile() (result UploadResult, err error) {
@@ -103,12 +113,11 @@ func (job *uploadJob) uploadFile() (result UploadResult, err error) {
 		parts := job.getParts(partsCounter)
 
 		// generate signed S3 upload url(s)
-		tmpResult, err := retry.Do(3, 3*time.Second, job.getSignedUploadUrls, firstPart, parts)
+		uploadUrls, err := job.getSignedUploadUrlsWithRetries(firstPart, parts)
 		if err != nil {
 			err = fmt.Errorf("Error getting signed URLs for parts %v-%v :\n%w", firstPart, parts, err)
-			return
+			return result, err
 		}
-		uploadUrls, _ := tmpResult[0].(signedUploadUrls)
 
 		if i == 0 {
 			// remember the uploadKey when requesting signed URLs for the first time
@@ -119,13 +128,13 @@ func (job *uploadJob) uploadFile() (result UploadResult, err error) {
 		for _, url := range uploadUrls.Urls {
 
 			// read a chunk of the file
-			bytesSlice := make([]byte, defaultSize)
+			bytesSlice := make([]byte, defaultChunkSize)
 
 			bytesRead, err := file.Read(bytesSlice)
 			if err != nil {
 				if err != io.EOF {
 					err = fmt.Errorf("Error reading the file to upload:\n%w", err)
-					return
+					return result, err
 				}
 				// EOF reached
 			}
@@ -133,26 +142,25 @@ func (job *uploadJob) uploadFile() (result UploadResult, err error) {
 			// upload the chunk to the signed URL
 			if bytesRead > 0 {
 				buffer := bytes.NewBuffer(bytesSlice[:bytesRead])
-				_, err = retry.Do(3, 3*time.Second, uploadChunk, url, buffer)
+				err = uploadChunkWithRetries(url, buffer)
 				if err != nil {
 					err = fmt.Errorf("Error uploading a chunk to URL:\n- %v\n%w", url, err)
-					return
+					return result, err
 				}
 			}
 		}
 
-		partsCounter += maxParts
+		partsCounter += parts
 	}
 
 	// complete the upload
-	tmpResult, err := retry.Do(3, 3*time.Second, job.completeUpload)
+	result, err = job.completeUploadWithRetries()
 	if err != nil {
 		err = fmt.Errorf("Error completing the upload:\n%w", err)
-		return
+		return result, err
 	}
-	result, _ = tmpResult[0].(UploadResult)
 
-	return
+	return result, err
 }
 
 // getParts gets the number of parts that must be processed in this batch.
@@ -171,8 +179,33 @@ func (job *uploadJob) getParts(partsCounter int) int {
 	return parts
 }
 
-// getSignedUploadUrls calls the signedS3UploadEndpoint
-func (job *uploadJob) getSignedUploadUrls(firstPart, parts int) (result signedUploadUrls, err error) {
+// getSignedUploadUrlsWithRetries calls the signedS3UploadEndpoint to get parts signed URLs, retrying max 3 times.
+// https://forge.autodesk.com/en/docs/data/v2/reference/http/buckets-:bucketKey-objects-:objectKey-signeds3upload-GET/
+func (job *uploadJob) getSignedUploadUrlsWithRetries(firstPart, parts int) (result signedUploadUrls, err error) {
+
+	var statusCode int
+
+	for i := 0; i < 3; i++ {
+
+		statusCode, result, err = job.getSignedUploadUrls(firstPart, parts)
+
+		// 429 - RATE-LIMIT EXCEEDED
+		// The maximum number of API calls that a Forge application can make _PER MINUTE_ was exceeded.
+		// 500 - INTERNAL SERVER ERROR
+		if statusCode == 429 || statusCode == 500 {
+			// retry in 1 minute
+			time.Sleep(1 * time.Minute)
+		} else {
+			// done
+			break
+		}
+	}
+
+	return result, err
+}
+
+// getSignedUploadUrls calls the signedS3UploadEndpoint to get parts signed URLs.
+func (job *uploadJob) getSignedUploadUrls(firstPart, parts int) (statusCode int, result signedUploadUrls, err error) {
 
 	// - https://forge.autodesk.com/en/docs/data/v2/reference/http/buckets-:bucketKey-objects-:objectKey-signeds3upload-GET/
 
@@ -204,11 +237,14 @@ func (job *uploadJob) getSignedUploadUrls(firstPart, parts int) (result signedUp
 	req.URL.RawQuery = q.Encode()
 
 	task := http.Client{}
+
 	response, err := task.Do(req)
 	if err != nil {
 		return
 	}
 	defer response.Body.Close()
+
+	statusCode = response.StatusCode
 
 	if response.StatusCode != http.StatusOK {
 		content, _ := ioutil.ReadAll(response.Body)
@@ -221,8 +257,47 @@ func (job *uploadJob) getSignedUploadUrls(firstPart, parts int) (result signedUp
 	return
 }
 
+// uploadChunkWithRetries uploads a chunk of bytes to a given signedUrl, retrying max 3 times.
+func uploadChunkWithRetries(signedUrl string, buffer *bytes.Buffer) (err error) {
+
+	var (
+		statusCode int
+
+		// A backoff schedule for when and how often to retry failed HTTP
+		// requests. The first element is the time to wait after the
+		// first failure, the second the time to wait after the second
+		// failure, etc. After reaching the last element, retries stop
+		// and the request is considered failed.
+		// https://brandur.org/fragments/go-http-retry
+		backoffSchedule = []time.Duration{
+			1 * time.Second,
+			3 * time.Second,
+			10 * time.Second,
+		}
+	)
+
+	for _, backoff := range backoffSchedule {
+
+		statusCode, err = uploadChunk(signedUrl, buffer)
+
+		// Consider retrying (for example, with an exponential backoff) individual uploads when the
+		// response code is 100-199, 429, or 500-599
+		if (statusCode >= 100 && statusCode <= 199) ||
+			statusCode == 429 ||
+			(statusCode >= 500 && statusCode <= 599) {
+			// retry
+			time.Sleep(backoff)
+		} else {
+			// done
+			break
+		}
+	}
+
+	return err
+}
+
 // uploadChunk uploads a chunk of bytes to a given signedUrl.
-func uploadChunk(signedUrl string, buffer *bytes.Buffer) (err error) {
+func uploadChunk(signedUrl string, buffer *bytes.Buffer) (statusCode int, err error) {
 
 	req, err := http.NewRequest("PUT", signedUrl, buffer)
 	if err != nil {
@@ -230,6 +305,7 @@ func uploadChunk(signedUrl string, buffer *bytes.Buffer) (err error) {
 	}
 
 	l := buffer.Len()
+
 	req.ContentLength = int64(l)
 	addOrSetHeader(req, "Content-Type", "application/octet-stream")
 	addOrSetHeader(req, "Content-Length", strconv.Itoa(l))
@@ -241,6 +317,8 @@ func uploadChunk(signedUrl string, buffer *bytes.Buffer) (err error) {
 	}
 	defer response.Body.Close()
 
+	statusCode = response.StatusCode
+
 	if response.StatusCode == http.StatusOK {
 		return
 	}
@@ -251,10 +329,36 @@ func uploadChunk(signedUrl string, buffer *bytes.Buffer) (err error) {
 	return
 }
 
+// completeUploadWithRetries instructs OSS to complete the object creation process after the bytes have been uploaded directly to S3, retrying max 3 times.
+// https://forge.autodesk.com/en/docs/data/v2/reference/http/buckets-:bucketKey-objects-:objectKey-signeds3upload-POST/
+func (job *uploadJob) completeUploadWithRetries() (result UploadResult, err error) {
+
+	var statusCode int
+
+	for i := 0; i < 3; i++ {
+
+		statusCode, result, err = job.completeUpload()
+
+		// 429 - RATE-LIMIT EXCEEDED
+		// The maximum number of API calls that a Forge application can make _PER MINUTE_ was exceeded.
+		// 500 - INTERNAL SERVER ERROR
+		if statusCode == 429 || statusCode == 500 {
+			// retry in 1 minute
+			time.Sleep(1 * time.Minute)
+		} else {
+			// done
+			break
+		}
+	}
+
+	return result, err
+}
+
 // completeUpload instructs OSS to complete the object creation process after the bytes have been uploaded directly to S3.
 // An object will not be accessible until this endpoint is called.
-// This endpoint must be called within 24 hours of the upload beginning, otherwise the object will be discarded, and the upload must begin again from scratch.
-func (job *uploadJob) completeUpload() (result UploadResult, err error) {
+// This endpoint must be called within 24 hours of the upload beginning, otherwise the object will be discarded,
+// and the upload must begin again from scratch.
+func (job *uploadJob) completeUpload() (statusCode int, result UploadResult, err error) {
 
 	// - https://forge.autodesk.com/en/docs/data/v2/reference/http/buckets-:bucketKey-objects-:objectKey-signeds3upload-POST/
 
@@ -296,6 +400,8 @@ func (job *uploadJob) completeUpload() (result UploadResult, err error) {
 		return
 	}
 	defer response.Body.Close()
+
+	statusCode = response.StatusCode
 
 	if response.StatusCode != http.StatusOK {
 		content, _ := ioutil.ReadAll(response.Body)
