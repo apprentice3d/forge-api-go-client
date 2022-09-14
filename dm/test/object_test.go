@@ -11,8 +11,11 @@ import (
 	"github.com/woweh/forge-api-go-client/dm"
 )
 
+/*  NOTE:
+Since tests are run in parallel, you should use a unique bucketKey per test.
+*/
+
 const (
-	bucketKey    string = "forge_unit_testing"
 	objectKey    string = "rst_basic_sample_project.rvt"
 	testFilePath string = "../assets/" + objectKey
 )
@@ -42,16 +45,22 @@ func TestBucketAPI_ListObjects(t *testing.T) {
 
 	bucketAPI := getBucketAPI(t)
 
-	_, err := bucketAPI.GetBucketDetails(bucketKey)
-	if err != nil {
-		// bucket doesn't exist yet, create it
-		t.Run("Create a temp bucket to store an object", func(t *testing.T) {
-			_, err := bucketAPI.CreateBucket(bucketKey, "transient")
+	bucketKey := "forge_unit_testing_list_objects"
+
+	t.Run("Create a temp bucket to store an object", func(t *testing.T) {
+		_, err := bucketAPI.GetBucketDetails(bucketKey)
+		if err == nil {
+			t.Log("The temp bucket already exists, try to delete it.")
+			err := bucketAPI.DeleteBucket(bucketKey)
 			if err != nil {
-				t.Error("Could not create temp bucket, got: ", err.Error())
+				t.Error("Could not delete temp bucket, got: ", err.Error())
 			}
-		})
-	}
+		}
+		_, err = bucketAPI.CreateBucket(bucketKey, "transient")
+		if err != nil {
+			t.Error("Could not create temp bucket, got: ", err.Error())
+		}
+	})
 
 	t.Run("List bucket content", func(t *testing.T) {
 		content, err := bucketAPI.ListObjects(bucketKey, "", "", "")
@@ -76,16 +85,22 @@ func TestBucketAPI_UploadObject(t *testing.T) {
 
 	bucketAPI := getBucketAPI(t)
 
-	_, err := bucketAPI.GetBucketDetails(bucketKey)
-	if err != nil {
-		// bucket doesn't exist yet, create it
-		t.Run("Create a temp bucket to store an object", func(t *testing.T) {
-			_, err := bucketAPI.CreateBucket(bucketKey, "transient")
+	bucketKey := "forge_unit_testing_upload_object"
+
+	t.Run("Create a temp bucket to store an object", func(t *testing.T) {
+		_, err := bucketAPI.GetBucketDetails(bucketKey)
+		if err == nil {
+			t.Log("The temp bucket already exists, try to delete it.")
+			err := bucketAPI.DeleteBucket(bucketKey)
 			if err != nil {
-				t.Error("Could not create temp bucket, got: ", err.Error())
+				t.Error("Could not delete temp bucket, got: ", err.Error())
 			}
-		})
-	}
+		}
+		_, err = bucketAPI.CreateBucket(bucketKey, "transient")
+		if err != nil {
+			t.Error("Could not create temp bucket, got: ", err.Error())
+		}
+	})
 
 	t.Run("List objects in temp bucket, to make sure it is empty", func(t *testing.T) {
 		content, err := bucketAPI.ListObjects(bucketKey, "", "", "")
@@ -122,8 +137,18 @@ func TestBucketAPI_DownloadObject(t *testing.T) {
 
 	bucketAPI := getBucketAPI(t)
 
+	bucketKey := "forge_unit_testing_download_object"
+
 	t.Run("Create a temp bucket to store an object", func(t *testing.T) {
-		_, err := bucketAPI.CreateBucket(bucketKey, "transient")
+		_, err := bucketAPI.GetBucketDetails(bucketKey)
+		if err == nil {
+			t.Log("The temp bucket already exists, try to delete it.")
+			err := bucketAPI.DeleteBucket(bucketKey)
+			if err != nil {
+				t.Error("Could not delete temp bucket, got: ", err.Error())
+			}
+		}
+		_, err = bucketAPI.CreateBucket(bucketKey, "transient")
 		if err != nil {
 			t.Error("Could not create temp bucket, got: ", err.Error())
 		}
