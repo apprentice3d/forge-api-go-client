@@ -30,5 +30,6 @@ The SDK has been extended with the following features:
   - https://forge.autodesk.com/en/docs/data/v2/reference/http/buckets-:bucketKey-objects-:objectKey-signeds3upload-GET/
   - https://forge.autodesk.com/en/docs/data/v2/reference/http/buckets-:bucketKey-objects-:objectKey-signeds3download-GET/
 
-TODO:
+## TODO:
+- Add support for regions (US <> EMEA).
 - Update ListBuckets to list all buckets (support paging).
