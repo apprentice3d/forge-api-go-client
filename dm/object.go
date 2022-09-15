@@ -3,6 +3,7 @@ package dm
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strconv"
@@ -16,7 +17,9 @@ func (api BucketAPI) ListObjects(bucketKey, limit, beginsWith, startAt string) (
 		return
 	}
 
-	return listObjects(api.getPath(), bucketKey, limit, beginsWith, startAt, bearer.AccessToken)
+	result, err = listObjects(api.getPath(), bucketKey, limit, beginsWith, startAt, bearer.AccessToken)
+
+	return
 }
 
 // DownloadObject downloads an on object, given the URL-encoded object name.
@@ -27,7 +30,14 @@ func (api BucketAPI) DownloadObject(bucketKey string, objectName string) (result
 		return
 	}
 
-	return downloadObject(api.getPath(), bucketKey, objectName, bearer.AccessToken)
+	downloadUrl, err := getSignedDownloadUrl(api.getPath(), bucketKey, objectName, bearer.AccessToken)
+	if err != nil {
+		return
+	}
+
+	result, err = downloadObjectUsingSignedUrl(&downloadUrl)
+
+	return
 }
 
 // UploadObject adds to specified bucket the given data (can originate from a multipart-form or direct file read).
@@ -39,7 +49,9 @@ func (api BucketAPI) UploadObject(bucketKey, objectName, fileToUpload string) (r
 		return
 	}
 
-	return job.uploadFile()
+	result, err = job.uploadFile()
+
+	return
 }
 
 /*
@@ -50,10 +62,7 @@ func listObjects(path, bucketKey, limit, beginsWith, startAt, token string) (res
 
 	task := http.Client{}
 
-	req, err := http.NewRequest("GET",
-		path+"/"+bucketKey+"/objects",
-		nil,
-	)
+	req, err := http.NewRequest("GET", path+"/"+bucketKey+"/objects", nil)
 
 	if err != nil {
 		return
@@ -85,28 +94,45 @@ func listObjects(path, bucketKey, limit, beginsWith, startAt, token string) (res
 		return
 	}
 
-	decoder := json.NewDecoder(response.Body)
-	err = decoder.Decode(&result)
+	err = json.NewDecoder(response.Body).Decode(&result)
 
 	return
 }
 
-// TODO: Update/replace the method
-func downloadObject(path, bucketKey, objectName string, token string) (result []byte, err error) {
+func getSignedDownloadUrl(path, bucketKey, objectName string, token string) (result signedDownloadUrl, err error) {
+
+	req, err := http.NewRequest("GET", path+"/"+bucketKey+"/objects/"+objectName+"/signeds3download", nil)
+	if err != nil {
+		return
+	}
+	req.Header.Set("Authorization", "Bearer "+token)
 
 	task := http.Client{}
+	response, err := task.Do(req)
+	if err != nil {
+		return
+	}
+	defer response.Body.Close()
 
-	req, err := http.NewRequest("GET",
-		path+"/"+bucketKey+"/objects/"+objectName,
-		nil)
+	if response.StatusCode == http.StatusOK {
+		err = json.NewDecoder(response.Body).Decode(&result)
+	} else {
+		content, _ := ioutil.ReadAll(response.Body)
+		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
+	}
 
+	return
+}
+
+func downloadObjectUsingSignedUrl(s *signedDownloadUrl) (result []byte, err error) {
+
+	req, err := http.NewRequest("GET", s.Url, nil)
 	if err != nil {
 		return
 	}
 
-	req.Header.Set("Authorization", "Bearer "+token)
+	task := http.Client{}
 	response, err := task.Do(req)
-
 	if err != nil {
 		return
 	}
@@ -119,6 +145,14 @@ func downloadObject(path, bucketKey, objectName string, token string) (result []
 	}
 
 	result, err = ioutil.ReadAll(response.Body)
+	if err != nil {
+		return
+	}
+
+	receivedSize := len(result)
+	if receivedSize != s.Size {
+		err = fmt.Errorf("the file size doesn't match, expected %v, but received %v", s.Size, receivedSize)
+	}
 
 	return
 }

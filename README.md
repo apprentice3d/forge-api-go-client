@@ -23,11 +23,12 @@ The SDK has been extended with the following features:
   See: https://forge.autodesk.com/en/docs/model-derivative/v2/reference/http/jobs/job-POST/
 
 ### Data Management API:
-- Update the upload to use the new direct-to-s3 approach (breaking change!).  
+- Update the upload object and download object to use the new direct-to-s3 approach.  
+  Note that UploadObject method has a breaking change!  
   See:
   - https://forge.autodesk.com/blog/data-management-oss-object-storage-service-migrating-direct-s3-approach  
-  - https://forge.autodesk.com/en/docs/data/v2/reference/http/buckets-:bucketKey-objects-:objectKey-signeds3upload-GET/  
-
+  - https://forge.autodesk.com/en/docs/data/v2/reference/http/buckets-:bucketKey-objects-:objectKey-signeds3upload-GET/
+  - https://forge.autodesk.com/en/docs/data/v2/reference/http/buckets-:bucketKey-objects-:objectKey-signeds3download-GET/
 
 TODO:
-- Update the download method too. 
+- Update ListBuckets to list all buckets (support paging).

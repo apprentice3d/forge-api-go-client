@@ -27,8 +27,8 @@ func (api BucketAPI) CreateBucket(bucketKey, policyKey string) (result BucketDet
 	if err != nil {
 		return
 	}
-	path := api.getPath()
-	result, err = createBucket(path, bucketKey, policyKey, bearer.AccessToken)
+
+	result, err = createBucket(api.getPath(), bucketKey, policyKey, bearer.AccessToken)
 
 	return
 }
@@ -40,9 +40,8 @@ func (api BucketAPI) DeleteBucket(bucketKey string) error {
 	if err != nil {
 		return err
 	}
-	path := api.getPath()
 
-	return deleteBucket(path, bucketKey, bearer.AccessToken)
+	return deleteBucket(api.getPath(), bucketKey, bearer.AccessToken)
 }
 
 // ListBuckets returns a list of all buckets created or associated with Forge secrets used for token creation
@@ -51,9 +50,8 @@ func (api BucketAPI) ListBuckets(region, limit, startAt string) (result ListedBu
 	if err != nil {
 		return
 	}
-	path := api.getPath()
 
-	return listBuckets(path, region, limit, startAt, bearer.AccessToken)
+	return listBuckets(api.getPath(), region, limit, startAt, bearer.AccessToken)
 }
 
 // GetBucketDetails returns information associated to a bucket. See BucketDetails struct.
@@ -62,9 +60,8 @@ func (api BucketAPI) GetBucketDetails(bucketKey string) (result BucketDetails, e
 	if err != nil {
 		return
 	}
-	path := api.getPath()
 
-	return getBucketDetails(path, bucketKey, bearer.AccessToken)
+	return getBucketDetails(api.getPath(), bucketKey, bearer.AccessToken)
 }
 
 /*
@@ -79,10 +76,7 @@ func (api BucketAPI) getPath() string {
 func getBucketDetails(path, bucketKey, token string) (result BucketDetails, err error) {
 	task := http.Client{}
 
-	req, err := http.NewRequest("GET",
-		path+"/"+bucketKey+"/details",
-		nil,
-	)
+	req, err := http.NewRequest("GET", path+"/"+bucketKey+"/details", nil)
 
 	if err != nil {
 		return
@@ -110,10 +104,7 @@ func getBucketDetails(path, bucketKey, token string) (result BucketDetails, err 
 func listBuckets(path, region, limit, startAt, token string) (result ListedBuckets, err error) {
 	task := http.Client{}
 
-	req, err := http.NewRequest("GET",
-		path,
-		nil,
-	)
+	req, err := http.NewRequest("GET", path, nil)
 
 	if err != nil {
 		return
@@ -145,10 +136,14 @@ func listBuckets(path, region, limit, startAt, token string) (result ListedBucke
 		return
 	}
 
-	decoder := json.NewDecoder(response.Body)
-	err = decoder.Decode(&result)
+	err = json.NewDecoder(response.Body).Decode(&result)
 
-	//TODO: address the pagination of buckets
+	/* TODO: address the pagination of buckets
+	if result.Next != "" {
+		// get the next batch
+	}
+	*/
+
 	return
 }
 
@@ -165,10 +160,7 @@ func createBucket(path, bucketKey, policyKey, token string) (result BucketDetail
 		return
 	}
 
-	req, err := http.NewRequest("POST",
-		path,
-		bytes.NewReader(body),
-	)
+	req, err := http.NewRequest("POST", path, bytes.NewReader(body))
 
 	if err != nil {
 		return
@@ -197,10 +189,7 @@ func createBucket(path, bucketKey, policyKey, token string) (result BucketDetail
 func deleteBucket(path, bucketKey, token string) (err error) {
 	task := http.Client{}
 
-	req, err := http.NewRequest("DELETE",
-		path+"/"+bucketKey,
-		nil,
-	)
+	req, err := http.NewRequest("DELETE", path+"/"+bucketKey, nil)
 
 	if err != nil {
 		return

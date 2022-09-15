@@ -34,6 +34,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"path"
@@ -88,6 +89,14 @@ func newUploadJob(api BucketAPI, bucketKey, objectName, fileToUpload string) (jo
 	job.totalParts = ceilingOfIntDivision(int(job.fileSize), int(defaultChunkSize))
 	job.numberOfBatches = ceilingOfIntDivision(job.totalParts, maxParts)
 
+	log.Println("New upload job:")
+	log.Println("- bucketKey:", bucketKey)
+	log.Println("- objectName:", objectName)
+	log.Println("- fileToUpload:", fileToUpload)
+	log.Println("- fileSize:", job.fileSize)
+	log.Println("- totalParts:", job.totalParts)
+	log.Println("- numberOfBatches:", job.numberOfBatches)
+
 	return
 }
 
@@ -105,6 +114,8 @@ func (job *uploadJob) uploadFile() (result UploadResult, err error) {
 	}
 	defer file.Close()
 
+	log.Println("Start uploading file...")
+
 	partsCounter := 0
 	for i := 0; i < job.numberOfBatches; i++ {
 
@@ -113,11 +124,15 @@ func (job *uploadJob) uploadFile() (result UploadResult, err error) {
 		parts := job.getParts(partsCounter)
 
 		// generate signed S3 upload url(s)
+		log.Println("- getting signed URLs...")
 		uploadUrls, err := job.getSignedUploadUrlsWithRetries(firstPart, parts)
 		if err != nil {
 			err = fmt.Errorf("Error getting signed URLs for parts %v-%v :\n%w", firstPart, parts, err)
 			return result, err
 		}
+
+		log.Println("- UploadKey: ", uploadUrls.UploadKey)
+		log.Println("- number of signed URLs: ", len(uploadUrls.Urls))
 
 		if i == 0 {
 			// remember the uploadKey when requesting signed URLs for the first time
@@ -147,6 +162,7 @@ func (job *uploadJob) uploadFile() (result UploadResult, err error) {
 					err = fmt.Errorf("Error uploading a chunk to URL:\n- %v\n%w", url, err)
 					return result, err
 				}
+				log.Println("- number of bytes sent: ", bytesRead)
 			}
 		}
 
@@ -154,11 +170,16 @@ func (job *uploadJob) uploadFile() (result UploadResult, err error) {
 	}
 
 	// complete the upload
+	log.Println("- completing upload...")
 	result, err = job.completeUploadWithRetries()
 	if err != nil {
 		err = fmt.Errorf("Error completing the upload:\n%w", err)
 		return result, err
 	}
+	log.Println("Finished uploading the file:")
+	log.Println("- ObjectId: ", result.ObjectId)
+	log.Println("- Location: ", result.Location)
+	log.Println("- Size: ", result.Size)
 
 	return result, err
 }

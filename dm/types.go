@@ -37,14 +37,18 @@ type ErrorResult struct {
 	Reason string `json:"reason"`
 }
 
+type BucketList []BucketInfo
+
+type BucketInfo struct {
+	BucketKey   string `json:"bucketKey"`
+	CreatedDate int64  `json:"createdDate"`
+	PolicyKey   string `json:"policyKey"`
+}
+
 // ListedBuckets reflects the response when query Data Management API for buckets associated with current Forge secrets.
 type ListedBuckets struct {
-	Items []struct {
-		BucketKey   string `json:"bucketKey"`
-		CreatedDate int64  `json:"createdDate"`
-		PolicyKey   string `json:"policyKey"`
-	} `json:"items"`
-	Next string `json:"next"`
+	Items BucketList `json:"items"`
+	Next  string     `json:"next"`
 }
 
 // ObjectDetails reflects the data presented when uploading an object to a bucket or requesting details on object.
@@ -54,10 +58,10 @@ type ObjectDetails struct {
 	ObjectKey   string            `json:"objectKey"`
 	SHA1        string            `json:"sha1"`
 	Size        uint64            `json:"size"`
-	ContentType string            `json:"contentType, omitempty"`
+	ContentType string            `json:"contentType,omitempty"`
 	Location    string            `json:"location"`
-	BlockSizes  []int64           `json:"blockSizes, omitempty"`
-	Deltas      map[string]string `json:"deltas, omitempty"`
+	BlockSizes  []int64           `json:"blockSizes,omitempty"`
+	Deltas      map[string]string `json:"deltas,omitempty"`
 }
 
 // UploadResult provides the OK/200 result of the completeUpload POST.
@@ -76,7 +80,7 @@ type BucketContent struct {
 	Next  string          `json:"next"`
 }
 
-// signedUploadUrls provides the response from the signedS3UploadEndpoint
+// signedUploadUrls reflects the response from the signedS3UploadEndpoint.
 type signedUploadUrls struct {
 	UploadKey        string    `json:"uploadKey"`
 	UploadExpiration time.Time `json:"uploadExpiration"`
@@ -106,4 +110,16 @@ type uploadJob struct {
 	// uploadKey is the identifier of the upload session, to differentiate multiple attempts to upload data for the same object.
 	// This must be provided when re-requesting chunk URLs for the same blob if they expire, and when calling the Complete Upload endpoint.
 	uploadKey string
+}
+
+// signedDownloadUrl reflects the response from the "signeds3download" endpoint.
+type signedDownloadUrl struct {
+	Status string `json:"status"`
+	Url    string `json:"url"`
+	Params struct {
+		ContentType        string `json:"content-type"`
+		ContentDisposition string `json:"content-disposition"`
+	} `json:"params"`
+	Size int    `json:"size"`
+	Sha1 string `json:"sha1"`
 }
