@@ -4,19 +4,19 @@
 # forge-api-go-client
 
 
-**Forge API:**  
-[![oAuth2](https://img.shields.io/badge/oAuth2-v2-green.svg)](http://developer-autodesk.github.io/)
+**Autodesk Platform Services APIs:**  
+[![oAuth2](https://img.shields.io/badge/oAuth2-v1-green.svg)](http://developer-autodesk.github.io/)
 [![Data-Management](https://img.shields.io/badge/Data%20Management-v1-green.svg)](http://autodesk-forge.github.io/)
 [![OSS](https://img.shields.io/badge/OSS-v2-green.svg)](http://autodesk-forge.github.io/)
 [![Model-Derivative](https://img.shields.io/badge/Model%20Derivative-v2-green.svg)](http://autodesk-forge.github.io/)
 [![Reality-Capture](https://img.shields.io/badge/Reality%20Capture-v1-green.svg)](http://developer-autodesk.github.io/)
 
 
-Golang SDK for building Forge based applications.
+Golang client for building APS based applications (Autodesk Platform Services, formerly *"Forge"*).
 
-This is a fork of the [Golang SDK by Denis Grigor](https://github.com/apprentice3d/forge-api-go-client).
+This is a fork of the [forge-api-go-client by Denis Grigor](https://github.com/apprentice3d/forge-api-go-client).
 
-The SDK has been extended with the following features:
+The client has been extended with the following features:
 
 ### Model Derivative API:
 - Add support for x-ads-headers and advanced translation options.  
@@ -31,5 +31,6 @@ The SDK has been extended with the following features:
   - https://forge.autodesk.com/en/docs/data/v2/reference/http/buckets-:bucketKey-objects-:objectKey-signeds3download-GET/
 
 ## TODO:
+- Update for OAuth V2
 - Add support for regions (US <> EMEA).
 - Update ListBuckets to list all buckets (support paging).
