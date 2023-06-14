@@ -1,8 +1,6 @@
 package oauth_test
 
 import (
-	"fmt"
-	"log"
 	"os"
 	"testing"
 
@@ -49,7 +47,7 @@ func TestTwoLeggedAuthentication(t *testing.T) {
 	t.Run("Invalid scope", func(t *testing.T) {
 		authenticator := oauth.NewTwoLegged(clientID, clientSecret)
 
-		bearer, err := authenticator.GetToken("data:improvise")
+		bearer, err := authenticator.GetToken("data:invalidScopeValue")
 
 		if err == nil {
 			t.Errorf("Expected to fail due to wrong scope, but got %v\n", bearer)
@@ -74,35 +72,4 @@ func TestTwoLeggedAuthentication(t *testing.T) {
 			t.Errorf("expected to not receive a token, but received: %s", bearer.AccessToken)
 		}
 	})
-}
-
-func ExampleTwoLeggedAuth_Authenticate() {
-
-	// acquire Forge secrets from environment
-	clientID := os.Getenv("FORGE_CLIENT_ID")
-	clientSecret := os.Getenv("FORGE_CLIENT_SECRET")
-
-	if len(clientID) == 0 || len(clientSecret) == 0 {
-		log.Fatalf("Could not get from env the Forge secrets")
-	}
-
-	// create oauth client
-	authenticator := oauth.NewTwoLegged(clientID, clientSecret)
-
-	// request a token with needed scopes, separated by spaces
-	bearer, err := authenticator.GetToken("data:read data:write")
-
-	if err != nil || len(bearer.AccessToken) == 0 {
-		log.Fatalf("Could not get from env the Forge secrets")
-	}
-
-	// at this point, the bearer should contain the needed data. Check Bearer struct for more info
-	fmt.Printf("Bearer now contains:\n"+
-		"AccessToken: %s\n"+
-		"TokenType: %s\n"+
-		"Expires in: %d\n",
-		bearer.AccessToken,
-		bearer.TokenType,
-		bearer.ExpiresIn)
-
 }

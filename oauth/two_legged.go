@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -17,31 +17,34 @@ func NewTwoLegged(clientID, clientSecret string) *TwoLeggedAuth {
 			clientID,
 			clientSecret,
 			"https://developer.api.autodesk.com",
-			"/authentication/v1",
+			"/authentication/v2",
 		},
 	}
 }
 
 // GetToken allows getting a token with a given scope
-func (a TwoLeggedAuth) GetToken(scope string) (bearer Bearer, err error) {
+// References:
+// - https://aps.autodesk.com/en/docs/oauth/v2/reference/http/gettoken-POST/ -
+// - https://aps.autodesk.com/en/docs/oauth/v2/tutorials/get-2-legged-token/
+func (a *TwoLeggedAuth) GetToken(scope string) (bearer Bearer, err error) {
 
 	task := http.Client{}
 
 	body := url.Values{}
-	body.Add("client_id", a.ClientID)
-	body.Add("client_secret", a.ClientSecret)
 	body.Add("grant_type", "client_credentials")
 	body.Add("scope", scope)
 
-	req, err := http.NewRequest("POST",
-		a.Host+a.authPath+"/authenticate",
+	req, err := http.NewRequest(
+		"POST",
+		a.Host+a.authPath+"/token",
 		bytes.NewBufferString(body.Encode()),
 	)
-
 	if err != nil {
 		return
 	}
+
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	setBasicAuthHeader(req, a.AuthData)
 	response, err := task.Do(req)
 
 	if err != nil {
@@ -50,7 +53,7 @@ func (a TwoLeggedAuth) GetToken(scope string) (bearer Bearer, err error) {
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		content, _ := ioutil.ReadAll(response.Body)
+		content, _ := io.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}
@@ -61,12 +64,12 @@ func (a TwoLeggedAuth) GetToken(scope string) (bearer Bearer, err error) {
 	return
 }
 
-func (a TwoLeggedAuth) GetRefreshToken() string {
+func (a *TwoLeggedAuth) GetRefreshToken() string {
 	return ""
 }
 
 // GetHostPath returns host path, usually different in case of prd stg and dev environments
-func (a AuthData) GetHostPath() string {
+func (a *AuthData) GetHostPath() string {
 	return a.Host
 }
 

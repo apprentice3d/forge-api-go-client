@@ -8,7 +8,7 @@ import (
 	"github.com/woweh/forge-api-go-client/oauth"
 )
 
-//TODO: set up a pipeline for auto-creating a 3-legged oauth token
+// TODO: set up a pipeline for auto-creating a 3-legged oauth token
 func TestInformation_AboutMe(t *testing.T) {
 
 	//prepare the credentials

@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -18,7 +18,7 @@ func NewThreeLegged(clientID, clientSecret, redirectURI, refreshToken string) *T
 			clientID,
 			clientSecret,
 			"https://developer.api.autodesk.com",
-			"/authentication/v1",
+			"/authentication/v2",
 		},
 		redirectURI,
 		refreshToken,
@@ -26,19 +26,13 @@ func NewThreeLegged(clientID, clientSecret, redirectURI, refreshToken string) *T
 }
 
 // Authorize method returns an URL to redirect an end user, where it will be asked to give his consent for app to
-//access the specified resources.
-//
-// The resources for which the permission is asked are specified as a space-separated list of required scopes.
-// State can be used to specify, as URL-encoded payload, some arbitrary data that the authentication flow will pass back
-// verbatim in a state query parameter to the callback URL.
-//	Note: You do not call this URL directly in your server code.
-//	See the Get a 3-Legged Token tutorial for more information on how to use this endpoint.
-func (a ThreeLeggedAuth) Authorize(scope string, state string) (string, error) {
+// access the specified resources.
+// References:
+// - https://aps.autodesk.com/en/docs/oauth/v2/tutorials/get-3-legged-token/
+// - https://aps.autodesk.com/en/docs/oauth/v2/reference/http/authorize-GET/
+func (a *ThreeLeggedAuth) Authorize(scope, state string) (string, error) {
 
-	request, err := http.NewRequest("GET",
-		a.Host+a.authPath+"/authorize",
-		nil,
-	)
+	request, err := http.NewRequest("GET", a.Host+a.authPath+"/authorize", nil)
 
 	if err != nil {
 		return "", err
@@ -56,41 +50,42 @@ func (a ThreeLeggedAuth) Authorize(scope string, state string) (string, error) {
 	return request.URL.String(), nil
 }
 
+// SetRefreshToken sets the refresh token for the ThreeLeggedAuth instance.
+// Parameter:
+// - refreshtoken: a string representing the refresh token to be set.
 func (a *ThreeLeggedAuth) SetRefreshToken(refreshtoken string) {
 	a.RefreshToken = refreshtoken
 }
 
-//ExchangeCode is used to exchange the authorization code for a token and an exchange token
+// ExchangeCode is used to exchange the authorization code for an access token (and refresh token).
+// References:
+// - https://aps.autodesk.com/en/docs/oauth/v2/tutorials/get-3-legged-token/
+// - https://aps.autodesk.com/en/docs/oauth/v2/reference/http/gettoken-POST/
 func (a *ThreeLeggedAuth) ExchangeCode(code string) (bearer Bearer, err error) {
 
 	task := http.Client{}
 
 	body := url.Values{}
-	body.Add("client_id", a.ClientID)
-	body.Add("client_secret", a.ClientSecret)
 	body.Add("grant_type", "authorization_code")
 	body.Add("code", code)
 	body.Add("redirect_uri", a.RedirectURI)
 
-	req, err := http.NewRequest("POST",
-		a.Host+a.authPath+"/gettoken",
-		bytes.NewBufferString(body.Encode()),
-	)
-
+	req, err := http.NewRequest("POST", a.Host+a.authPath+"/token", bytes.NewBufferString(body.Encode()))
 	if err != nil {
 		return
 	}
+
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	setBasicAuthHeader(req, a.AuthData)
+	req.Header.Set("Accept", "application/json")
 	response, err := task.Do(req)
-
 	if err != nil {
 		return
 	}
-
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		content, _ := ioutil.ReadAll(response.Body)
+		content, _ := io.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}
@@ -105,41 +100,39 @@ func (a *ThreeLeggedAuth) ExchangeCode(code string) (bearer Bearer, err error) {
 
 func (a *ThreeLeggedAuth) GetToken(scope string) (token Bearer, err error) {
 	token, err = a.GetNewRefreshToken(a.RefreshToken, scope)
+	if err != nil {
+		return
+	}
 	a.RefreshToken = token.RefreshToken
 	return
 }
 
 // GetNewRefreshToken is used to get a new access token by using the refresh token provided by ExchangeCode
-func (a ThreeLeggedAuth) GetNewRefreshToken(refreshToken string, scope string) (bearer Bearer, err error) {
+func (a *ThreeLeggedAuth) GetNewRefreshToken(refreshToken string, scope string) (bearer Bearer, err error) {
 
 	task := http.Client{}
 
 	body := url.Values{}
-	body.Add("client_id", a.ClientID)
-	body.Add("client_secret", a.ClientSecret)
 	body.Add("grant_type", "refresh_token")
 	body.Add("refresh_token", refreshToken)
 	body.Add("scope", scope)
 
-	req, err := http.NewRequest("POST",
-		a.Host+a.authPath+"/refreshtoken",
-		bytes.NewBufferString(body.Encode()),
-	)
-
+	req, err := http.NewRequest("POST", a.Host+a.authPath+"/token", bytes.NewBufferString(body.Encode()))
 	if err != nil {
 		return
 	}
+
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	setBasicAuthHeader(req, a.AuthData)
+	req.Header.Set("Accept", "application/json")
 	response, err := task.Do(req)
-
 	if err != nil {
 		return
 	}
-
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		content, _ := ioutil.ReadAll(response.Body)
+		content, _ := io.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}
@@ -149,6 +142,6 @@ func (a ThreeLeggedAuth) GetNewRefreshToken(refreshToken string, scope string) (
 	return
 }
 
-func (a ThreeLeggedAuth) GetRefreshToken() string {
+func (a *ThreeLeggedAuth) GetRefreshToken() string {
 	return a.RefreshToken
 }
