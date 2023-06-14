@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strconv"
 )
@@ -89,7 +89,7 @@ func listObjects(path, bucketKey, limit, beginsWith, startAt, token string) (res
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		content, _ := ioutil.ReadAll(response.Body)
+		content, _ := io.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}
@@ -117,7 +117,7 @@ func getSignedDownloadUrl(path, bucketKey, objectName string, token string) (res
 	if response.StatusCode == http.StatusOK {
 		err = json.NewDecoder(response.Body).Decode(&result)
 	} else {
-		content, _ := ioutil.ReadAll(response.Body)
+		content, _ := io.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 	}
 
@@ -139,12 +139,12 @@ func downloadObjectUsingSignedUrl(s *signedDownloadUrl) (result []byte, err erro
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		content, _ := ioutil.ReadAll(response.Body)
+		content, _ := io.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}
 
-	result, err = ioutil.ReadAll(response.Body)
+	result, err = io.ReadAll(response.Body)
 	if err != nil {
 		return
 	}

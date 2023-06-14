@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strconv"
 
@@ -34,7 +34,8 @@ func (api BucketAPI) CreateBucket(bucketKey, policyKey string) (result BucketDet
 }
 
 // DeleteBucket deletes bucket given its key.
-// 	WARNING: The bucket delete call is undocumented.
+//
+//	WARNING: The bucket delete call is undocumented.
 func (api BucketAPI) DeleteBucket(bucketKey string) error {
 	bearer, err := api.Authenticator.GetToken("bucket:delete")
 	if err != nil {
@@ -90,7 +91,7 @@ func getBucketDetails(path, bucketKey, token string) (result BucketDetails, err 
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		content, _ := ioutil.ReadAll(response.Body)
+		content, _ := io.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}
@@ -131,7 +132,7 @@ func listBuckets(path, region, limit, startAt, token string) (result ListedBucke
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		content, _ := ioutil.ReadAll(response.Body)
+		content, _ := io.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}
@@ -174,7 +175,7 @@ func createBucket(path, bucketKey, policyKey, token string) (result BucketDetail
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		content, _ := ioutil.ReadAll(response.Body)
+		content, _ := io.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}
@@ -203,7 +204,7 @@ func deleteBucket(path, bucketKey, token string) (err error) {
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		content, _ := ioutil.ReadAll(response.Body)
+		content, _ := io.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}
