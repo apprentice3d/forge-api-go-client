@@ -33,7 +33,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -127,7 +126,7 @@ func (job *uploadJob) uploadFile() (result UploadResult, err error) {
 		log.Println("- getting signed URLs...")
 		uploadUrls, err := job.getSignedUploadUrlsWithRetries(firstPart, parts)
 		if err != nil {
-			err = fmt.Errorf("Error getting signed URLs for parts %v-%v :\n%w", firstPart, parts, err)
+			err = fmt.Errorf("error getting signed URLs for parts %v-%v :\n%w", firstPart, parts, err)
 			return result, err
 		}
 
@@ -148,7 +147,7 @@ func (job *uploadJob) uploadFile() (result UploadResult, err error) {
 			bytesRead, err := file.Read(bytesSlice)
 			if err != nil {
 				if err != io.EOF {
-					err = fmt.Errorf("Error reading the file to upload:\n%w", err)
+					err = fmt.Errorf("error reading the file to upload:\n%w", err)
 					return result, err
 				}
 				// EOF reached
@@ -159,7 +158,7 @@ func (job *uploadJob) uploadFile() (result UploadResult, err error) {
 				buffer := bytes.NewBuffer(bytesSlice[:bytesRead])
 				err = uploadChunkWithRetries(url, buffer)
 				if err != nil {
-					err = fmt.Errorf("Error uploading a chunk to URL:\n- %v\n%w", url, err)
+					err = fmt.Errorf("error uploading a chunk to URL:\n- %v\n%w", url, err)
 					return result, err
 				}
 				log.Println("- number of bytes sent: ", bytesRead)
@@ -173,7 +172,7 @@ func (job *uploadJob) uploadFile() (result UploadResult, err error) {
 	log.Println("- completing upload...")
 	result, err = job.completeUploadWithRetries()
 	if err != nil {
-		err = fmt.Errorf("Error completing the upload:\n%w", err)
+		err = fmt.Errorf("error completing the upload:\n%w", err)
 		return result, err
 	}
 	log.Println("Finished uploading the file:")
@@ -268,7 +267,7 @@ func (job *uploadJob) getSignedUploadUrls(firstPart, parts int) (statusCode int,
 	statusCode = response.StatusCode
 
 	if response.StatusCode != http.StatusOK {
-		content, _ := ioutil.ReadAll(response.Body)
+		content, _ := io.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}
@@ -344,7 +343,7 @@ func uploadChunk(signedUrl string, buffer *bytes.Buffer) (statusCode int, err er
 		return
 	}
 
-	content, _ := ioutil.ReadAll(response.Body)
+	content, _ := io.ReadAll(response.Body)
 	err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 
 	return
@@ -425,7 +424,7 @@ func (job *uploadJob) completeUpload() (statusCode int, result UploadResult, err
 	statusCode = response.StatusCode
 
 	if response.StatusCode != http.StatusOK {
-		content, _ := ioutil.ReadAll(response.Body)
+		content, _ := io.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}

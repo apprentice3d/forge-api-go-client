@@ -3,7 +3,7 @@ package md
 import (
 	"encoding/json"
 	"errors"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strconv"
 )
@@ -28,12 +28,12 @@ func getDerivative(path string, urn, derivativeUrn, token string) (result []byte
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		content, _ := ioutil.ReadAll(response.Body)
+		content, _ := io.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}
 
-	result, err = ioutil.ReadAll(response.Body)
+	result, err = io.ReadAll(response.Body)
 
 	return
 }
@@ -54,19 +54,23 @@ type Manifest struct {
 }
 
 type Derivative struct {
-	Name         string `json:"name"`
-	HasThumbnail string `json:"hasThumbnail"`
-	Status       string `json:"status"`
-	Progress     string `json:"progress"`
-	// messages BUG: disable for the time being
-	//Messages     []struct {
-	//	Type string `json:"type"`
-	//	// Message string `json:"message"`
-	//	Code string `json:"code"`
-	//} `json:"messages,omitempty"`
-	OutputType string      `json:"outputType"`
-	Properties *Properties `json:"properties,omitempty"`
-	Children   []Child     `json:"children"`
+	Name         string      `json:"name"`
+	HasThumbnail string      `json:"hasThumbnail"`
+	Status       string      `json:"status"`
+	Progress     string      `json:"progress"`
+	Messages     []Message   `json:"messages,omitempty"`
+	OutputType   string      `json:"outputType"`
+	Properties   *Properties `json:"properties,omitempty"`
+	Children     []Child     `json:"children"`
+}
+
+type Message struct {
+	Type string `json:"type"`
+	Code string `json:"code"`
+	// Message can either be a string, or an array of strings
+	// Use reflection to handle this, for example:
+	// reflect.TypeOf(result.Derivatives[0].Messages[0].Message).Kind() == reflect.String
+	Message interface{} `json:"message,omitempty"`
 }
 
 type Properties struct {
@@ -99,12 +103,7 @@ type Child struct {
 	Camera       []float32 `json:"camera,omitempty"`
 	ModelGUID    *string   `json:"modelGuid,omitempty"`
 	ObjectIDs    []int     `json:"objectIds,omitempty"`
-	// messages BUG: disable for the time being
-	//Messages     []struct {
-	//	Type    string   `json:"type"`
-	//	Message []string `json:"message"`
-	//	Code    string   `json:"code"`
-	//} `json:"messages,omitempty"`
+	Messages     []Message `json:"messages,omitempty"`
 }
 
 func getManifest(path string, urn, token string) (result Manifest, err error) {
@@ -127,7 +126,7 @@ func getManifest(path string, urn, token string) (result Manifest, err error) {
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		content, _ := ioutil.ReadAll(response.Body)
+		content, _ := io.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}
@@ -173,7 +172,7 @@ func getMetadata(path string, urn, token string, xHeaders XAdsHeaders) (result M
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		content, _ := ioutil.ReadAll(response.Body)
+		content, _ := io.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}

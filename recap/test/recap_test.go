@@ -2,7 +2,7 @@ package recap_test
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -181,7 +181,7 @@ func TestReCapAPIWorkflowUsingLocalFiles(t *testing.T) {
 				t.Fatal(err.Error())
 			}
 
-			data, err := ioutil.ReadAll(response.Body)
+			data, err := io.ReadAll(response.Body)
 			response.Body.Close()
 			if err != nil {
 				t.Fatal(err.Error())

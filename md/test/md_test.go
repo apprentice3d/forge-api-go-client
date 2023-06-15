@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
-	"io/ioutil"
 	"os"
+	"reflect"
 	"testing"
 
 	"github.com/woweh/forge-api-go-client/dm"
@@ -24,7 +24,7 @@ func TestAPI_TranslateToSVF(t *testing.T) {
 	tempBucketName := "go_testing_md_bucket"
 	testFilePath := "../../assets/HelloWorld.rvt"
 
-	var testObject dm.ObjectDetails
+	var uploadResult dm.UploadResult
 
 	t.Run("Create a temporary bucket", func(t *testing.T) {
 		_, err := bucketAPI.CreateBucket(tempBucketName, "transient")
@@ -48,25 +48,21 @@ func TestAPI_TranslateToSVF(t *testing.T) {
 			t.Fatal("Cannot open testfile for reading")
 		}
 		defer file.Close()
-		data, err := ioutil.ReadAll(file)
-		if err != nil {
-			t.Fatal("Cannot read the testfile")
-		}
 
-		testObject, err = bucketAPI.UploadObject(tempBucketName, "temp_file.rvt", data)
+		uploadResult, err = bucketAPI.UploadObject(tempBucketName, "temp_file.rvt", testFilePath)
 
 		if err != nil {
 			t.Fatal("Could not upload the test object, got: ", err.Error())
 		}
 
-		if testObject.Size == 0 {
+		if uploadResult.Size == 0 {
 			t.Fatal("The test object was uploaded but it is zero-sized")
 		}
 	})
 
 	t.Run("Translate object into SVF", func(t *testing.T) {
 
-		result, err := mdAPI.TranslateToSVF(testObject.ObjectID)
+		result, err := mdAPI.TranslateToSVF(uploadResult.ObjectId)
 
 		if err != nil {
 			t.Error("Could not translate the test object, got: ", err.Error())
@@ -149,7 +145,7 @@ func TestModelDerivativeAPI_GetManifest(t *testing.T) {
 	tempBucketName := "go_testing_md_bucket"
 	testFilePath := "../../assets/HelloWorld.rvt"
 
-	var testObject dm.ObjectDetails
+	var uploadResult dm.UploadResult
 	var translationResult md.TranslationResult
 
 	t.Run("Create a temporary bucket", func(t *testing.T) {
@@ -173,26 +169,22 @@ func TestModelDerivativeAPI_GetManifest(t *testing.T) {
 		if err != nil {
 			t.Fatal("Cannot open testfile for reading")
 		}
-		defer file.Close()
-		data, err := ioutil.ReadAll(file)
-		if err != nil {
-			t.Fatal("Cannot read the testfile")
-		}
+		file.Close()
 
-		testObject, err = bucketAPI.UploadObject(tempBucketName, "temp_file.rvt", data)
+		uploadResult, err = bucketAPI.UploadObject(tempBucketName, "temp_file.rvt", testFilePath)
 
 		if err != nil {
 			t.Fatal("Could not upload the test object, got: ", err.Error())
 		}
 
-		if testObject.Size == 0 {
+		if uploadResult.Size == 0 {
 			t.Fatal("The test object was uploaded but it is zero-sized")
 		}
 	})
 
 	t.Run("Translate object into SVF", func(t *testing.T) {
 		var err error
-		translationResult, err = mdAPI.TranslateToSVF(testObject.ObjectID)
+		translationResult, err = mdAPI.TranslateToSVF(uploadResult.ObjectId)
 
 		if err != nil {
 			t.Error("Could not translate the test object, got: ", err.Error())
@@ -476,7 +468,20 @@ func TestParseManifest(t *testing.T) {
 			t.Error("Derivative child message should be an error message")
 		}
 
-		if len(decodedManifest.Derivatives[0].Children[0].Messages[2].Message) != 2 {
+		// use reflect to check if the message is an array
+		if reflect.TypeOf(decodedManifest.Derivatives[0].Children[0].Messages[2].Message).Kind() != reflect.Slice {
+			t.Error("Derivative child message should be an array")
+		}
+
+		// assign the message to a variable
+		message := decodedManifest.Derivatives[0].Children[0].Messages[2].Message.([]interface{})
+
+		// check if the message is an array of strings
+		if reflect.TypeOf(message[0]).Kind() != reflect.String {
+			t.Error("Derivative child message should be an array of strings")
+		}
+
+		if len(message) != 2 {
 			t.Error("Derivative child message should contain 2 message descriptions")
 		}
 

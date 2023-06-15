@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strconv"
 
@@ -64,7 +64,7 @@ func (activity *Activity) Delete() (err error) {
 	return
 }
 
-//CreateAlias creates a new alias for this Activity.
+// CreateAlias creates a new alias for this Activity.
 func (activity Activity) CreateAlias(alias string, version uint) (result Alias, err error) {
 	bearer, err := activity.authenticator.GetToken("code:all")
 	if err != nil {
@@ -110,7 +110,7 @@ func createActivity(path string, activity ActivityConfig, token string) (result 
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		content, _ := ioutil.ReadAll(response.Body)
+		content, _ := io.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}
@@ -138,7 +138,7 @@ func deleteActivity(path string, activityId string, token string) (err error) {
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusNoContent {
-		content, _ := ioutil.ReadAll(response.Body)
+		content, _ := io.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}
@@ -166,7 +166,7 @@ func listActivityAliases(path string, activityId, token string) (list AliasesLis
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		content, _ := ioutil.ReadAll(response.Body)
+		content, _ := io.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}
@@ -207,7 +207,7 @@ func createActivityAlias(path, activityId, alias string, version uint, token str
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		content, _ := ioutil.ReadAll(response.Body)
+		content, _ := io.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}
@@ -248,7 +248,7 @@ func modifyActivityAlias(path, activityId, alias string, version uint, token str
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		content, _ := ioutil.ReadAll(response.Body)
+		content, _ := io.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}
@@ -281,7 +281,7 @@ func getActivityAliasDetails(path, activityId, alias, token string) (result Alia
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		content, _ := ioutil.ReadAll(response.Body)
+		content, _ := io.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}
@@ -309,7 +309,7 @@ func deleteActivityAlias(path string, activityId, alias, token string) (err erro
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusNoContent {
-		content, _ := ioutil.ReadAll(response.Body)
+		content, _ := io.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}
@@ -337,7 +337,7 @@ func listActivityVersions(path string, activityId, token string) (list VersionLi
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		content, _ := ioutil.ReadAll(response.Body)
+		content, _ := io.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}
@@ -377,7 +377,7 @@ func createActivityVersion(path, activityId, engine string, token string) (resul
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		content, _ := ioutil.ReadAll(response.Body)
+		content, _ := io.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}
@@ -410,7 +410,7 @@ func getActivityVersionDetails(path, activityId string, version uint, token stri
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		content, _ := ioutil.ReadAll(response.Body)
+		content, _ := io.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}
@@ -438,7 +438,7 @@ func deleteActivityVersion(path, activityId string, version uint, token string) 
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusNoContent {
-		content, _ := ioutil.ReadAll(response.Body)
+		content, _ := io.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}
