@@ -1,8 +1,12 @@
-// Package dm contains the Go wrappers for calls to Data Management API
-// https://developer.autodesk.com/en/docs/data/v2/overview/
-//
-// The API offers the following features:
-//
-//	- Access data from Autodesk SaaS applications;
-//	- Manage and store files from your app on the Forge platform, independent of any Autodesk SaaS application;
+/*
+Package dm provides wrappers for the Data Management V2 REST API.
+https://aps.autodesk.com/data-management-api
+https://aps.autodesk.com/en/docs/data/v2/developers_guide/
+
+At the time of writing (2023/14/06), only the Object Storage Service (OSS) is supported.
+
+The API offers the following features:
+- Create, list, read, update and delete buckets
+- Upload, list and download objects (=> CAD files)
+*/
 package dm
