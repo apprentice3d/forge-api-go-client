@@ -1,11 +1,10 @@
-package md_test
+package md
 
 import (
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
 	"os"
-	"reflect"
 	"testing"
 
 	"github.com/woweh/forge-api-go-client/dm"
@@ -13,7 +12,19 @@ import (
 	"github.com/woweh/forge-api-go-client/oauth"
 )
 
+/*
+NOTE:
+- Buckets can only be deleted by the user who created them.
+  => You might want to change the bucketKey if the bucket already exists.
+
+- A bucketKey (= bucket name) must be globally unique across all applications and regions
+
+- You can only run these tests when you have a valid client ID and secret.
+  => You probably want to run the tests locally, with your own credentials.
+*/
+
 func TestAPI_TranslateToSVF(t *testing.T) {
+
 	// prepare the credentials
 	clientID := os.Getenv("FORGE_CLIENT_ID")
 	clientSecret := os.Getenv("FORGE_CLIENT_SECRET")
@@ -21,16 +32,22 @@ func TestAPI_TranslateToSVF(t *testing.T) {
 	bucketAPI := dm.NewBucketAPI(authenticator)
 	mdAPI := md.NewMDAPI(authenticator)
 
-	tempBucketName := "go_testing_md_bucket"
 	testFilePath := "../../assets/HelloWorld.rvt"
+
+	tempBucketName := "forge_unit_testing_translate_to_svf"
 
 	var uploadResult dm.UploadResult
 
 	t.Run("Create a temporary bucket", func(t *testing.T) {
-		_, err := bucketAPI.CreateBucket(tempBucketName, "transient")
+		if ok, _ := bucketAPI.BucketExists(tempBucketName); ok {
+			// no need to create a new bucket
+			t.Log("The temp bucket already exists.")
+		} else {
+			_, err := bucketAPI.CreateBucket(tempBucketName, "transient")
 
-		if err != nil {
-			t.Errorf("Failed to create a bucket: %s\n", err.Error())
+			if err != nil {
+				t.Errorf("Failed to create a bucket: %s\n", err.Error())
+			}
 		}
 	})
 
@@ -142,8 +159,9 @@ func TestModelDerivativeAPI_GetManifest(t *testing.T) {
 	bucketAPI := dm.NewBucketAPI(authenticator)
 	mdAPI := md.NewMDAPI(authenticator)
 
-	tempBucketName := "go_testing_md_bucket"
 	testFilePath := "../../assets/HelloWorld.rvt"
+
+	tempBucketName := "forge_unit_testing_get_manifest"
 
 	var uploadResult dm.UploadResult
 	var translationResult md.TranslationResult
@@ -468,21 +486,18 @@ func TestParseManifest(t *testing.T) {
 			t.Error("Derivative child message should be an error message")
 		}
 
-		// use reflect to check if the message is an array
-		if reflect.TypeOf(decodedManifest.Derivatives[0].Children[0].Messages[2].Message).Kind() != reflect.Slice {
+		// use type assertion to check if the message is an array and assign it to a variable
+		if msgs, ok := decodedManifest.Derivatives[0].Children[0].Messages[2].Message.([]interface{}); !ok {
 			t.Error("Derivative child message should be an array")
-		}
+		} else {
+			// check if the message is an array of strings
+			if _, ok := msgs[0].(string); !ok {
+				t.Error("Derivative child message should be an array of strings")
+			}
 
-		// assign the message to a variable
-		message := decodedManifest.Derivatives[0].Children[0].Messages[2].Message.([]interface{})
-
-		// check if the message is an array of strings
-		if reflect.TypeOf(message[0]).Kind() != reflect.String {
-			t.Error("Derivative child message should be an array of strings")
-		}
-
-		if len(message) != 2 {
-			t.Error("Derivative child message should contain 2 message descriptions")
+			if len(msgs) != 2 {
+				t.Error("Derivative child message should contain 2 message descriptions")
+			}
 		}
 
 		if decodedManifest.Derivatives[0].Children[0].Children[0].Role != "graphics" {

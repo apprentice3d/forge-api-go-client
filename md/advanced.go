@@ -1,10 +1,8 @@
 package md
 
-// This file provides enums (types and consts) for advanced translation options.
+// This file provides "enums" (= types and consts) for advanced translation options.
 
-/*
-// Revit specific options
-*/type (
+type (
 	// MaterialMode is a Revit specific option that specifies the materials to apply to the generated SVF/SVF2 derivatives.
 	MaterialMode string
 	// Unit is an OBJ specific option for translating models into different units.
@@ -19,7 +17,7 @@ package md
 )
 
 /*
-// Revit specific options
+Revit specific options
 */
 
 const (
@@ -29,7 +27,7 @@ const (
 )
 
 /*
-// OBJ specific options
+OBJ specific options
 */
 
 const (
@@ -53,7 +51,7 @@ const (
 )
 
 /*
-// IFC specific options
+IFC specific options
 */
 
 const (

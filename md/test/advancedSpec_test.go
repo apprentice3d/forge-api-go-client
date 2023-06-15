@@ -158,8 +158,8 @@ func Test_AdvancedSpec_IsEmpty(t *testing.T) {
 	expectedJson := "{\"type\":\"svf2\",\"views\":[\"3d\"]}"
 
 	formatSpec := md.FormatSpec{
-		Type:  "svf2",
-		Views: []string{"3d"},
+		Type:  md.SVF,
+		Views: []md.OutputView{md.View3D},
 	}
 	bytes, _ := json.Marshal(formatSpec)
 	gotJson := string(bytes)

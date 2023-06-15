@@ -8,17 +8,26 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+
+	"github.com/woweh/forge-api-go-client"
 )
 
 // TranslationParams is used when specifying the translation jobs
-// See: https://forge.autodesk.com/en/docs/model-derivative/v2/reference/http/job-POST/
+// See: https://aps.autodesk.com/en/docs/model-derivative/v2/reference/http/jobs/job-POST/#body-structure
 type TranslationParams struct {
-	Input struct {
-		URN           string  `json:"urn"`
-		CompressedURN *bool   `json:"compressedUrn,omitempty"`
-		RootFileName  *string `json:"rootFileName,omitempty"`
-	} `json:"input"`
-	Output OutputSpec `json:"output"`
+	Input  InputSpec  `json:"input"`  // InputSpec is used when specifying the source design
+	Output OutputSpec `json:"output"` // OutputSpec is used when specifying the expected format and views (2d or/and 3d)
+	// TODO: Add misc option
+}
+
+// URN of the source design; This is typically returned when you upload the source design to APS
+//The URN needs to be Base64 (URL Safe) encoded.
+
+type InputSpec struct {
+	URN             string  `json:"urn"` // URN of the source design; This is typically returned when you upload the source design to APS
+	CompressedURN   *bool   `json:"compressedUrn,omitempty"`
+	RootFileName    *string `json:"rootFileName,omitempty"`
+	CheckReferences *bool   `json:"checkReferences,omitempty"`
 }
 
 // TranslationResult reflects data received upon successful creation of translation job
@@ -38,19 +47,51 @@ type OutputSpec struct {
 
 // DestSpec is used within OutputSpecs and is useful when specifying the region for translation results
 type DestSpec struct {
-	Region string `json:"region"` // Region in which to store outputs. Possible values: US, EMEA. By default, it is set to US.
+	Region forge.Region `json:"region"` // Region in which to store outputs. Possible values: US, EMEA. By default, it is set to US.
 }
+
+// OutputType is the requested output type.
+// For a list of supported types, call the [GET formats endpoint].
+// Note that Advanced Options are not supported for all output types.
+// Make sure you specify the correct options for the requested output type.
+// The API has only been tested with the following output types: svf, svf2 and obj
+//
+// [GET formats endpoint]: https://aps.autodesk.com/en/docs/model-derivative/v2/reference/http/informational/formats-GET/
+type OutputType string
+
+const (
+	DWG       OutputType = "dwg"
+	FBX       OutputType = "fbx"
+	IFC       OutputType = "ifc"
+	IGES      OutputType = "iges"
+	OBJ       OutputType = "obj"
+	STEP      OutputType = "step"
+	STL       OutputType = "stl"
+	SVF       OutputType = "svf"
+	SVF2      OutputType = "svf2"
+	Thumbnail OutputType = "thumbnail"
+)
+
+// OutputView - possible values: 2d, 3d
+// Note that some output types have only one possible view.
+// Make sure you specify the correct view for the requested output type.
+type OutputView string
+
+const (
+	View2D OutputView = "2d"
+	View3D OutputView = "3d"
+)
 
 // FormatSpec is used within OutputSpecs and should be used when specifying the expected format and views (2d or/and 3d)
 type FormatSpec struct {
-	Type     string        `json:"type"`               // The requested output types.
-	Views    []string      `json:"views"`              // An Array of the requested views.
+	Type     OutputType    `json:"type"`               // The requested output types.
+	Views    []OutputView  `json:"views"`              // An Array of the requested views.
 	Advanced *AdvancedSpec `json:"advanced,omitempty"` // A set of special options, which you must specify only if the input file type is IFC, Revit, or Navisworks.
 }
 
 // AdvancedSpec is a set of extra translation options.
-// You can specify them if the input file type is IFC, Revit, or Navisworks and the output is SVF/SVF2.
-// You must specify them if the output is OBJ.
+// You *can* specify them if the input file type is IFC, Revit, or Navisworks and the output is SVF/SVF2.
+// You *must* specify them if the output is OBJ.
 type AdvancedSpec struct {
 	// SVF/SVF2 option to be specified when the input file type is _IFC_. Specifies what _IFC_ loader to use during translation.
 	ConversionMethod ConversionMethod `json:"conversionMethod,omitempty"`
@@ -93,7 +134,9 @@ type AdvancedSpec struct {
 }
 
 // translate triggers a translation job with the given TranslationParams and xAdsHeaders.XAdsHeaders.
-func translate(path string, params TranslationParams, xAdsHeaders *XAdsHeaders, token string) (result TranslationResult, err error) {
+func translate(path string, params TranslationParams, xAdsHeaders *XAdsHeaders, token string) (
+	result TranslationResult, err error,
+) {
 
 	byteParams, err := json.Marshal(params)
 	if err != nil {
@@ -101,9 +144,11 @@ func translate(path string, params TranslationParams, xAdsHeaders *XAdsHeaders, 
 		return
 	}
 
-	req, err := http.NewRequest("POST",
+	req, err := http.NewRequest(
+		"POST",
 		path+"/job",
-		bytes.NewBuffer(byteParams))
+		bytes.NewBuffer(byteParams),
+	)
 
 	if err != nil {
 		return

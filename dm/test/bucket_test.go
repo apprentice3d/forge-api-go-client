@@ -4,8 +4,15 @@ import (
 	"testing"
 )
 
-/*  NOTE:
-Since tests are run in parallel, you should use a unique bucketKey per test.
+/*
+NOTE:
+- Buckets can only be deleted by the user who created them.
+  => You might want to change the bucketKey if the bucket already exists.
+
+- A bucketKey (= bucket name) must be globally unique across all applications and regions
+
+- You can only run these tests when you have a valid client ID and secret.
+  => You probably want to run the tests locally, with your own credentials.
 */
 
 func TestBucketAPI_CreateBucket(t *testing.T) {
@@ -21,7 +28,7 @@ func TestBucketAPI_CreateBucket(t *testing.T) {
 
 			err := bucketAPI.DeleteBucket(bucketKey)
 			if err != nil {
-				t.Error("Could not delete temp bucket, got: ", err.Error())
+				t.Fatalf("Failed to delete bucket: %s\n", err.Error())
 			}
 		}
 
@@ -69,7 +76,7 @@ func TestBucketAPI_GetBucketDetails(t *testing.T) {
 
 			err := bucketAPI.DeleteBucket(bucketKey)
 			if err != nil {
-				t.Error("Could not delete temp bucket, got: ", err.Error())
+				t.Fatalf("Failed to delete bucket: %s\n", err.Error())
 			}
 		}
 

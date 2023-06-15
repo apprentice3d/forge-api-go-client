@@ -6,15 +6,22 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
-func getDerivative(path string, urn, derivativeUrn, token string) (result []byte, err error) {
+type derivativeDownloadUrl struct {
+	Etag        string `json:"etag"`
+	Size        int    `json:"size"`
+	Url         string `json:"url"`
+	ContentType string `json:"content-type"`
+	Expiration  int64  `json:"expiration"`
+}
+
+func getDerivative(path, urn, derivativeUrn, token string) (result []byte, err error) {
+
 	task := http.Client{}
 
-	req, err := http.NewRequest("GET",
-		path+"/"+urn+"/manifest/"+derivativeUrn,
-		nil,
-	)
+	req, err := http.NewRequest("GET", path+"/"+urn+"/manifest/"+derivativeUrn+"/signedcookies", nil)
 
 	if err != nil {
 		return
@@ -33,9 +40,53 @@ func getDerivative(path string, urn, derivativeUrn, token string) (result []byte
 		return
 	}
 
-	result, err = io.ReadAll(response.Body)
+	var getUrlResult derivativeDownloadUrl
 
-	return
+	// deserialize the response
+	err = json.NewDecoder(response.Body).Decode(&getUrlResult)
+	if err != nil {
+		return
+	}
+
+	signedCookieValue := strings.Join(response.Header.Values("Set-Cookie"), ";")
+
+	return downloadDerivative(getUrlResult, signedCookieValue)
+}
+
+func downloadDerivative(downloadUrl derivativeDownloadUrl, cookieValue string) (result []byte, err error) {
+
+	task := http.Client{}
+
+	req, err := http.NewRequest("GET", downloadUrl.Url, nil)
+	if err != nil {
+		return
+	}
+
+	req.Header.Set("Cookie", cookieValue)
+	req.Header.Set("Content-Type", downloadUrl.ContentType)
+	req.Header.Set("Content-Length", strconv.Itoa(downloadUrl.Size))
+	response, err := task.Do(req)
+	if err != nil {
+		return
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusOK {
+		content, _ := io.ReadAll(response.Body)
+		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
+		return
+	}
+
+	result, err = io.ReadAll(response.Body)
+	if err != nil {
+		return
+	}
+	if len(result) != downloadUrl.Size {
+		err = errors.New("downloaded file size is different than the expected size")
+		return
+	}
+
+	return result, nil
 }
 
 // BUG: When translating a non-Revit model, the
@@ -70,7 +121,7 @@ type Message struct {
 	// Message can either be a string, or an array of strings
 	// Use reflection to handle this, for example:
 	// reflect.TypeOf(result.Derivatives[0].Messages[0].Message).Kind() == reflect.String
-	Message interface{} `json:"message,omitempty"`
+	Message any `json:"message,omitempty"`
 }
 
 type Properties struct {
@@ -106,13 +157,10 @@ type Child struct {
 	Messages     []Message `json:"messages,omitempty"`
 }
 
-func getManifest(path string, urn, token string) (result Manifest, err error) {
+func getManifest(path, urn, token string) (result Manifest, err error) {
 	task := http.Client{}
 
-	req, err := http.NewRequest("GET",
-		path+"/"+urn+"/manifest",
-		nil,
-	)
+	req, err := http.NewRequest("GET", path+"/"+urn+"/manifest", nil)
 
 	if err != nil {
 		return
@@ -131,8 +179,7 @@ func getManifest(path string, urn, token string) (result Manifest, err error) {
 		return
 	}
 
-	decoder := json.NewDecoder(response.Body)
-	err = decoder.Decode(&result)
+	err = json.NewDecoder(response.Body).Decode(&result)
 
 	return
 }
@@ -149,21 +196,18 @@ type MetadataResponse struct {
 	} `json:"data,omitempty"`
 }
 
-func getMetadata(path string, urn, token string, xHeaders XAdsHeaders) (result MetadataResponse, err error) {
+func getMetadata(path, urn, token string, xHeaders XAdsHeaders) (result MetadataResponse, err error) {
 	task := http.Client{}
 
-	req, err := http.NewRequest("GET",
-		path+"/"+urn+"/metadata",
-		nil,
-	)
+	req, err := http.NewRequest("GET", path+"/"+urn+"/metadata", nil)
 
 	if err != nil {
 		return
 	}
 
 	req.Header.Set("Authorization", "Bearer "+token)
-	req.Header.Add("x-ads-derivative-format", string(xHeaders.Format))
 	req.Header.Add("x-ads-force", strconv.FormatBool(xHeaders.Overwrite))
+	req.Header.Add("x-ads-derivative-format", string(xHeaders.Format))
 
 	response, err := task.Do(req)
 	if err != nil {
@@ -177,42 +221,67 @@ func getMetadata(path string, urn, token string, xHeaders XAdsHeaders) (result M
 		return
 	}
 
-	decoder := json.NewDecoder(response.Body)
-	err = decoder.Decode(&result)
+	err = json.NewDecoder(response.Body).Decode(&result)
 
 	return
 }
 
-/****************************    **********************/
+func getModelViewProperties(path, urn, guid, token string, xHeaders XAdsHeaders) (
+	jsonData []byte, err error,
+) {
+	task := http.Client{}
 
-type LMVManifest struct {
-	Name           string `json:"name"`
-	ToolkitVersion string `json:"toolkitversion"`
-	ADSKID         struct {
-		SourceSystem string `json:"sourcesystem"`
-		Type         string `json:"type"`
-		ID           string `json:"id"`
-		Version      string `json:"version"`
-	} `json:"adskID"`
-	Assets   []Asset   `json:"assets"`
-	Typesets []Typeset `json:"typesets"`
+	req, err := http.NewRequest("GET", path+"/"+urn+"/metadata", nil)
+	if err != nil {
+		return
+	}
+
+	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Add("x-ads-force", strconv.FormatBool(xHeaders.Overwrite))
+	req.Header.Add("x-ads-derivative-format", string(xHeaders.Format))
+
+	response, err := task.Do(req)
+	if err != nil {
+		return
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusOK {
+		content, _ := io.ReadAll(response.Body)
+		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
+		return
+	}
+
+	return io.ReadAll(response.Body)
 }
 
-type Asset struct {
-	ID    string `json:"id"`
-	Type  string `json:"type"`
-	URI   string `json:"URI"`
-	Size  uint64 `json:"size"`
-	USize uint64 `json:"usize"`
-}
+func getObjectTree(path, urn, guid, token string, forceGet bool, xHeaders XAdsHeaders) (
+	jsonData []byte, err error,
+) {
+	task := http.Client{}
 
-type Typeset struct {
-	ID    string `json:"id"`
-	Types []Type `json:"types"`
-}
+	url := path + "/" + urn + "/metadata/" + guid + "?forceget=" + strconv.FormatBool(forceGet)
 
-type Type struct {
-	Class   string `json:"class"`
-	Type    string `json:"type"`
-	Version uint   `json:"version"`
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return
+	}
+
+	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Add("x-ads-force", strconv.FormatBool(xHeaders.Overwrite))
+	req.Header.Add("x-ads-derivative-format", string(xHeaders.Format))
+
+	response, err := task.Do(req)
+	if err != nil {
+		return
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusOK {
+		content, _ := io.ReadAll(response.Body)
+		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
+		return
+	}
+
+	return io.ReadAll(response.Body)
 }
