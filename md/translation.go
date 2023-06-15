@@ -20,14 +20,21 @@ type TranslationParams struct {
 	// TODO: Add misc option
 }
 
-// URN of the source design; This is typically returned when you upload the source design to APS
-//The URN needs to be Base64 (URL Safe) encoded.
-
 type InputSpec struct {
-	URN             string  `json:"urn"` // URN of the source design; This is typically returned when you upload the source design to APS
-	CompressedURN   *bool   `json:"compressedUrn,omitempty"`
-	RootFileName    *string `json:"rootFileName,omitempty"`
-	CheckReferences *bool   `json:"checkReferences,omitempty"`
+	// The URN of the source design. This is typically returned as `ObjectId` when you upload the source design to APS.
+	// The URN needs to be Base64 (URL Safe) encoded.
+	URN string `json:"urn"`
+	// Set this to `true` if the source design is compressed as a zip file.
+	// The design can consist of a single file or as in the case of Autodesk Inventor, multiple files.
+	// If set to `true`, you must specify the rootFilename attribute.
+	CompressedURN *bool `json:"compressedUrn,omitempty"`
+	// The name of the top-level design file in the compressed file.
+	// Mandatory if the compressedUrn is set to true.
+	RootFileName *string `json:"rootFileName,omitempty"`
+	//   - true - Instructs the server to check for references and download all referenced files.
+	// If the design consists of multiple files (as with Autodesk Inventor assemblies) the translation fails if this attribute is not set to true.
+	//   - false - (Default) Does not check for any references.
+	CheckReferences *bool `json:"checkReferences,omitempty"`
 }
 
 // TranslationResult reflects data received upon successful creation of translation job
@@ -144,11 +151,7 @@ func translate(path string, params TranslationParams, xAdsHeaders *XAdsHeaders, 
 		return
 	}
 
-	req, err := http.NewRequest(
-		"POST",
-		path+"/job",
-		bytes.NewBuffer(byteParams),
-	)
+	req, err := http.NewRequest("POST", path+"/job", bytes.NewBuffer(byteParams))
 
 	if err != nil {
 		return

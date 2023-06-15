@@ -90,8 +90,8 @@ type signedUploadUrls struct {
 
 // uploadJob provides information for uploading a file
 type uploadJob struct {
-	// api is the instance of the BucketAPI.
-	api BucketAPI
+	// api is a pointer to an instance of the BucketAPI.
+	api *BucketAPI
 	// bucketKey is the key (= name) of the bucket where the file shall be stored.
 	bucketKey string
 	// objectKey is the key (= name) of the file in the Autodesk cloud (OSS).

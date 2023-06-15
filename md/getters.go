@@ -255,8 +255,21 @@ func getModelViewProperties(path, urn, guid, token string, xHeaders XAdsHeaders)
 	return io.ReadAll(response.Body)
 }
 
+type ObjectTree struct {
+	Data struct {
+		Type    string           `json:"type"`
+		Objects []ObjectTreeNode `json:"objects"`
+	} `json:"data"`
+}
+
+type ObjectTreeNode struct {
+	ObjectId int              `json:"objectid"`
+	Name     string           `json:"name"`
+	Objects  []ObjectTreeNode `json:"objects"`
+}
+
 func getObjectTree(path, urn, guid, token string, forceGet bool, xHeaders XAdsHeaders) (
-	jsonData []byte, err error,
+	result ObjectTree, err error,
 ) {
 	task := http.Client{}
 
@@ -283,5 +296,7 @@ func getObjectTree(path, urn, guid, token string, forceGet bool, xHeaders XAdsHe
 		return
 	}
 
-	return io.ReadAll(response.Body)
+	err = json.NewDecoder(response.Body).Decode(&result)
+
+	return
 }

@@ -29,7 +29,7 @@ func NewBucketAPI(authenticator oauth.ForgeAuthenticator) BucketAPI {
 //   - https://aps.autodesk.com/en/docs/data/v2/reference/http/buckets-POST/
 //
 // Deprecated: Use CreateBucketForRegion instead.
-func (api BucketAPI) CreateBucket(bucketKey, policyKey string) (result BucketDetails, err error) {
+func (api *BucketAPI) CreateBucket(bucketKey, policyKey string) (result BucketDetails, err error) {
 
 	bearer, err := api.Authenticator.GetToken("bucket:create")
 	if err != nil {
@@ -45,7 +45,7 @@ func (api BucketAPI) CreateBucket(bucketKey, policyKey string) (result BucketDet
 //
 // References:
 //   - https://aps.autodesk.com/en/docs/data/v2/reference/http/buckets-POST/
-func (api BucketAPI) CreateBucketForRegion(bucketKey, policyKey string, region forge.Region) (result BucketDetails, err error) {
+func (api *BucketAPI) CreateBucketForRegion(bucketKey, policyKey string, region forge.Region) (result BucketDetails, err error) {
 
 	bearer, err := api.Authenticator.GetToken("bucket:create")
 	if err != nil {
@@ -61,7 +61,7 @@ func (api BucketAPI) CreateBucketForRegion(bucketKey, policyKey string, region f
 //
 // References:
 //   - https://aps.autodesk.com/en/docs/data/v2/reference/http/buckets-:bucketKey-DELETE/
-func (api BucketAPI) DeleteBucket(bucketKey string) error {
+func (api *BucketAPI) DeleteBucket(bucketKey string) error {
 	bearer, err := api.Authenticator.GetToken("bucket:delete")
 	if err != nil {
 		return err
@@ -74,7 +74,7 @@ func (api BucketAPI) DeleteBucket(bucketKey string) error {
 //
 // References:
 //   - https://aps.autodesk.com/en/docs/data/v2/reference/http/buckets-GET/
-func (api BucketAPI) ListBuckets(region, limit, startAt string) (result ListedBuckets, err error) {
+func (api *BucketAPI) ListBuckets(region forge.Region, limit, startAt string) (result ListedBuckets, err error) {
 	bearer, err := api.Authenticator.GetToken("bucket:read")
 	if err != nil {
 		return
@@ -87,7 +87,7 @@ func (api BucketAPI) ListBuckets(region, limit, startAt string) (result ListedBu
 //
 // References:
 //   - https://aps.autodesk.com/en/docs/data/v2/reference/http/buckets-:bucketKey-details-GET/
-func (api BucketAPI) GetBucketDetails(bucketKey string) (result BucketDetails, err error) {
+func (api *BucketAPI) GetBucketDetails(bucketKey string) (result BucketDetails, err error) {
 	bearer, err := api.Authenticator.GetToken("bucket:read")
 	if err != nil {
 		return
@@ -98,7 +98,7 @@ func (api BucketAPI) GetBucketDetails(bucketKey string) (result BucketDetails, e
 
 // BucketExists returns true if the bucket exists, false otherwise.
 // This function calls GetBucketDetails and checks if the bucket key matches.
-func (api BucketAPI) BucketExists(bucketKey string) (exists bool, err error) {
+func (api *BucketAPI) BucketExists(bucketKey string) (exists bool, err error) {
 	bearer, err := api.Authenticator.GetToken("bucket:read")
 	if err != nil {
 		return false, err
@@ -116,7 +116,7 @@ func (api BucketAPI) BucketExists(bucketKey string) (exists bool, err error) {
  */
 
 // getPath gets the full bucket API path (= api.Authenticator.GetHostPath() + api.BucketAPIPath).
-func (api BucketAPI) getPath() string {
+func (api *BucketAPI) getPath() string {
 	return api.Authenticator.GetHostPath() + api.BucketAPIPath
 }
 
@@ -148,7 +148,7 @@ func getBucketDetails(path, bucketKey, token string) (result BucketDetails, err 
 	return
 }
 
-func listBuckets(path, region, limit, startAt, token string) (result ListedBuckets, err error) {
+func listBuckets(path string, region forge.Region, limit, startAt, token string) (result ListedBuckets, err error) {
 	task := http.Client{}
 
 	req, err := http.NewRequest("GET", path, nil)
@@ -159,7 +159,7 @@ func listBuckets(path, region, limit, startAt, token string) (result ListedBucke
 
 	params := req.URL.Query()
 	if len(region) != 0 {
-		params.Add("region", region)
+		params.Add("region", string(region))
 	}
 	if len(limit) != 0 {
 		params.Add("limit", limit)

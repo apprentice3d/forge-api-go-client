@@ -230,14 +230,12 @@ func (a *ModelDerivativeAPI) GetMetadata(urn string, xHeaders XAdsHeaders) (resu
 	return
 }
 
-// GetModelViewProperties returns the properties of the objects in the model view as one big string.
+// GetModelViewProperties returns the properties of the objects in the model view as one json blob.
 //   - You can get the guid (unique model view ID) by using the GetMetadata function.
 //
 // References:
 //   - https://aps.autodesk.com/en/docs/model-derivative/v2/reference/http/metadata/urn-metadata-guid-properties-GET/
-func (a *ModelDerivativeAPI) GetModelViewProperties(urn, guid string, xHeaders XAdsHeaders) (
-	jsonData []byte, err error,
-) {
+func (a *ModelDerivativeAPI) GetModelViewProperties(urn, guid string, xHeaders XAdsHeaders) (jsonData []byte, err error) {
 	bearer, err := a.Authenticator.GetToken("data:read")
 	if err != nil {
 		return
@@ -248,12 +246,10 @@ func (a *ModelDerivativeAPI) GetModelViewProperties(urn, guid string, xHeaders X
 	return getModelViewProperties(path, urn, guid, bearer.AccessToken, xHeaders)
 }
 
-// GetObjectTree returns the object tree of the model view as a JSON string.
+// GetObjectTree returns the object tree of the model view.
 //   - You can get the guid (unique model view ID) by using the GetMetadata function.
-//   - Use forceGet = true to retrieve the object tree even if it exceeds the recommended maximum size (20 MB). The default for forceGet is false.
-func (a *ModelDerivativeAPI) GetObjectTree(urn, guid string, forceGet bool, xHeaders XAdsHeaders) (
-	jsonData []byte, err error,
-) {
+//   - Use forceGet = `true` to retrieve the object tree even if it exceeds the recommended maximum size (20 MB). The default for forceGet is `false`.
+func (a *ModelDerivativeAPI) GetObjectTree(urn, guid string, forceGet bool, xHeaders XAdsHeaders) (result ObjectTree, err error) {
 	bearer, err := a.Authenticator.GetToken("data:read")
 	if err != nil {
 		return
