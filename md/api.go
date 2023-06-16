@@ -16,7 +16,8 @@ type ModelDerivativeAPI struct {
 
 // NewMDAPI returns a Model Derivative API client.
 //
-// NOTE: this uses the US region.
+// NOTE:
+// This uses the default US region.
 //
 // Deprecated: Use NewMdApi instead.
 func NewMDAPI(authenticator oauth.ForgeAuthenticator) ModelDerivativeAPI {
@@ -116,6 +117,8 @@ func (a *ModelDerivativeAPI) NewTranslationParams(
 }
 
 // UrnFromObjectId creates a Base64 (URL Safe) encoded URN from the given objectID.
+//
+// dm.UploadObject will return an objectID that can be used here.
 func UrnFromObjectId(objectID string) string {
 	return base64.RawStdEncoding.EncodeToString([]byte(objectID))
 }
@@ -185,17 +188,34 @@ func (a *ModelDerivativeAPI) TranslateToSVF(objectID string) (result Translation
 	return
 }
 
-// GetManifest returns information about derivatives that correspond to a specific source file,
-// including derivative URNs and translation statuses.
+// GetManifest returns information about derivatives that correspond to a specific source file, including derivative URNs and translation statuses.
+//
+// References:
+//   - https://aps.autodesk.com/en/docs/model-derivative/v2/reference/http/manifest/urn-manifest-GET/
 func (a *ModelDerivativeAPI) GetManifest(urn string) (result Manifest, err error) {
 	bearer, err := a.Authenticator.GetToken("data:read")
 	if err != nil {
 		return
 	}
+
 	path := a.Authenticator.GetHostPath() + a.ModelDerivativePath
 	result, err = getManifest(path, urn, bearer.AccessToken)
 
 	return
+}
+
+// GetPropertiesDatabaseUrn returns the URN of the SQLite properties database from the manifest.
+// If the database URN is not found, an empty string is returned.
+// The database URN is used to download the SQLite properties database using the GetDerivative function.
+func (m *Manifest) GetPropertiesDatabaseUrn() string {
+	for _, derivative := range m.Derivatives {
+		for _, child := range derivative.Children {
+			if child.Role == "Autodesk.CloudPlatform.PropertyDatabase" {
+				return child.URN
+			}
+		}
+	}
+	return ""
 }
 
 // GetDerivative downloads a selected derivative. To download the file, you need to specify the file’s URN, which you retrieve from the manifest.
@@ -217,7 +237,7 @@ func (a *ModelDerivativeAPI) GetDerivative(urn, derivativeUrn string) (jsonData 
 //
 //	NOTE: You can retrieve metadata only from an input file that has been translated to SVF or SVF2.
 //
-// References:
+// Reference:
 //   - https://aps.autodesk.com/en/docs/model-derivative/v2/reference/http/metadata/urn-metadata-GET/
 func (a *ModelDerivativeAPI) GetMetadata(urn string, xHeaders XAdsHeaders) (result MetadataResponse, err error) {
 	bearer, err := a.Authenticator.GetToken("data:read")
@@ -231,11 +251,10 @@ func (a *ModelDerivativeAPI) GetMetadata(urn string, xHeaders XAdsHeaders) (resu
 }
 
 // GetModelViewProperties returns the properties of the objects in the model view as one json blob.
-//   - You can get the guid (unique model view ID) by using the GetMetadata function.
 //
-// References:
+// Reference:
 //   - https://aps.autodesk.com/en/docs/model-derivative/v2/reference/http/metadata/urn-metadata-guid-properties-GET/
-func (a *ModelDerivativeAPI) GetModelViewProperties(urn, guid string, xHeaders XAdsHeaders) (jsonData []byte, err error) {
+func (a *ModelDerivativeAPI) GetModelViewProperties(urn string, xHeaders XAdsHeaders) (jsonData []byte, err error) {
 	bearer, err := a.Authenticator.GetToken("data:read")
 	if err != nil {
 		return
@@ -243,13 +262,18 @@ func (a *ModelDerivativeAPI) GetModelViewProperties(urn, guid string, xHeaders X
 
 	path := a.Authenticator.GetHostPath() + a.ModelDerivativePath
 
-	return getModelViewProperties(path, urn, guid, bearer.AccessToken, xHeaders)
+	return getModelViewProperties(path, urn, bearer.AccessToken, xHeaders)
 }
 
-// GetObjectTree returns the object tree of the model view.
-//   - You can get the guid (unique model view ID) by using the GetMetadata function.
+// GetObjectTree returns a hierarchical list of objects (object tree) in the model view specified by the modelGuid URI parameter.
+//   - You can get the modelGuid (unique model view ID) by using the GetModelViewProperties function.
 //   - Use forceGet = `true` to retrieve the object tree even if it exceeds the recommended maximum size (20 MB). The default for forceGet is `false`.
-func (a *ModelDerivativeAPI) GetObjectTree(urn, guid string, forceGet bool, xHeaders XAdsHeaders) (result ObjectTree, err error) {
+//
+// Reference:
+//   - https://aps.autodesk.com/en/docs/model-derivative/v2/reference/http/metadata/urn-metadata-guid-GET/
+func (a *ModelDerivativeAPI) GetObjectTree(urn, modelGuid string, forceGet bool, xHeaders XAdsHeaders) (
+	result ObjectTree, err error,
+) {
 	bearer, err := a.Authenticator.GetToken("data:read")
 	if err != nil {
 		return
@@ -257,5 +281,5 @@ func (a *ModelDerivativeAPI) GetObjectTree(urn, guid string, forceGet bool, xHea
 
 	path := a.Authenticator.GetHostPath() + a.ModelDerivativePath
 
-	return getObjectTree(path, urn, guid, bearer.AccessToken, forceGet, xHeaders)
+	return getObjectTree(path, urn, modelGuid, bearer.AccessToken, forceGet, xHeaders)
 }

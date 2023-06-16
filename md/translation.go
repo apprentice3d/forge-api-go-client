@@ -12,11 +12,11 @@ import (
 	"github.com/woweh/forge-api-go-client"
 )
 
-// TranslationParams is used when specifying the translation jobs
+// TranslationParams are used when specifying translation jobs.
 // See: https://aps.autodesk.com/en/docs/model-derivative/v2/reference/http/jobs/job-POST/#body-structure
 type TranslationParams struct {
 	Input  InputSpec  `json:"input"`  // InputSpec is used when specifying the source design
-	Output OutputSpec `json:"output"` // OutputSpec is used when specifying the expected format and views (2d or/and 3d)
+	Output OutputSpec `json:"output"` // OutputSpec is used when specifying the expected format and views (2d and/or 3d)
 	// TODO: Add misc option
 }
 
