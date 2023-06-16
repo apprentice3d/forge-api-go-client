@@ -4,6 +4,6 @@ package forge
 type Region string
 
 const (
-	US   Region = "US"
-	EMEA Region = "EMEA"
+	US   Region = "us"
+	EMEA Region = "emea"
 )

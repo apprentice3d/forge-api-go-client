@@ -6,6 +6,7 @@ These tests are meant to test the public API of the md package.
 */
 
 import (
+	"encoding/json"
 	"os"
 	"testing"
 	"time"
@@ -46,10 +47,9 @@ func TestModelDerivativeAPI_HappyPath_AllFunctions_Default_US(t *testing.T) {
 	tempBucketName := "forge_api_go_client_unit_testing_happy_path_default_us"
 
 	var uploadResult dm.UploadResult
-
 	var translationResult md.TranslationResult
-
 	var manifest md.Manifest
+	var masterViewGuid string
 
 	t.Run(
 		"Create a temporary bucket", func(t *testing.T) {
@@ -73,26 +73,26 @@ func TestModelDerivativeAPI_HappyPath_AllFunctions_Default_US(t *testing.T) {
 			_, err := bucketAPI.GetBucketDetails(tempBucketName)
 
 			if err != nil {
-				t.Fatalf("Failed to get bucket details: %s\n", err.Error())
+				t.Errorf("Failed to get bucket details: %s\n", err.Error())
 			}
 		},
 	)
 
 	t.Run(
-		"Upload an object into temp bucket", func(t *testing.T) {
+		"Upload object into bucket", func(t *testing.T) {
 			file, err := os.Open(testFilePath)
 			if err != nil {
-				t.Fatal("Cannot open test file for reading")
+				t.Error("Cannot open test file for reading")
 			}
 			defer file.Close()
 
 			uploadResult, err = bucketAPI.UploadObject(tempBucketName, "temp_file.rvt", testFilePath)
 			if err != nil {
-				t.Fatal("Could not upload the test object, got: ", err.Error())
+				t.Error("Could not upload the test object, got: ", err.Error())
 			}
 
 			if uploadResult.Size == 0 {
-				t.Fatal("The test object was uploaded but it is zero-sized")
+				t.Error("The test object was uploaded but it is zero-sized")
 			}
 		},
 	)
@@ -142,11 +142,11 @@ func TestModelDerivativeAPI_HappyPath_AllFunctions_Default_US(t *testing.T) {
 				case md.StatusSuccess:
 					translating = false
 				case md.StatusFailed:
-					t.Fatal("Translation failed")
+					t.Error("Translation failed")
 				case md.StatusTimeout:
-					t.Fatal("Translation timed out")
+					t.Error("Translation timed out")
 				default:
-					t.Fatalf("Got unexpected status: %s", manifest.Status)
+					t.Errorf("Got unexpected status: %s", manifest.Status)
 				}
 			}
 
@@ -160,13 +160,6 @@ func TestModelDerivativeAPI_HappyPath_AllFunctions_Default_US(t *testing.T) {
 			}
 		},
 	)
-
-	// To test:
-	// - manifest.GetPropertiesDatabaseUrn()
-	// - GetDerivative()
-	// - GetMetadata()
-	// - GetModelViewProperties()
-	// - GetObjectTree()
 
 	t.Run(
 		"Download the properties database URN", func(t *testing.T) {
@@ -183,14 +176,59 @@ func TestModelDerivativeAPI_HappyPath_AllFunctions_Default_US(t *testing.T) {
 	)
 
 	t.Run(
-		"Download the metadata", func(t *testing.T) {
-			metadata, err := mdAPI.GetMetadata(manifest.URN, md.DefaultXAdsHeaders())
+		"Download metadata and get master view GUID", func(t *testing.T) {
+			metaData, err := mdAPI.GetMetadata(manifest.URN, md.DefaultXAdsHeaders())
 			if err != nil {
 				t.Error("Failed to download the metadata, got: ", err.Error())
 			}
 
-			if metadata.Data.Type != "metadata" {
-				t.Error("Expecting 'metadata' result type, got ", metadata.Data.Type)
+			if metaData.Data.Type != "metadata" {
+				t.Error("Expecting 'metadata' result type, got ", metaData.Data.Type)
+			}
+
+			masterViewGuid = metaData.GetMasterModelViewGuid()
+			if masterViewGuid == "" {
+				t.Error("Expecting a non-empty master view GUID")
+			}
+		},
+	)
+
+	t.Run(
+		"Download all properties", func(t *testing.T) {
+			bytes, err := mdAPI.GetModelViewProperties(manifest.URN, masterViewGuid, md.DefaultXAdsHeaders())
+			if err != nil {
+				t.Error("Failed to download the properties, got: ", err.Error())
+			}
+
+			if len(bytes) == 0 {
+				t.Error("Properties data (byte array) empty")
+			}
+
+			// convert the bytes to JSON
+			jsonProperties, err := json.Marshal(string(bytes))
+			if err != nil {
+				t.Error("Failed to convert the properties to JSON, got: ", err.Error())
+			}
+
+			if len(jsonProperties) == 0 {
+				t.Error("Properties data (JSON) empty")
+			}
+		},
+	)
+
+	t.Run(
+		"Download object tree", func(t *testing.T) {
+			tree, err := mdAPI.GetObjectTree(manifest.URN, masterViewGuid, true, md.DefaultXAdsHeaders())
+			if err != nil {
+				t.Error("Failed to download the object tree, got: ", err.Error())
+			}
+
+			if tree.Data.Type != "objects" {
+				t.Error("Expecting 'objects' result type, got ", tree.Data.Type)
+			}
+
+			if len(tree.Data.Objects) == 0 {
+				t.Error("Object tree is empty")
 			}
 		},
 	)
@@ -201,7 +239,7 @@ func TestModelDerivativeAPI_HappyPath_AllFunctions_Default_US(t *testing.T) {
 				t.Log("Try to delete the temporary bucket...")
 				err := bucketAPI.DeleteBucket(tempBucketName)
 				if err != nil {
-					t.Fatalf("Failed to delete bucket: %s\n", err.Error())
+					t.Errorf("Failed to delete bucket: %s\n", err.Error())
 				}
 			}
 

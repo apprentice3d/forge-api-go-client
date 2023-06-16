@@ -84,7 +84,7 @@ var TranslationSVFPreset = TranslationParams{
 		Formats: []FormatSpec{
 			{
 				Type:  SVF,
-				Views: []OutputView{View2D, View3D},
+				Views: []ViewType{View2D, View3D},
 			},
 		},
 	},
@@ -97,7 +97,7 @@ var TranslationSVFPreset = TranslationParams{
 // Make sure to use the correct views and advanced options for the given outputType.
 // There are no checks for this.
 func (a *ModelDerivativeAPI) NewTranslationParams(
-	urn string, outputType OutputType, views []OutputView, advanced *AdvancedSpec,
+	urn string, outputType OutputType, views []ViewType, advanced *AdvancedSpec,
 ) TranslationParams {
 	return TranslationParams{
 		Input: InputSpec{
@@ -239,7 +239,7 @@ func (a *ModelDerivativeAPI) GetDerivative(urn, derivativeUrn string) (jsonData 
 //
 // Reference:
 //   - https://aps.autodesk.com/en/docs/model-derivative/v2/reference/http/metadata/urn-metadata-GET/
-func (a *ModelDerivativeAPI) GetMetadata(urn string, xHeaders XAdsHeaders) (result MetadataResponse, err error) {
+func (a *ModelDerivativeAPI) GetMetadata(urn string, xHeaders XAdsHeaders) (result MetaData, err error) {
 	bearer, err := a.Authenticator.GetToken("data:read")
 	if err != nil {
 		return
@@ -250,11 +250,41 @@ func (a *ModelDerivativeAPI) GetMetadata(urn string, xHeaders XAdsHeaders) (resu
 	return
 }
 
-// GetModelViewProperties returns the properties of the objects in the model view as one json blob.
+// GetMasterModelViewGuid returns the GUID of the master view.
+// If no master view is found, the GUID of the first 3D view is returned.
+// If no 3D view is found, an empty string is returned.
+func (m *MetaData) GetMasterModelViewGuid() string {
+	// 1st look for the master view
+	for _, view := range m.Data.Views {
+		if view.IsMasterView {
+			return view.Guid
+		}
+	}
+	// else return the first 3d view
+	for _, view := range m.Data.Views {
+		if view.Role == View3D {
+			return view.Guid
+		}
+	}
+	return ""
+}
+
+// GetModelViewProperties returns a list of all properties of all objects that are displayed in the model view specified by the modelGuid URI parameter.
+//
+// Properties are returned as a flat list ordered, by their `objectId`.
+// The `objectId` is a non-persistent ID assigned to an object when a design file is translated to the SVF or SVF2 format.
+// This means that:
+//   - A design file must be translated to SVF or SVF2 before you can retrieve properties.
+//   - The `objectId` of an object can change if the design is translated to SVF or SVF2 again. If you require a persistent ID to reference an object, use externalId.
+//
+// Note: Before you call this endpoint:
+//   - Get the modelGuid (unique model view ID) by using the GetModelViewProperties function.
 //
 // Reference:
 //   - https://aps.autodesk.com/en/docs/model-derivative/v2/reference/http/metadata/urn-metadata-guid-properties-GET/
-func (a *ModelDerivativeAPI) GetModelViewProperties(urn string, xHeaders XAdsHeaders) (jsonData []byte, err error) {
+func (a *ModelDerivativeAPI) GetModelViewProperties(urn, modelGuid string, xHeaders XAdsHeaders) (
+	jsonData []byte, err error,
+) {
 	bearer, err := a.Authenticator.GetToken("data:read")
 	if err != nil {
 		return
@@ -262,12 +292,15 @@ func (a *ModelDerivativeAPI) GetModelViewProperties(urn string, xHeaders XAdsHea
 
 	path := a.Authenticator.GetHostPath() + a.ModelDerivativePath
 
-	return getModelViewProperties(path, urn, bearer.AccessToken, xHeaders)
+	return getModelViewProperties(path, urn, modelGuid, bearer.AccessToken, xHeaders)
 }
 
 // GetObjectTree returns a hierarchical list of objects (object tree) in the model view specified by the modelGuid URI parameter.
-//   - You can get the modelGuid (unique model view ID) by using the GetModelViewProperties function.
-//   - Use forceGet = `true` to retrieve the object tree even if it exceeds the recommended maximum size (20 MB). The default for forceGet is `false`.
+//
+// Note: Before you call this endpoint:
+//   - Get the modelGuid (unique model view ID) by using the GetModelViewProperties function.
+//
+// Use forceGet = `true` to retrieve the object tree even if it exceeds the recommended maximum size (20 MB). The default for forceGet is `false`.
 //
 // Reference:
 //   - https://aps.autodesk.com/en/docs/model-derivative/v2/reference/http/metadata/urn-metadata-guid-GET/

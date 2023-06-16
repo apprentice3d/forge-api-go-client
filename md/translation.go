@@ -79,20 +79,20 @@ const (
 	Thumbnail OutputType = "thumbnail"
 )
 
-// OutputView - possible values: 2d, 3d
+// ViewType - possible values: 2d, 3d
 // Note that some output types have only one possible view.
 // Make sure you specify the correct view for the requested output type.
-type OutputView string
+type ViewType string
 
 const (
-	View2D OutputView = "2d"
-	View3D OutputView = "3d"
+	View2D ViewType = "2d"
+	View3D ViewType = "3d"
 )
 
 // FormatSpec is used within OutputSpecs and should be used when specifying the expected format and views (2d or/and 3d)
 type FormatSpec struct {
 	Type     OutputType    `json:"type"`               // The requested output types.
-	Views    []OutputView  `json:"views"`              // An Array of the requested views.
+	Views    []ViewType    `json:"views"`              // An Array of the requested views.
 	Advanced *AdvancedSpec `json:"advanced,omitempty"` // A set of special options, which you must specify only if the input file type is IFC, Revit, or Navisworks.
 }
 

@@ -31,14 +31,18 @@ func Test_IfcAdvancedSpec_Json(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			advancedSpec := md.IfcAdvancedSpec(tt.args.conversionMethod, tt.args.storeys, tt.args.spaces, tt.args.openings)
-			bytes, _ := json.Marshal(advancedSpec)
-			gotJson := string(bytes)
-			if gotJson != tt.want {
-				t.Errorf("IfcAdvancedSpec() json = %v, want %v", gotJson, tt.want)
-			}
-		})
+		t.Run(
+			tt.name, func(t *testing.T) {
+				advancedSpec := md.IfcAdvancedSpec(
+					tt.args.conversionMethod, tt.args.storeys, tt.args.spaces, tt.args.openings,
+				)
+				bytes, _ := json.Marshal(advancedSpec)
+				gotJson := string(bytes)
+				if gotJson != tt.want {
+					t.Errorf("IfcAdvancedSpec() json = %v, want %v", gotJson, tt.want)
+				}
+			},
+		)
 	}
 }
 
@@ -64,14 +68,16 @@ func Test_RevitAdvancedSpec_Json(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			advancedSpec := md.RevitAdvancedSpec(&tt.args.generateMasterViews, tt.args.materialMode)
-			bytes, _ := json.Marshal(advancedSpec)
-			gotJson := string(bytes)
-			if gotJson != tt.want {
-				t.Errorf("RevitAdvancedSpec() json = %v, want %v", gotJson, tt.want)
-			}
-		})
+		t.Run(
+			tt.name, func(t *testing.T) {
+				advancedSpec := md.RevitAdvancedSpec(&tt.args.generateMasterViews, tt.args.materialMode)
+				bytes, _ := json.Marshal(advancedSpec)
+				gotJson := string(bytes)
+				if gotJson != tt.want {
+					t.Errorf("RevitAdvancedSpec() json = %v, want %v", gotJson, tt.want)
+				}
+			},
+		)
 	}
 }
 
@@ -106,14 +112,19 @@ func TestNavisworksAdvancedSpec(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			advancedSpec := md.NavisworksAdvancedSpec(tt.args.hiddenObjects, tt.args.basicMaterialProperties, tt.args.autodeskMaterialProperties, tt.args.timeLinerProperties)
-			bytes, _ := json.Marshal(advancedSpec)
-			gotJson := string(bytes)
-			if gotJson != tt.want {
-				t.Errorf("NavisworksAdvancedSpec() json = %v, want %v", gotJson, tt.want)
-			}
-		})
+		t.Run(
+			tt.name, func(t *testing.T) {
+				advancedSpec := md.NavisworksAdvancedSpec(
+					tt.args.hiddenObjects, tt.args.basicMaterialProperties, tt.args.autodeskMaterialProperties,
+					tt.args.timeLinerProperties,
+				)
+				bytes, _ := json.Marshal(advancedSpec)
+				gotJson := string(bytes)
+				if gotJson != tt.want {
+					t.Errorf("NavisworksAdvancedSpec() json = %v, want %v", gotJson, tt.want)
+				}
+			},
+		)
 	}
 }
 
@@ -131,7 +142,9 @@ func Test_ObjAdvancedSpec_Json(t *testing.T) {
 	}{
 		{
 			name: "All params are filled in",
-			args: args{exportFileStructure: md.Single, unit: md.Meter, modelGuid: "justSomeGuid", objectIds: []int{1, 2, 3}},
+			args: args{
+				exportFileStructure: md.Single, unit: md.Meter, modelGuid: "justSomeGuid", objectIds: []int{1, 2, 3},
+			},
 			want: "{\"exportFileStructure\":\"single\",\"unit\":\"meter\",\"modelGuid\":\"justSomeGuid\",\"objectIds\":[1,2,3]}",
 		},
 		{
@@ -141,14 +154,18 @@ func Test_ObjAdvancedSpec_Json(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			advancedSpec := md.ObjAdvancedSpec(tt.args.exportFileStructure, tt.args.unit, tt.args.modelGuid, &tt.args.objectIds)
-			bytes, _ := json.Marshal(advancedSpec)
-			gotJson := string(bytes)
-			if gotJson != tt.want {
-				t.Errorf("ObjAdvancedSpec() json = %v, want %v", gotJson, tt.want)
-			}
-		})
+		t.Run(
+			tt.name, func(t *testing.T) {
+				advancedSpec := md.ObjAdvancedSpec(
+					tt.args.exportFileStructure, tt.args.unit, tt.args.modelGuid, &tt.args.objectIds,
+				)
+				bytes, _ := json.Marshal(advancedSpec)
+				gotJson := string(bytes)
+				if gotJson != tt.want {
+					t.Errorf("ObjAdvancedSpec() json = %v, want %v", gotJson, tt.want)
+				}
+			},
+		)
 	}
 }
 
@@ -158,8 +175,8 @@ func Test_AdvancedSpec_IsEmpty(t *testing.T) {
 	expectedJson := "{\"type\":\"svf2\",\"views\":[\"3d\"]}"
 
 	formatSpec := md.FormatSpec{
-		Type:  md.SVF,
-		Views: []md.OutputView{md.View3D},
+		Type:  md.SVF2,
+		Views: []md.ViewType{md.View3D},
 	}
 	bytes, _ := json.Marshal(formatSpec)
 	gotJson := string(bytes)
