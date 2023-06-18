@@ -10,13 +10,14 @@ import (
 	"encoding/json"
 	"testing"
 
+	"github.com/woweh/forge-api-go-client"
 	"github.com/woweh/forge-api-go-client/md"
 )
 
-func TestAPI_TranslationSVFPreset_JSON_Creation(t *testing.T) {
+func TestAPI_DefaultTranslationParams_JSON_Creation(t *testing.T) {
 
-	params := md.TranslationSVFPreset
-	params.Input.URN = md.UrnFromObjectId("just a test urn")
+	mdApi := md.NewMdApi(nil, forge.US)
+	params := mdApi.DefaultTranslationParams("just a test urn")
 
 	output, err := json.Marshal(&params)
 	if err != nil {
@@ -637,7 +638,7 @@ func TestParseManifest(t *testing.T) {
                     "role": "3d",
                     "name": "{3D}",
                     "viewableID": "a4646655-27fa-4fcc-b2cb-1c97f89f1e9b-00031929",
-                    "phaseNames": "New Construction",
+                    "phaseNames": "NewMdApi Construction",
                     "status": "success",
                     "hasThumbnail": "true",
                     "progress": "complete",

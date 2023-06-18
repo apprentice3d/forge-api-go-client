@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"log"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 type MetaData struct {
@@ -35,11 +37,15 @@ type ObjectTreeNode struct {
 	Objects  []ObjectTreeNode `json:"objects"`
 }
 
+const (
+	timeToWait = time.Duration(5) * time.Second
+	maxRetries = 12 * 5 // => 5 minutes max
+)
+
 func getMetadata(path, urn, token string, xHeaders XAdsHeaders) (result MetaData, err error) {
 	task := http.Client{}
 
 	req, err := http.NewRequest("GET", path+"/"+urn+"/metadata", nil)
-
 	if err != nil {
 		return
 	}
@@ -48,11 +54,17 @@ func getMetadata(path, urn, token string, xHeaders XAdsHeaders) (result MetaData
 	req.Header.Add("x-ads-force", strconv.FormatBool(xHeaders.Overwrite))
 	req.Header.Add("x-ads-derivative-format", string(xHeaders.Format))
 
+	log.Println("Requesting metadata...")
+	log.Println("- Base64  encoded design URN: ", urn)
+	log.Println("- URL: ", req.URL.String())
+
 	response, err := task.Do(req)
 	if err != nil {
 		return
 	}
 	defer response.Body.Close()
+
+	log.Println("Response status code: ", response.StatusCode)
 
 	if response.StatusCode != http.StatusOK {
 		content, _ := io.ReadAll(response.Body)
@@ -68,6 +80,10 @@ func getMetadata(path, urn, token string, xHeaders XAdsHeaders) (result MetaData
 func getObjectTree(path, urn, modelGuid, token string, forceGet bool, xHeaders XAdsHeaders) (
 	result ObjectTree, err error,
 ) {
+	// retry logic, not very elegant but it works
+	tries := 0
+retry:
+	tries++
 	task := http.Client{}
 
 	url := path + "/" + urn + "/metadata/" + modelGuid + "?forceget=" + strconv.FormatBool(forceGet)
@@ -81,13 +97,27 @@ func getObjectTree(path, urn, modelGuid, token string, forceGet bool, xHeaders X
 	req.Header.Add("x-ads-force", strconv.FormatBool(xHeaders.Overwrite))
 	req.Header.Add("x-ads-derivative-format", string(xHeaders.Format))
 
+	log.Println("Requesting object tree...")
+	log.Println("- Base64  encoded design URN: ", urn)
+	log.Println("- Unique model view ID: ", modelGuid)
+	log.Println("- URL: ", req.URL.String())
+
 	response, err := task.Do(req)
 	if err != nil {
 		return
 	}
 	defer response.Body.Close()
 
-	if response.StatusCode != http.StatusOK {
+	log.Println("Response status code: ", response.StatusCode)
+
+	if response.StatusCode == http.StatusAccepted {
+		// 202 Accepted => the request has been accepted for processing, but the processing has not been completed.
+		if tries < maxRetries {
+			log.Println("=> retry number: ", tries)
+			time.Sleep(timeToWait)
+			goto retry
+		}
+	} else if response.StatusCode != http.StatusOK {
 		content, _ := io.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
@@ -101,6 +131,11 @@ func getObjectTree(path, urn, modelGuid, token string, forceGet bool, xHeaders X
 func getModelViewProperties(path, urn, modelGuid, token string, xHeaders XAdsHeaders) (
 	jsonData []byte, err error,
 ) {
+
+	// retry logic, not very elegant but it works
+	tries := 0
+retry:
+	tries++
 	task := http.Client{}
 
 	req, err := http.NewRequest("GET", path+"/"+urn+"/metadata/"+modelGuid+"/properties", nil)
@@ -112,13 +147,27 @@ func getModelViewProperties(path, urn, modelGuid, token string, xHeaders XAdsHea
 	req.Header.Add("x-ads-force", strconv.FormatBool(xHeaders.Overwrite))
 	req.Header.Add("x-ads-derivative-format", string(xHeaders.Format))
 
+	log.Println("Requesting all properties...")
+	log.Println("- Base64  encoded design URN: ", urn)
+	log.Println("- Unique model view ID: ", modelGuid)
+	log.Println("- URL: ", req.URL.String())
+
 	response, err := task.Do(req)
 	if err != nil {
 		return
 	}
 	defer response.Body.Close()
 
-	if response.StatusCode != http.StatusOK {
+	log.Println("Response status code: ", response.StatusCode)
+
+	if response.StatusCode == http.StatusAccepted {
+		// 202 Accepted => the request has been accepted for processing, but the processing has not been completed.
+		if tries < maxRetries {
+			log.Println("=> retry number: ", tries)
+			time.Sleep(timeToWait)
+			goto retry
+		}
+	} else if response.StatusCode != http.StatusOK {
 		content, _ := io.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return

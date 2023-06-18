@@ -21,18 +21,18 @@ type XAdsHeaders struct {
 //   - overwrite  =>  x-ads-force header;
 //     Possible values are: false or true
 func NewXAdsHeaders(format DerivativeFormat, overwrite bool) XAdsHeaders {
-	xAdsHeaders := XAdsHeaders{}
-	xAdsHeaders.Format = format
-	xAdsHeaders.Overwrite = overwrite
-	return xAdsHeaders
+	return XAdsHeaders{
+		Format:    format,
+		Overwrite: overwrite,
+	}
 }
 
-// DefaultXAdsHeaders gets XAdsHeaders with default values
+// DefaultXAdsHeaders gets XAdsHeaders with default values (Format: Latest, Overwrite: false).
 func DefaultXAdsHeaders() XAdsHeaders {
-	xHeaders := XAdsHeaders{}
-	xHeaders.Format = Latest
-	xHeaders.Overwrite = false
-	return xHeaders
+	return XAdsHeaders{
+		Format:    Latest,
+		Overwrite: false,
+	}
 }
 
 // DerivativeFormat indicates the value for the xAdsHeaders.Format

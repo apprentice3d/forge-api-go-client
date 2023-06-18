@@ -22,7 +22,6 @@ func getDerivative(path, urn, derivativeUrn, token string) (result []byte, err e
 	task := http.Client{}
 
 	req, err := http.NewRequest("GET", path+"/"+urn+"/manifest/"+derivativeUrn+"/signedcookies", nil)
-
 	if err != nil {
 		return
 	}

@@ -1,6 +1,6 @@
 package md
 
-// This file provides "enums" (= types and consts) for advanced translation options.
+// This file provides "enums" (= types and consts) and factory functions for advanced translation options.
 
 type (
 	// MaterialMode is a Revit specific option that specifies the materials to apply to the generated SVF/SVF2 derivatives.
@@ -65,3 +65,50 @@ const (
 	Show Option = "show" // elements are extracted and are visible by default.
 	Skip Option = "skip" // elements are not translated.
 )
+
+// IfcAdvancedSpec returns an IFC specific AdvancedSpec.
+//
+//	NOTE:
+//
+// The storeys, spaces, and openings options are applicable only when conversionMethod is set to `modern` or `v3`.
+func IfcAdvancedSpec(conversionMethod ConversionMethod, storeys, spaces, openings Option) *AdvancedSpec {
+	if conversionMethod == Legacy {
+		return &AdvancedSpec{ConversionMethod: conversionMethod}
+	}
+	return &AdvancedSpec{
+		ConversionMethod: conversionMethod,
+		BuildingStoreys:  storeys,
+		Spaces:           spaces,
+		OpeningElements:  openings,
+	}
+}
+
+// RevitAdvancedSpec returns a Revit specific AdvancedSpec.
+func RevitAdvancedSpec(generateMasterViews bool, materialMode MaterialMode) *AdvancedSpec {
+	return &AdvancedSpec{
+		GenerateMasterViews: &generateMasterViews,
+		MaterialMode:        materialMode,
+	}
+}
+
+// NavisworksAdvancedSpec returns a Navisworks specific AdvancedSpec.
+func NavisworksAdvancedSpec(hiddenObjects, basicMaterialProperties, autodeskMaterialProperties, timeLinerProperties bool) *AdvancedSpec {
+	return &AdvancedSpec{
+		HiddenObjects:              &hiddenObjects,
+		BasicMaterialProperties:    &basicMaterialProperties,
+		AutodeskMaterialProperties: &autodeskMaterialProperties,
+		TimeLinerProperties:        &timeLinerProperties,
+	}
+}
+
+// ObjAdvancedSpec returns a OBJ specific AdvancedSpec.
+func ObjAdvancedSpec(
+	exportFileStructure ExportFileStructure, unit Unit, modelGuid string, objectIds *[]int,
+) *AdvancedSpec {
+	return &AdvancedSpec{
+		ExportFileStructure: exportFileStructure,
+		Unit:                unit,
+		ModelGuid:           modelGuid,
+		ObjectIds:           objectIds,
+	}
+}

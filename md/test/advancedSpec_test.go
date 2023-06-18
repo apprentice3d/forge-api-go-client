@@ -70,7 +70,7 @@ func Test_RevitAdvancedSpec_Json(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(
 			tt.name, func(t *testing.T) {
-				advancedSpec := md.RevitAdvancedSpec(&tt.args.generateMasterViews, tt.args.materialMode)
+				advancedSpec := md.RevitAdvancedSpec(tt.args.generateMasterViews, tt.args.materialMode)
 				bytes, _ := json.Marshal(advancedSpec)
 				gotJson := string(bytes)
 				if gotJson != tt.want {
@@ -83,13 +83,11 @@ func Test_RevitAdvancedSpec_Json(t *testing.T) {
 
 func TestNavisworksAdvancedSpec(t *testing.T) {
 	type args struct {
-		hiddenObjects              *bool
-		basicMaterialProperties    *bool
-		autodeskMaterialProperties *bool
-		timeLinerProperties        *bool
+		hiddenObjects              bool
+		basicMaterialProperties    bool
+		autodeskMaterialProperties bool
+		timeLinerProperties        bool
 	}
-	trueValue := true
-	falseValue := false
 	tests := []struct {
 		name string
 		args args
@@ -97,17 +95,17 @@ func TestNavisworksAdvancedSpec(t *testing.T) {
 	}{
 		{
 			name: "All params are filled in",
-			args: args{&trueValue, &falseValue, &trueValue, &falseValue},
+			args: args{true, false, true, false},
 			want: "{\"hiddenObjects\":true,\"basicMaterialProperties\":false,\"autodeskMaterialProperties\":true,\"timelinerProperties\":false}",
 		},
 		{
 			name: "Only hiddenObjects parameter",
-			args: args{&trueValue, nil, nil, nil},
+			args: args{true, false, false, false},
 			want: "{\"hiddenObjects\":true}",
 		},
 		{
 			name: "Only hiddenObjects and timelinerProperties parameters",
-			args: args{&trueValue, nil, nil, &falseValue},
+			args: args{true, false, false, false},
 			want: "{\"hiddenObjects\":true,\"timelinerProperties\":false}",
 		},
 	}

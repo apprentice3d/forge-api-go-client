@@ -64,7 +64,7 @@ var (
 	defaultChunkSize = int64(100 * megaByte)
 )
 
-func newUploadJob(api *BucketAPI, bucketKey, objectName, fileToUpload string) (job uploadJob, err error) {
+func newUploadJob(api *OssAPI, bucketKey, objectName, fileToUpload string) (job uploadJob, err error) {
 
 	fileInfo, err := os.Stat(fileToUpload)
 	if err != nil {
@@ -88,7 +88,7 @@ func newUploadJob(api *BucketAPI, bucketKey, objectName, fileToUpload string) (j
 		uploadKey:         "",
 	}
 
-	log.Println("New upload job:")
+	log.Println("NewOssApi upload job:")
 	log.Println("- bucketKey:", bucketKey)
 	log.Println("- objectName:", objectName)
 	log.Println("- fileToUpload:", fileToUpload)
@@ -445,7 +445,9 @@ func addOrSetHeader(req *http.Request, key, value string) {
 func (job *uploadJob) getSignedS3UploadPath() string {
 	// https://developer.api.autodesk.com/oss/v2/buckets/:bucketKey/objects/:objectKey/signeds3upload
 	// :bucketKey/objects/:objectKey/signeds3upload
-	return job.api.Authenticator.GetHostPath() + path.Join(job.api.BucketAPIPath, job.bucketKey, "objects", job.objectKey, signedS3UploadEndpoint)
+	return job.api.Authenticator.GetHostPath() + path.Join(
+		job.api.BucketApiPath, job.bucketKey, "objects", job.objectKey, signedS3UploadEndpoint,
+	)
 }
 
 func (job *uploadJob) authenticate() (accessToken string, err error) {

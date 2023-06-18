@@ -12,47 +12,28 @@ import (
 	"github.com/woweh/forge-api-go-client/oauth"
 )
 
-// NewBucketAPI returns a Bucket API client with default configurations and populates the BucketAPIPath.
-func NewBucketAPI(authenticator oauth.ForgeAuthenticator) BucketAPI {
-	return BucketAPI{
-		authenticator,
-		"/oss/v2/buckets",
+// NewOssApi returns an OSS API client with default configurations and populates the BucketApiPath.
+func NewOssApi(authenticator oauth.ForgeAuthenticator, region forge.Region) OssAPI {
+	return OssAPI{
+		Authenticator: authenticator,
+		BucketApiPath: "/oss/v2/buckets",
+		Region:        region,
 	}
 }
 
 // CreateBucket creates and returns details of created bucket, or an error on failure.
-//
-// This method uses the default region (US).
-// Use CreateBucketForRegion to specify a region (> EMEA).
+// The region is taken from the OssAPI instance.
 //
 // References:
 //   - https://aps.autodesk.com/en/docs/data/v2/reference/http/buckets-POST/
-//
-// Deprecated: Use CreateBucketForRegion instead.
-func (api *BucketAPI) CreateBucket(bucketKey, policyKey string) (result BucketDetails, err error) {
+func (api *OssAPI) CreateBucket(bucketKey, policyKey string) (result BucketDetails, err error) {
 
 	bearer, err := api.Authenticator.GetToken("bucket:create")
 	if err != nil {
 		return
 	}
 
-	result, err = createBucket(api.getPath(), bucketKey, policyKey, bearer.AccessToken, forge.US)
-
-	return
-}
-
-// CreateBucket creates and returns details of created bucket, or an error on failure.
-//
-// References:
-//   - https://aps.autodesk.com/en/docs/data/v2/reference/http/buckets-POST/
-func (api *BucketAPI) CreateBucketForRegion(bucketKey, policyKey string, region forge.Region) (result BucketDetails, err error) {
-
-	bearer, err := api.Authenticator.GetToken("bucket:create")
-	if err != nil {
-		return
-	}
-
-	result, err = createBucket(api.getPath(), bucketKey, policyKey, bearer.AccessToken, region)
+	result, err = createBucket(api.getPath(), bucketKey, policyKey, bearer.AccessToken, api.Region)
 
 	return
 }
@@ -61,7 +42,7 @@ func (api *BucketAPI) CreateBucketForRegion(bucketKey, policyKey string, region 
 //
 // References:
 //   - https://aps.autodesk.com/en/docs/data/v2/reference/http/buckets-:bucketKey-DELETE/
-func (api *BucketAPI) DeleteBucket(bucketKey string) error {
+func (api *OssAPI) DeleteBucket(bucketKey string) error {
 	bearer, err := api.Authenticator.GetToken("bucket:delete")
 	if err != nil {
 		return err
@@ -74,7 +55,7 @@ func (api *BucketAPI) DeleteBucket(bucketKey string) error {
 //
 // References:
 //   - https://aps.autodesk.com/en/docs/data/v2/reference/http/buckets-GET/
-func (api *BucketAPI) ListBuckets(region forge.Region, limit, startAt string) (result ListedBuckets, err error) {
+func (api *OssAPI) ListBuckets(region forge.Region, limit, startAt string) (result ListedBuckets, err error) {
 	bearer, err := api.Authenticator.GetToken("bucket:read")
 	if err != nil {
 		return
@@ -87,7 +68,7 @@ func (api *BucketAPI) ListBuckets(region forge.Region, limit, startAt string) (r
 //
 // References:
 //   - https://aps.autodesk.com/en/docs/data/v2/reference/http/buckets-:bucketKey-details-GET/
-func (api *BucketAPI) GetBucketDetails(bucketKey string) (result BucketDetails, err error) {
+func (api *OssAPI) GetBucketDetails(bucketKey string) (result BucketDetails, err error) {
 	bearer, err := api.Authenticator.GetToken("bucket:read")
 	if err != nil {
 		return
@@ -96,28 +77,13 @@ func (api *BucketAPI) GetBucketDetails(bucketKey string) (result BucketDetails, 
 	return getBucketDetails(api.getPath(), bucketKey, bearer.AccessToken)
 }
 
-// BucketExists returns true if the bucket exists, false otherwise.
-// This function calls GetBucketDetails and checks if the bucket key matches.
-func (api *BucketAPI) BucketExists(bucketKey string) (exists bool, err error) {
-	bearer, err := api.Authenticator.GetToken("bucket:read")
-	if err != nil {
-		return false, err
-	}
-
-	result, err := getBucketDetails(api.getPath(), bucketKey, bearer.AccessToken)
-	if err != nil {
-		return false, err
-	}
-	return result.BucketKey == bucketKey, nil
-}
-
 /*
  *	SUPPORT FUNCTIONS
  */
 
-// getPath gets the full bucket API path (= api.Authenticator.GetHostPath() + api.BucketAPIPath).
-func (api *BucketAPI) getPath() string {
-	return api.Authenticator.GetHostPath() + api.BucketAPIPath
+// getPath gets the full bucket API path (= api.Authenticator.GetHostPath() + api.BucketApiPath).
+func (api *OssAPI) getPath() string {
+	return api.Authenticator.GetHostPath() + api.BucketApiPath
 }
 
 func getBucketDetails(path, bucketKey, token string) (result BucketDetails, err error) {
@@ -202,7 +168,8 @@ func createBucket(path, bucketKey, policyKey, token string, region forge.Region)
 		CreateBucketRequest{
 			bucketKey,
 			policyKey,
-		})
+		},
+	)
 	if err != nil {
 		return
 	}

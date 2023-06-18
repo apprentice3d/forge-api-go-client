@@ -14,20 +14,6 @@ type ModelDerivativeAPI struct {
 	Region              forge.Region
 }
 
-// NewMDAPI returns a Model Derivative API client.
-//
-// NOTE:
-// This uses the default US region.
-//
-// Deprecated: Use NewMdApi instead.
-func NewMDAPI(authenticator oauth.ForgeAuthenticator) ModelDerivativeAPI {
-	return ModelDerivativeAPI{
-		authenticator,
-		"/modelderivative/v2/designdata",
-		forge.US,
-	}
-}
-
 // NewMdApi returns a Model Derivative API client for a specific region.
 func NewMdApi(authenticator oauth.ForgeAuthenticator, region forge.Region) ModelDerivativeAPI {
 	// default to US region
@@ -37,57 +23,26 @@ func NewMdApi(authenticator oauth.ForgeAuthenticator, region forge.Region) Model
 	}
 
 	return ModelDerivativeAPI{
-		authenticator,
-		path,
-		region,
+		Authenticator:       authenticator,
+		ModelDerivativePath: path,
+		Region:              region,
 	}
 }
 
-// TranslateWithParamsAndXHeaders starts a translation job with the given TranslationParams and XAdsHeaders.
+// StartTranslation starts a translation job with the given TranslationParams and XAdsHeaders.
 //
 // References:
 //   - https://aps.autodesk.com/en/docs/model-derivative/v2/reference/http/jobs/job-POST/
-func (a *ModelDerivativeAPI) TranslateWithParamsAndXHeaders(
-	params TranslationParams, xHeaders XAdsHeaders,
-) (result TranslationResult, err error) {
+func (a *ModelDerivativeAPI) StartTranslation(params TranslationParams, xHeaders XAdsHeaders) (
+	result TranslationJob, err error,
+) {
 	bearer, err := a.Authenticator.GetToken("data:write data:read")
 	if err != nil {
 		return
 	}
 	path := a.Authenticator.GetHostPath() + a.ModelDerivativePath
-	result, err = translate(path, params, &xHeaders, bearer.AccessToken)
 
-	return
-}
-
-// TranslateWithParams triggers translation job with settings specified in given TranslationParams
-//
-// Deprecated: Use TranslateWithParamsAndXHeaders instead.
-func (a *ModelDerivativeAPI) TranslateWithParams(params TranslationParams) (result TranslationResult, err error) {
-	bearer, err := a.Authenticator.GetToken("data:write data:read")
-	if err != nil {
-		return
-	}
-	path := a.Authenticator.GetHostPath() + a.ModelDerivativePath
-	result, err = translate(path, params, nil, bearer.AccessToken)
-
-	return
-}
-
-// TranslationSVFPreset specifies default parameters for translating a generic model into svf.
-//   - Output: svf
-//   - Views: 2d, 3d
-//   - Destination: US
-var TranslationSVFPreset = TranslationParams{
-	Output: OutputSpec{
-		Destination: DestSpec{forge.US},
-		Formats: []FormatSpec{
-			{
-				Type:  SVF,
-				Views: []ViewType{View2D, View3D},
-			},
-		},
-	},
+	return translate(path, params, &xHeaders, bearer.AccessToken)
 }
 
 // NewTranslationParams creates a TranslationParams struct with the given objectID, outputType, views, and advanced options.
@@ -97,11 +52,11 @@ var TranslationSVFPreset = TranslationParams{
 // Make sure to use the correct views and advanced options for the given outputType.
 // There are no checks for this.
 func (a *ModelDerivativeAPI) NewTranslationParams(
-	urn string, outputType OutputType, views []ViewType, advanced *AdvancedSpec,
+	objectId string, outputType OutputType, views []ViewType, advanced *AdvancedSpec,
 ) TranslationParams {
 	return TranslationParams{
 		Input: InputSpec{
-			URN: urn,
+			URN: UrnFromObjectId(objectId),
 		},
 		Output: OutputSpec{
 			Destination: DestSpec{a.Region},
@@ -116,76 +71,20 @@ func (a *ModelDerivativeAPI) NewTranslationParams(
 	}
 }
 
+// DefaultTranslationParams creates a TranslationParams struct with the given objectID.
+//   - The region will be taken from the ModelDerivativeAPI.
+//   - The outputType will be SVF.
+//   - The views will be 2D and 3D.
+//   - The advanced options will be nil.
+func (a *ModelDerivativeAPI) DefaultTranslationParams(objectId string) TranslationParams {
+	return a.NewTranslationParams(objectId, SVF, ViewTypes2DAnd3D(), nil)
+}
+
 // UrnFromObjectId creates a Base64 (URL Safe) encoded URN from the given objectID.
 //
 // dm.UploadObject will return an objectID that can be used here.
 func UrnFromObjectId(objectID string) string {
 	return base64.RawStdEncoding.EncodeToString([]byte(objectID))
-}
-
-// IfcAdvancedSpec returns an IFC specific AdvancedSpec.
-//
-//	NOTE:
-//
-// The storeys, spaces, and openings options are applicable only when conversionMethod is set to `modern` or `v3`.
-func IfcAdvancedSpec(conversionMethod ConversionMethod, storeys, spaces, openings Option) *AdvancedSpec {
-	if conversionMethod == Legacy {
-		return &AdvancedSpec{ConversionMethod: conversionMethod}
-	}
-	return &AdvancedSpec{
-		ConversionMethod: conversionMethod,
-		BuildingStoreys:  storeys,
-		Spaces:           spaces,
-		OpeningElements:  openings,
-	}
-}
-
-// RevitAdvancedSpec returns a Revit specific AdvancedSpec.
-func RevitAdvancedSpec(generateMasterViews *bool, materialMode MaterialMode) *AdvancedSpec {
-	return &AdvancedSpec{
-		GenerateMasterViews: generateMasterViews,
-		MaterialMode:        materialMode,
-	}
-}
-
-// NavisworksAdvancedSpec returns a Navisworks specific AdvancedSpec.
-func NavisworksAdvancedSpec(hiddenObjects, basicMaterialProperties, autodeskMaterialProperties, timeLinerProperties *bool) *AdvancedSpec {
-	return &AdvancedSpec{
-		HiddenObjects:              hiddenObjects,
-		BasicMaterialProperties:    basicMaterialProperties,
-		AutodeskMaterialProperties: autodeskMaterialProperties,
-		TimeLinerProperties:        timeLinerProperties,
-	}
-}
-
-// ObjAdvancedSpec returns a OBJ specific AdvancedSpec.
-func ObjAdvancedSpec(
-	exportFileStructure ExportFileStructure, unit Unit, modelGuid string, objectIds *[]int,
-) *AdvancedSpec {
-	return &AdvancedSpec{
-		ExportFileStructure: exportFileStructure,
-		Unit:                unit,
-		ModelGuid:           modelGuid,
-		ObjectIds:           objectIds,
-	}
-}
-
-// TranslateToSVF is a helper function for translating a file to SVF using the default TranslationSVFPreset.
-// The objectID will be converted into a Base64 (URL Safe) encoded URN.
-//
-// Deprecated: Use TranslateWithParamsAndXHeaders instead.
-func (a *ModelDerivativeAPI) TranslateToSVF(objectID string) (result TranslationResult, err error) {
-	bearer, err := a.Authenticator.GetToken("data:write data:read")
-	if err != nil {
-		return
-	}
-	path := a.Authenticator.GetHostPath() + a.ModelDerivativePath
-	params := TranslationSVFPreset
-	params.Input.URN = UrnFromObjectId(objectID)
-
-	result, err = translate(path, params, nil, bearer.AccessToken)
-
-	return
 }
 
 // GetManifest returns information about derivatives that correspond to a specific source file, including derivative URNs and translation statuses.
@@ -199,9 +98,8 @@ func (a *ModelDerivativeAPI) GetManifest(urn string) (result Manifest, err error
 	}
 
 	path := a.Authenticator.GetHostPath() + a.ModelDerivativePath
-	result, err = getManifest(path, urn, bearer.AccessToken)
 
-	return
+	return getManifest(path, urn, bearer.AccessToken)
 }
 
 // GetPropertiesDatabaseUrn returns the URN of the SQLite properties database from the manifest.
@@ -220,15 +118,17 @@ func (m *Manifest) GetPropertiesDatabaseUrn() string {
 
 // GetDerivative downloads a selected derivative. To download the file, you need to specify the file’s URN, which you retrieve from the manifest.
 // You can fetch the manifest using the GetManifest function.
+//
+// References:
+//   - https://aps.autodesk.com/en/docs/model-derivative/v2/reference/http/urn-manifest-derivativeUrn-signedcookies-GET/
 func (a *ModelDerivativeAPI) GetDerivative(urn, derivativeUrn string) (jsonData []byte, err error) {
-	bearer, err := a.Authenticator.GetToken("jsonData:read")
+	bearer, err := a.Authenticator.GetToken("data:read")
 	if err != nil {
 		return
 	}
 	path := a.Authenticator.GetHostPath() + a.ModelDerivativePath
-	jsonData, err = getDerivative(path, urn, derivativeUrn, bearer.AccessToken)
 
-	return
+	return getDerivative(path, urn, derivativeUrn, bearer.AccessToken)
 }
 
 // GetMetadata returns a list of model views (Viewables) in the source design specified by the `urn` URI parameter.
@@ -245,9 +145,8 @@ func (a *ModelDerivativeAPI) GetMetadata(urn string, xHeaders XAdsHeaders) (resu
 		return
 	}
 	path := a.Authenticator.GetHostPath() + a.ModelDerivativePath
-	result, err = getMetadata(path, urn, bearer.AccessToken, xHeaders)
 
-	return
+	return getMetadata(path, urn, bearer.AccessToken, xHeaders)
 }
 
 // GetMasterModelViewGuid returns the GUID of the master view.

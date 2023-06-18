@@ -37,8 +37,8 @@ type InputSpec struct {
 	CheckReferences *bool `json:"checkReferences,omitempty"`
 }
 
-// TranslationResult reflects data received upon successful creation of translation job
-type TranslationResult struct {
+// TranslationJob reflects data received upon successful creation of translation job
+type TranslationJob struct {
 	Result       string `json:"result"`
 	URN          string `json:"urn"`
 	AcceptedJobs struct {
@@ -88,6 +88,21 @@ const (
 	View2D ViewType = "2d"
 	View3D ViewType = "3d"
 )
+
+// ViewTypes2DAnd3D returns a slice of ViewTypes containing View2D and View3D.
+func ViewTypes2DAnd3D() []ViewType {
+	return []ViewType{View2D, View3D}
+}
+
+// ViewType2D returns a slice of ViewTypes containing only View2D.
+func ViewType2D() []ViewType {
+	return []ViewType{View2D}
+}
+
+// ViewType3D returns a slice of ViewTypes containing only View3D.
+func ViewType3D() []ViewType {
+	return []ViewType{View3D}
+}
 
 // FormatSpec is used within OutputSpecs and should be used when specifying the expected format and views (2d or/and 3d)
 type FormatSpec struct {
@@ -142,7 +157,7 @@ type AdvancedSpec struct {
 
 // translate triggers a translation job with the given TranslationParams and xAdsHeaders.XAdsHeaders.
 func translate(path string, params TranslationParams, xAdsHeaders *XAdsHeaders, token string) (
-	result TranslationResult, err error,
+	result TranslationJob, err error,
 ) {
 
 	byteParams, err := json.Marshal(params)
@@ -152,7 +167,6 @@ func translate(path string, params TranslationParams, xAdsHeaders *XAdsHeaders, 
 	}
 
 	req, err := http.NewRequest("POST", path+"/job", bytes.NewBuffer(byteParams))
-
 	if err != nil {
 		return
 	}
