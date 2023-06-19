@@ -88,7 +88,7 @@ func newUploadJob(api *OssAPI, bucketKey, objectName, fileToUpload string) (job 
 		uploadKey:         "",
 	}
 
-	log.Println("NewOssApi upload job:")
+	log.Println("New upload job:")
 	log.Println("- bucketKey:", bucketKey)
 	log.Println("- objectName:", objectName)
 	log.Println("- fileToUpload:", fileToUpload)
