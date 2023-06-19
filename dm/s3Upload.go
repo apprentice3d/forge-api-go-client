@@ -64,17 +64,9 @@ var (
 	defaultChunkSize = int64(100 * megaByte)
 )
 
-func newUploadJob(api BucketAPI, bucketKey, objectName, fileToUpload string) (job uploadJob, err error) {
+func newUploadJob(api *OssAPI, bucketKey, objectName, fileToUpload string) (job uploadJob, err error) {
 
-	job = uploadJob{}
-	job.api = api
-	job.bucketKey = bucketKey
-	job.objectKey = objectName
-	job.fileToUpload = fileToUpload
-	job.minutesExpiration = minutesExpiration
-	job.uploadKey = ""
-
-	fileInfo, err := os.Stat(job.fileToUpload)
+	fileInfo, err := os.Stat(fileToUpload)
 	if err != nil {
 		return
 	}
@@ -84,11 +76,19 @@ func newUploadJob(api BucketAPI, bucketKey, objectName, fileToUpload string) (jo
 	// - In the old API, the boundary for multipart uploads was 100 MB.
 	//   => See const defaultChunkSize
 
-	job.fileSize = fileInfo.Size()
-	job.totalParts = ceilingOfIntDivision(int(job.fileSize), int(defaultChunkSize))
-	job.numberOfBatches = ceilingOfIntDivision(job.totalParts, maxParts)
+	job = uploadJob{
+		api:               api,
+		bucketKey:         bucketKey,
+		objectKey:         objectName,
+		fileToUpload:      fileToUpload,
+		minutesExpiration: minutesExpiration,
+		fileSize:          fileInfo.Size(),
+		totalParts:        ceilingOfIntDivision(int(job.fileSize), int(defaultChunkSize)),
+		numberOfBatches:   ceilingOfIntDivision(job.totalParts, maxParts),
+		uploadKey:         "",
+	}
 
-	log.Println("New upload job:")
+	log.Println("NewOssApi upload job:")
 	log.Println("- bucketKey:", bucketKey)
 	log.Println("- objectName:", objectName)
 	log.Println("- fileToUpload:", fileToUpload)
@@ -445,7 +445,9 @@ func addOrSetHeader(req *http.Request, key, value string) {
 func (job *uploadJob) getSignedS3UploadPath() string {
 	// https://developer.api.autodesk.com/oss/v2/buckets/:bucketKey/objects/:objectKey/signeds3upload
 	// :bucketKey/objects/:objectKey/signeds3upload
-	return job.api.Authenticator.GetHostPath() + path.Join(job.api.BucketAPIPath, job.bucketKey, "objects", job.objectKey, signedS3UploadEndpoint)
+	return job.api.Authenticator.GetHostPath() + path.Join(
+		job.api.BucketApiPath, job.bucketKey, "objects", job.objectKey, signedS3UploadEndpoint,
+	)
 }
 
 func (job *uploadJob) authenticate() (accessToken string, err error) {

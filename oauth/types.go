@@ -1,12 +1,12 @@
 package oauth
 
 // ForgeAuthenticator defines an interface that allows abstraction of 2-legged and a 3-legged context.
-// 	This provides useful when an API accepts both 2-legged and 3-legged context tokens
+//
+//	This provides useful when an API accepts both 2-legged and 3-legged context tokens
 type ForgeAuthenticator interface {
 	GetToken(scope string) (Bearer, error)
 	GetHostPath() string
 	GetRefreshToken() string
-	//SetHostPath(path string)
 }
 
 // AuthData reflects the data common to 2-legged and 3-legged api calls
@@ -37,10 +37,3 @@ type Bearer struct {
 	AccessToken  string `json:"access_token"`            // The access token
 	RefreshToken string `json:"refresh_token,omitempty"` // The refresh token used in 3-legged oauth
 }
-
-// ThreeLeggedAuthenticator interface defines the method necessary to qualify as 3-legged authenticator
-//type ThreeLeggedAuthenticator interface {
-//	Authorize(scope string, state string) (string, error)
-//	GetToken(code string) (Bearer, error)
-//	RefreshToken(refreshToken string, scope string) (Bearer, error)
-//}

@@ -3,21 +3,23 @@ package dm
 import (
 	"time"
 
+	"github.com/woweh/forge-api-go-client"
 	"github.com/woweh/forge-api-go-client/oauth"
 )
 
 /* BUCKET API TYPES */
 
-// BucketAPI holds the necessary data for making Bucket related calls to Forge Data Management service
-type BucketAPI struct {
+// OssAPI holds the necessary data for making Object Storage Service (OSS) related calls to the Forge Data Management API.
+type OssAPI struct {
 	Authenticator oauth.ForgeAuthenticator
-	BucketAPIPath string // = "/oss/v2/buckets", populate in NewBucketAPI
+	BucketApiPath string // = "/oss/v2/buckets", populate in NewOssApi
+	Region        forge.Region
 }
 
 // CreateBucketRequest contains the data necessary to be passed upon bucket creation
 type CreateBucketRequest struct {
-	BucketKey string `json:"bucketKey"`
-	PolicyKey string `json:"policyKey"`
+	BucketKey string          `json:"bucketKey"`
+	PolicyKey RetentionPolicy `json:"policyKey"`
 }
 
 // BucketDetails reflects the body content received upon creation of a bucket
@@ -29,7 +31,7 @@ type BucketDetails struct {
 		AuthID string `json:"authId"`
 		Access string `json:"access"`
 	} `json:"permissions"`
-	PolicyKey string `json:"policyKey"`
+	PolicyKey RetentionPolicy `json:"policyKey"`
 }
 
 // ErrorResult reflects the body content when a request failed (g.e. Bad request or key conflict)
@@ -40,9 +42,9 @@ type ErrorResult struct {
 type BucketList []BucketInfo
 
 type BucketInfo struct {
-	BucketKey   string `json:"bucketKey"`
-	CreatedDate int64  `json:"createdDate"`
-	PolicyKey   string `json:"policyKey"`
+	BucketKey   string          `json:"bucketKey"`
+	CreatedDate int64           `json:"createdDate"`
+	PolicyKey   RetentionPolicy `json:"policyKey"`
 }
 
 // ListedBuckets reflects the response when query Data Management API for buckets associated with current Forge secrets.
@@ -90,8 +92,8 @@ type signedUploadUrls struct {
 
 // uploadJob provides information for uploading a file
 type uploadJob struct {
-	// api is the instance of the BucketAPI.
-	api BucketAPI
+	// api is a pointer to an instance of the OssAPI.
+	api *OssAPI
 	// bucketKey is the key (= name) of the bucket where the file shall be stored.
 	bucketKey string
 	// objectKey is the key (= name) of the file in the Autodesk cloud (OSS).

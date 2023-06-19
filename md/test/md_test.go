@@ -1,930 +1,368 @@
 package md_test
 
-import (
-	"bytes"
-	"encoding/base64"
-	"encoding/json"
-	"os"
-	"reflect"
-	"testing"
+/*
+package md_test provides "blackbox" tests for the md package.
+These tests are meant to test the public API of the md package.
+*/
 
+import (
+	"encoding/json"
+	"log"
+	"os"
+	"testing"
+	"time"
+
+	"github.com/woweh/forge-api-go-client"
 	"github.com/woweh/forge-api-go-client/dm"
 	"github.com/woweh/forge-api-go-client/md"
 	"github.com/woweh/forge-api-go-client/oauth"
 )
 
-func TestAPI_TranslateToSVF(t *testing.T) {
-	// prepare the credentials
-	clientID := os.Getenv("FORGE_CLIENT_ID")
-	clientSecret := os.Getenv("FORGE_CLIENT_SECRET")
-	authenticator := oauth.NewTwoLegged(clientID, clientSecret)
-	bucketAPI := dm.NewBucketAPI(authenticator)
-	mdAPI := md.NewMDAPI(authenticator)
+/*
+NOTE:
+- You can only run these tests when you have a valid client ID and secret.
+  => You probably want to run the tests locally, with your own credentials.
+- A bucketKey (= bucket name) must be globally unique across all applications and regions
+- Rules for bucketKey names: -_.a-z0-9 (between 3-128 characters in length)
+- Buckets can only be deleted by the user who created them.
+  => You might want to change the bucketKey if the bucket already exists.
+- A bucket name will not be immediately available for reuse after deletion.
+  => Best use a unique bucket name for each subtest.
+  => You can also use a timestamp to make sure the bucket name is unique.
+*/
 
-	tempBucketName := "go_testing_md_bucket"
-	testFilePath := "../../assets/HelloWorld.rvt"
+const (
+	testFilePath = "../../dm/assets/rst_basic_sample_project.rvt"
+)
 
-	var uploadResult dm.UploadResult
+var (
+	backoffSchedule = []time.Duration{
+		1 * time.Second,
+		3 * time.Second,
+		7 * time.Second,
+		15 * time.Second,
+		31 * time.Second,
+	}
+	usTestsFailed   bool
+	emeaTestsFailed bool
+)
 
-	t.Run("Create a temporary bucket", func(t *testing.T) {
-		_, err := bucketAPI.CreateBucket(tempBucketName, "transient")
+func TestMain(m *testing.M) {
 
-		if err != nil {
-			t.Errorf("Failed to create a bucket: %s\n", err.Error())
-		}
-	})
+	log.Println("In TestMain()...")
 
-	t.Run("Get bucket details", func(t *testing.T) {
-		_, err := bucketAPI.GetBucketDetails(tempBucketName)
+	usTestsFailed = false
+	emeaTestsFailed = false
 
-		if err != nil {
-			t.Fatalf("Failed to get bucket details: %s\n", err.Error())
-		}
-	})
+	log.Println("Running tests...")
+	exitCode := m.Run()
 
-	t.Run("Upload an object into temp bucket", func(t *testing.T) {
-		file, err := os.Open(testFilePath)
-		if err != nil {
-			t.Fatal("Cannot open testfile for reading")
-		}
-		defer file.Close()
+	log.Println("Tests finished, determining exit code")
+	log.Println("- usTestsFailed: ", usTestsFailed)
+	log.Println("- emeaTestsFailed: ", emeaTestsFailed)
+	if usTestsFailed || emeaTestsFailed {
+		exitCode = 1
+	} else {
+		exitCode = 0
+	}
 
-		uploadResult, err = bucketAPI.UploadObject(tempBucketName, "temp_file.rvt", testFilePath)
-
-		if err != nil {
-			t.Fatal("Could not upload the test object, got: ", err.Error())
-		}
-
-		if uploadResult.Size == 0 {
-			t.Fatal("The test object was uploaded but it is zero-sized")
-		}
-	})
-
-	t.Run("Translate object into SVF", func(t *testing.T) {
-
-		result, err := mdAPI.TranslateToSVF(uploadResult.ObjectId)
-
-		if err != nil {
-			t.Error("Could not translate the test object, got: ", err.Error())
-		}
-
-		if result.Result != "created" {
-			t.Error("The test object was uploaded, but failed to create the translation job")
-		}
-	})
-
-	t.Run("Delete the temporary bucket", func(t *testing.T) {
-		err := bucketAPI.DeleteBucket(tempBucketName)
-
-		if err != nil {
-			t.Fatalf("Failed to delete bucket: %s\n", err.Error())
-		}
-	})
+	log.Println("Exiting with code: ", exitCode)
+	os.Exit(exitCode)
 }
 
-func TestAPI_TranslateToSVF2_JSON_Creation(t *testing.T) {
+func TestModelDerivativeAPI_HappyPath_AllFunctions(t *testing.T) {
 
-	params := md.TranslationSVFPreset
-	params.Input.URN = base64.RawStdEncoding.EncodeToString([]byte("just a test urn"))
-
-	output, err := json.Marshal(&params)
-	if err != nil {
-		t.Fatal("Could not marshal the preset into JSON: ", err.Error())
+	type args struct {
+		region         forge.Region
+		tempBucketName string
+		objectName     string
+		error          *bool
 	}
 
-	referenceExample := `
-{
-        "input": {
-          "urn": "anVzdCBhIHRlc3QgdXJu"
-        },
-        "output": {
-			"destination": {
-        		"region": "us"
-      		},
-          	"formats": [
-            {
-              "type": "svf",
-              "views": [
-                "2d",
-                "3d"
-              ]
-            }
-          ]
-        }
-      }
-`
-
-	var example md.TranslationParams
-	err = json.Unmarshal([]byte(referenceExample), &example)
-	if err != nil {
-		t.Fatal("Could not unmarshal the reference example: ", err.Error())
+	tests := []struct {
+		name string
+		args args
+	}{
+		{
+			name: "Default-US",
+			args: args{
+				region:         forge.US,
+				tempBucketName: "forge_api_go_client_unit_testing_happy_path_default_us",
+				objectName:     "rst_basic_sample_project_us.rvt",
+				error:          &usTestsFailed,
+			},
+		},
+		{
+			name: "EMEA",
+			args: args{
+				region:         forge.EMEA,
+				tempBucketName: "forge_api_go_client_unit_testing_happy_path_default_emea",
+				objectName:     "rst_basic_sample_project_emea.rvt",
+				error:          &emeaTestsFailed,
+			},
+		},
 	}
 
-	expected, err := json.Marshal(example)
-	if err != nil {
-		t.Fatal("Could not marshal the reference example into JSON: ", err.Error())
-	}
+	// run the tests
+	for _, tt := range tests {
+		t.Run(
+			tt.name, func(t *testing.T) {
 
-	if !bytes.Equal(expected, output) {
-		t.Fatalf("The translation params are not correct:\nexpected: %s\n created: %s",
-			string(expected),
-			string(output))
+				trueVal := true
 
-	}
+				// prepare the credentials
+				clientID := os.Getenv("FORGE_CLIENT_ID")
+				clientSecret := os.Getenv("FORGE_CLIENT_SECRET")
 
-}
-
-func TestModelDerivativeAPI_GetManifest(t *testing.T) {
-	// prepare the credentials
-	clientID := os.Getenv("FORGE_CLIENT_ID")
-	clientSecret := os.Getenv("FORGE_CLIENT_SECRET")
-	authenticator := oauth.NewTwoLegged(clientID, clientSecret)
-	bucketAPI := dm.NewBucketAPI(authenticator)
-	mdAPI := md.NewMDAPI(authenticator)
-
-	tempBucketName := "go_testing_md_bucket"
-	testFilePath := "../../assets/HelloWorld.rvt"
-
-	var uploadResult dm.UploadResult
-	var translationResult md.TranslationResult
-
-	t.Run("Create a temporary bucket", func(t *testing.T) {
-		_, err := bucketAPI.CreateBucket(tempBucketName, "transient")
-
-		if err != nil {
-			t.Errorf("Failed to create a bucket: %s\n", err.Error())
-		}
-	})
-
-	t.Run("Get bucket details", func(t *testing.T) {
-		_, err := bucketAPI.GetBucketDetails(tempBucketName)
-
-		if err != nil {
-			t.Fatalf("Failed to get bucket details: %s\n", err.Error())
-		}
-	})
-
-	t.Run("Upload an object into temp bucket", func(t *testing.T) {
-		file, err := os.Open(testFilePath)
-		if err != nil {
-			t.Fatal("Cannot open testfile for reading")
-		}
-		file.Close()
-
-		uploadResult, err = bucketAPI.UploadObject(tempBucketName, "temp_file.rvt", testFilePath)
-
-		if err != nil {
-			t.Fatal("Could not upload the test object, got: ", err.Error())
-		}
-
-		if uploadResult.Size == 0 {
-			t.Fatal("The test object was uploaded but it is zero-sized")
-		}
-	})
-
-	t.Run("Translate object into SVF", func(t *testing.T) {
-		var err error
-		translationResult, err = mdAPI.TranslateToSVF(uploadResult.ObjectId)
-
-		if err != nil {
-			t.Error("Could not translate the test object, got: ", err.Error())
-		}
-
-		if translationResult.Result != "created" {
-			t.Error("The test object was uploaded, but failed to create the translation job")
-		}
-	})
-
-	t.Run("Get manifest of the object", func(t *testing.T) {
-		manifest, err := mdAPI.GetManifest(translationResult.URN)
-		if err != nil {
-			t.Errorf("Problems getting the manifest for %s: %s", translationResult.URN, err.Error())
-		}
-
-		if manifest.Type != "manifest" {
-			t.Error("Expecting 'manifest' type, got ", manifest.Type)
-		}
-
-		if manifest.URN != translationResult.URN {
-			t.Errorf("URN not matching: translation=%s\tmanifest=%s", translationResult.URN, manifest.URN)
-		}
-
-		status := manifest.Status
-		if status != "failed" && status != "success" && status != "inprogress" && status != "pending" {
-			t.Errorf("Got unexpected status: %s", status)
-		}
-
-		if status == "success" && len(manifest.Derivatives) != 2 {
-			t.Errorf("Expecting to have 2 derivative, got %d", len(manifest.Derivatives))
-		}
-
-		outputType := manifest.Derivatives[0].OutputType
-		if status == "success" && outputType != "svf" {
-			t.Errorf("Expecting first derivative to be 'svf', got %s", outputType)
-		}
-
-	})
-
-	t.Run("Delete the temporary bucket", func(t *testing.T) {
-		err := bucketAPI.DeleteBucket(tempBucketName)
-
-		if err != nil {
-			t.Fatalf("Failed to delete bucket: %s\n", err.Error())
-		}
-	})
-}
-
-func TestParseManifest(t *testing.T) {
-	t.Run("Parse pending manifest", func(t *testing.T) {
-		manifest := `
-			{
-			  "type": "manifest",
-			  "hasThumbnail": "false",
-			  "status": "pending",
-			  "progress": "0% complete",
-			  "region": "US",
-			  "urn": "dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6bW9kZWxkZXJpdmF0aXZlL0E1LnppcA",
-			  "derivatives": [
-			  ]
-			}
-			`
-		var decodedManifest md.Manifest
-		err := json.Unmarshal([]byte(manifest), &decodedManifest)
-		if err != nil {
-			t.Error(err.Error())
-		}
-
-		if len(decodedManifest.Derivatives) != 0 {
-			t.Error("There should not be derivatives")
-		}
-
-	})
-
-	t.Run("Parse in progress manifest", func(t *testing.T) {
-		manifest := `
-			{
-				  "type": "manifest",
-				  "hasThumbnail": "true",
-				  "status": "inprogress",
-				  "progress": "99% complete",
-				  "region": "US",
-				  "urn": "dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6bW9kZWxkZXJpdmF0aXZlL0E1LnppcA",
-				  "derivatives": [
-					{
-					  "name": "A5.iam",
-					  "hasThumbnail": "true",
-					  "status": "success",
-					  "progress": "99% complete",
-					  "outputType": "svf",
-					  "children": [
-						{
-						  "guid": "d998268f-eeb4-da87-0db4-c5dbbc4926d0",
-						  "type": "geometry",
-						  "role": "3d",
-						  "name": "Scene",
-						  "status": "success",
-						  "progress": "99% complete",
-						  "hasThumbnail": "true",
-						  "children": [
-							{
-							  "guid": "4f981e94-8241-4eaf-b08b-cd337c6b8b1f",
-							  "type": "resource",
-							  "progress": "99% complete",
-							  "role": "graphics",
-							  "mime": "application/autodesk-svf"
-							},
-							{
-							  "guid": "d718eb7e-fa8a-42f9-8b32-e323c0fbea0c",
-							  "type": "resource",
-							  "urn": "urn:adsk.viewing:fs.file:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6bW9kZWxkZXJpdmF0aXZlL0E1LnppcA/output/1/A5.svf.png01_thumb_400x400.png",
-							  "resolution": [
-								400.0,
-								400.0
-							  ],
-							  "mime": "image/png",
-							  "role": "thumbnail"
-							},
-							{
-							  "guid": "34dc340b-835f-47f7-9da5-b8219aefe741",
-							  "type": "resource",
-							  "urn": "urn:adsk.viewing:fs.file:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6bW9kZWxkZXJpdmF0aXZlL0E1LnppcA/output/1/A5.svf.png01_thumb_200x200.png",
-							  "resolution": [
-								200.0,
-								200.0
-							  ],
-							  "mime": "image/png",
-							  "role": "thumbnail"
-							},
-							{
-							  "guid": "299c6ba6-650e-423e-bbd6-3aaff44ee104",
-							  "type": "resource",
-							  "urn": "urn:adsk.viewing:fs.file:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6bW9kZWxkZXJpdmF0aXZlL0E1LnppcA/output/1/A5.svf.png01_thumb_100x100.png",
-							  "resolution": [
-								100.0,
-								100.0
-							  ],
-							  "mime": "image/png",
-							  "role": "thumbnail"
-							}
-						  ]
-						}
-					  ]
-					}
-				  ]
-			}
-			`
-		var decodedManifest md.Manifest
-		err := json.Unmarshal([]byte(manifest), &decodedManifest)
-		if err != nil {
-			t.Error(err.Error())
-		}
-
-		if len(decodedManifest.Derivatives) != 1 {
-			t.Error("Failed to parse derivatives")
-		}
-
-		if len(decodedManifest.Derivatives[0].Children) != 1 {
-			t.Error("Failed to parse childern derivatives")
-		}
-
-		if len(decodedManifest.Derivatives[0].Children[0].Children) != 4 {
-			t.Error("Failed to parse childern of derivative's children [funny]")
-		}
-
-		if decodedManifest.Derivatives[0].Children[0].Children[0].URN != "" {
-			child := decodedManifest.Derivatives[0].Children[0].Children[0]
-			t.Errorf("URN should be empty: %s => %s", child.Name, child.URN)
-		}
-
-	})
-
-	t.Run("Parse complete failed manifest", func(t *testing.T) {
-		manifest := `
-			{
-			  "type": "manifest",
-			  "hasThumbnail": "false",
-			  "status": "failed",
-			  "progress": "complete",
-			  "region": "US",
-			  "urn": "dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6bW9kZWxkZXJpdmF0aXZlL0E1LnppcA",
-			  "derivatives": [
-				{
-				  "name": "A5.iam",
-				  "hasThumbnail": "false",
-				  "status": "failed",
-				  "progress": "complete",
-				  "messages": [
-					{
-					  "type": "warning",
-					  "message": "The drawing's thumbnails were not properly created.",
-					  "code": "TranslationWorker-ThumbnailGenerationFailed"
-					}
-				  ],
-				  "outputType": "svf",
-				  "children": [
-					{
-					  "guid": "d998268f-eeb4-da87-0db4-c5dbbc4926d0",
-					  "type": "geometry",
-					  "role": "3d",
-					  "name": "Scene",
-					  "status": "success",
-					  "messages": [
-						{
-						  "type": "warning",
-						  "code": "ATF-1023",
-						  "message": [
-							"The file: {0} does not exist.",
-							"C:\\Users\\ADSK\\Documents\\A5\\Top.ipt"
-						  ]
-						},
-						{
-						  "type": "warning",
-						  "code": "ATF-1023",
-						  "message": [
-							"The file: {0} does not exist.",
-							"C:\\Users\\ADSK\\Documents\\A5\\Bottom.ipt"
-						  ]
-						},
-						{
-						  "type": "error",
-						  "code": "ATF-1026",
-						  "message": [
-							"The file: {0} is empty.",
-							"C:/worker/viewing-inventor-lmv/tmp/job-1/5/output/1/A5.svf"
-						  ]
-						}
-					  ],
-					  "progress": "complete",
-					  "hasThumbnail": "false",
-					  "children": [
-						{
-						  "guid": "4f981e94-8241-4eaf-b08b-cd337c6b8b1f",
-						  "type": "resource",
-						  "urn": "urn:adsk.viewing:fs.file:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6bW9kZWxkZXJpdmF0aXZlL0E1LnppcA/output/1/A5.svf",
-						  "role": "graphics",
-						  "mime": "application/autodesk-svf"
-						}
-					  ]
-					}
-				  ]
+				// check client ID and secret
+				if clientID == "" || clientSecret == "" {
+					t.Skip("Skipping tests because FORGE_CLIENT_ID and/or FORGE_CLIENT_SECRET env variables are not set")
 				}
-			  ]
-			}
-			`
-		var decodedManifest md.Manifest
-		err := json.Unmarshal([]byte(manifest), &decodedManifest)
-		if err != nil {
-			t.Error(err.Error())
-		}
 
-		if len(decodedManifest.Derivatives) != 1 {
-			t.Error("Failed to parse derivatives")
-		}
-
-		if len(decodedManifest.Derivatives[0].Children) != 1 {
-			t.Error("Failed to parse childern derivatives")
-		}
-
-		if len(decodedManifest.Derivatives[0].Children[0].Children) != 1 {
-			t.Error("Failed to parse childern of derivative's children [funny]")
-		}
-
-		if decodedManifest.Derivatives[0].Children[0].Children[0].URN == "" {
-			t.Error("URN should not be empty")
-		}
-
-		if decodedManifest.Derivatives[0].Messages[0].Type != "warning" {
-			t.Error("Chould contain a warning message")
-		}
-
-		if len(decodedManifest.Derivatives[0].Children[0].Messages) != 3 {
-			t.Error("Derivative child should contain 3 error message")
-		}
-
-		if decodedManifest.Derivatives[0].Children[0].Messages[0].Type != "warning" {
-			t.Error("Derivative child message should be a warning message")
-		}
-		if decodedManifest.Derivatives[0].Children[0].Messages[2].Type != "error" {
-			t.Error("Derivative child message should be an error message")
-		}
-
-		// use reflect to check if the message is an array
-		if reflect.TypeOf(decodedManifest.Derivatives[0].Children[0].Messages[2].Message).Kind() != reflect.Slice {
-			t.Error("Derivative child message should be an array")
-		}
-
-		// assign the message to a variable
-		message := decodedManifest.Derivatives[0].Children[0].Messages[2].Message.([]interface{})
-
-		// check if the message is an array of strings
-		if reflect.TypeOf(message[0]).Kind() != reflect.String {
-			t.Error("Derivative child message should be an array of strings")
-		}
-
-		if len(message) != 2 {
-			t.Error("Derivative child message should contain 2 message descriptions")
-		}
-
-		if decodedManifest.Derivatives[0].Children[0].Children[0].Role != "graphics" {
-			t.Error("Failed to parse childern of derivative's children [funny]")
-		}
-
-	})
-
-	t.Run("Parse complete success manifest", func(t *testing.T) {
-		manifest := `
-			{
-			  "type": "manifest",
-			  "hasThumbnail": "true",
-			  "status": "success",
-			  "progress": "complete",
-			  "region": "US",
-			  "urn": "dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6bW9kZWxkZXJpdmF0aXZlL0E1LnppcA",
-			  "derivatives": [
-				{
-				  "name": "A5.iam",
-				  "hasThumbnail": "true",
-				  "status": "success",
-				  "progress": "complete",
-				  "outputType": "svf",
-				  "children": [
-					{
-					  "guid": "d998268f-eeb4-da87-0db4-c5dbbc4926d0",
-					  "type": "geometry",
-					  "role": "3d",
-					  "name": "Scene",
-					  "status": "success",
-					  "progress": "complete",
-					  "hasThumbnail": "true",
-					  "children": [
-						{
-						  "guid": "4f981e94-8241-4eaf-b08b-cd337c6b8b1f",
-						  "type": "resource",
-						  "urn": "urn:adsk.viewing:fs.file:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6bW9kZWxkZXJpdmF0aXZlL0E1LnppcA/output/1/A5.svf",
-						  "role": "graphics",
-						  "mime": "application/autodesk-svf"
-						},
-						{
-						  "guid": "d718eb7e-fa8a-42f9-8b32-e323c0fbea0c",
-						  "type": "resource",
-						  "urn": "urn:adsk.viewing:fs.file:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6bW9kZWxkZXJpdmF0aXZlL0E1LnppcA/output/1/A5.svf.png01_thumb_400x400.png",
-						  "resolution": [
-							400.0,
-							400.0
-						  ],
-						  "mime": "image/png",
-						  "role": "thumbnail"
-						},
-						{
-						  "guid": "34dc340b-835f-47f7-9da5-b8219aefe741",
-						  "type": "resource",
-						  "urn": "urn:adsk.viewing:fs.file:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6bW9kZWxkZXJpdmF0aXZlL0E1LnppcA/output/1/A5.svf.png01_thumb_200x200.png",
-						  "resolution": [
-							200.0,
-							200.0
-						  ],
-						  "mime": "image/png",
-						  "role": "thumbnail"
-						},
-						{
-						  "guid": "299c6ba6-650e-423e-bbd6-3aaff44ee104",
-						  "type": "resource",
-						  "urn": "urn:adsk.viewing:fs.file:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6bW9kZWxkZXJpdmF0aXZlL0E1LnppcA/output/1/A5.svf.png01_thumb_100x100.png",
-						  "resolution": [
-							100.0,
-							100.0
-						  ],
-						  "mime": "image/png",
-						  "role": "thumbnail"
-						}
-					  ]
-					},
-					{
-					  "guid": "b86dcf4d-dd4e-561a-1b52-50ee01f7af4f",
-					  "hasThumbnail": "true",
-					  "progress": "complete",
-					  "role": "2d",
-					  "status": "success",
-					  "type": "geometry",
-					  "children": [
-						{
-						  "guid": "cfe81eb4-fbc6-17c0-beba-3ab845d228f0",
-						  "mime": "image/png",
-						  "resolution": [
-							100,
-							100
-						  ],
-						  "role": "thumbnail",
-						  "status": "success",
-						  "type": "resource",
-						  "urn": "urn:adsk.viewing:fs.file:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6bW9kZWxkZXJpdmF0aXZlL0E1LnppcA/output/661c6096-056d-e58c-6c87-38769662932f_f2d/02___Floor1.png"
-						},
-						{
-						  "guid": "03c34714-36c7-b2bf-eb19-245f26c15e50",
-						  "mime": "image/png",
-						  "resolution": [
-							200,
-							200
-						  ],
-						  "role": "thumbnail",
-						  "status": "success",
-						  "type": "resource",
-						  "urn": "urn:adsk.viewing:fs.file:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6bW9kZWxkZXJpdmF0aXZlL0E1LnppcA/output/661c6096-056d-e58c-6c87-38769662932f_f2d/02___Floor2.png"
-						},
-						{
-						  "guid": "b680b9ec-5240-6858-b7ef-7e9adafd9d9a",
-						  "mime": "image/png",
-						  "resolution": [
-							400,
-							400
-						  ],
-						  "role": "thumbnail",
-						  "status": "success",
-						  "type": "resource",
-						  "urn": "urn:adsk.viewing:fs.file:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6bW9kZWxkZXJpdmF0aXZlL0E1LnppcA/output/661c6096-056d-e58c-6c87-38769662932f_f2d/02___Floor4.png"
-						},
-						{
-						  "guid": "a81433d1-e3e7-97f8-17f2-e85c1bbc1f66",
-						  "mime": "application/autodesk-f2d",
-						  "role": "graphics",
-						  "status": "success",
-						  "type": "resource",
-						  "urn": "urn:adsk.viewing:fs.file:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6bW9kZWxkZXJpdmF0aXZlL0E1LnppcA/output/661c6096-056d-e58c-6c87-38769662932f_f2d/primaryGraphics.f2d"
-						},
-						{
-						  "guid": "5d2d63c3-943e-4111-b0fe-75abfeb85cb8",
-						  "name": "Floor Plan: 02 - Floor",
-						  "role": "2d",
-						  "type": "view",
-						  "viewbox": [
-							0,
-							0,
-							279.4,
-							215.9
-						  ]
-						}
-					  ]
-					}
-				  ]
-				},
-				{
-				  "status": "success",
-				  "progress": "complete",
-				  "outputType": "step",
-				  "children": [
-					{
-					  "guid": "a6128518-dcf0-967b-31a1-3439a375daeb",
-					  "role": "STEP",
-					  "mime": "application/octet-stream",
-					  "urn": "urn:adsk.viewing:fs.file:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6bW9kZWxkZXJpdmF0aXZlL0E1LnppcA/output/1/A5.stp",
-					  "status": "success",
-					  "type": "resource"
-					}
-				  ]
-				},
-				{
-				  "name": "A5.iam",
-				  "hasThumbnail": "true",
-				  "status": "success",
-				  "progress": "complete",
-				  "outputType": "thumbnail",
-				  "children": [
-					{
-					  "guid": "63c50197-c285-411b-bcfd-b3f19b1d37ef",
-					  "mime": "image/png",
-					  "resolution": [
-						256,
-						256
-					  ],
-					  "role": "thumbnail",
-					  "type": "resource",
-					  "urn": "urn:adsk.viewing:fs.file:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6bW9kZWxkZXJpdmF0aXZlL0E1LnppcA/output/256x256.png"
-					}
-				  ]
-				},
-				{
-				  "status": "success",
-				  "progress": "complete",
-				  "outputType": "obj",
-				  "children": [
-					{
-					  "guid": "1122e136-ea24-31ee-a7ef-ad065fafad42",
-					  "type": "resource",
-					  "role": "obj",
-					  "modelGUID": "4f981e94-8241-4eaf-b08b-cd337c6b8b1f",
-					  "objectIds": [
-						2,
-						3,
-						4
-					  ],
-					  "status": "success",
-					  "urn": "urn:adsk.viewing:fs.file:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6bW9kZWxkZXJpdmF0aXZlL0E1LnppcA/output/geometry/bc3339b2-73cd-4fba-9cb3-15363703a354.obj"
-					},
-					{
-					  "guid": "29c1c0d4-7a35-350a-b3e5-fb221b054e29",
-					  "type": "resource",
-					  "role": "obj",
-					  "modelGUID": "4f981e94-8241-4eaf-b08b-cd337c6b8b1f",
-					  "objectIds": [
-						2,
-						3,
-						4
-					  ],
-					  "status": "success",
-					  "urn": "urn:adsk.viewing:fs.file:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6bW9kZWxkZXJpdmF0aXZlL0E1LnppcA/output/geometry/bc3339b2-73cd-4fba-9cb3-15363703a354.mtl"
-					},
-					{
-					  "guid": "3e9752f1-5989-38b1-bff1-1f2d81841c8a",
-					  "type": "resource",
-					  "role": "obj",
-					  "modelGUID": "4f981e94-8241-4eaf-b08b-cd337c6b8b1f",
-					  "objectIds": [
-						2,
-						3,
-						4
-					  ],
-					  "status": "success",
-					  "urn": "urn:adsk.viewing:fs.file:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6bW9kZWxkZXJpdmF0aXZlL0E1LnppcA/output/geometry/bc3339b2-73cd-4fba-9cb3-15363703a354.zip"
-					}
-				  ]
+				authenticator := oauth.NewTwoLegged(clientID, clientSecret)
+				_, err := authenticator.GetToken("bucket:create bucket:read data:read data:create data:write")
+				if err != nil {
+					// can't continue if we can't get a token
+					tt.args.error = &trueVal
+					t.Fatalf("Failed to get token: %s\n", err.Error())
 				}
-			  ]
-			}
-			`
-		var decodedManifest md.Manifest
-		err := json.Unmarshal([]byte(manifest), &decodedManifest)
-		if err != nil {
-			t.Error(err.Error())
-		}
 
-		if len(decodedManifest.Derivatives) != 4 {
-			t.Error("Failed to parse derivatives")
-		}
+				ossAPI := dm.NewOssApi(authenticator, tt.args.region)
+				mdAPI := md.NewMdApi(authenticator, tt.args.region)
 
-		if len(decodedManifest.Derivatives[0].Children) == 1 {
-			t.Errorf("Failed to parse childern derivatives, expecting 1, got %d",
-				len(decodedManifest.Derivatives[0].Children))
-		}
+				t.Log("Checking if bucket already exists...")
+				bucketDetails, err := ossAPI.GetBucketDetails(tt.args.tempBucketName)
+				if err == nil {
 
-		if len(decodedManifest.Derivatives[0].Children[0].Children) != 4 {
-			t.Errorf("Failed to parse childern of derivative's children [funny], expecting 4, got %d",
-				len(decodedManifest.Derivatives[0].Children[0].Children))
-		}
+					t.Log("Bucket exists, no need to create it...")
+					t.Log(bucketDetails)
 
-		if decodedManifest.Derivatives[0].Children[0].Children[0].URN == "" {
-			t.Error("URN should not be empty")
-		}
+				} else {
 
-		if len(decodedManifest.Derivatives[0].Messages) != 0 {
-			t.Error("Derivative should not contain any error messages")
-		}
+					t.Log("Bucket does not exist, try creating it...")
+					_, err = ossAPI.CreateBucket(tt.args.tempBucketName, dm.PolicyTransient)
+					if err != nil {
+						// can't continue if bucket creation fails
+						tt.args.error = &trueVal
+						t.Fatalf("Failed to create a bucket: %s\n", err.Error())
+					}
 
-		expectedOutputTypes := []string{"svf", "step", "thumbnail", "obj"}
+					t.Log("Verify that bucket exists...")
+					for _, backoff := range backoffSchedule {
+						bucketDetails, err = ossAPI.GetBucketDetails(tt.args.tempBucketName)
+						if err != nil {
+							t.Logf("Failed to get bucket details: %s\n", err.Error())
+							t.Log("Trying again...")
+							time.Sleep(backoff)
+						} else {
+							t.Log(bucketDetails)
+							break
+						}
+					}
+					if err != nil {
+						// can't continue if bucket creation failed
+						t.Log("Bucket does not exist, even after waiting for it to be created")
+						tt.args.error = &trueVal
+						t.Fatalf("Failed to get bucket details: %s\n", err.Error())
+					}
+				}
 
-		for idx := range decodedManifest.Derivatives {
-			if decodedManifest.Derivatives[idx].OutputType != expectedOutputTypes[idx] {
-				t.Errorf("Wrong derivative type parsing: expectd %s, got %s",
-					decodedManifest.Derivatives[idx].OutputType,
-					expectedOutputTypes[idx],
+				t.Log("Checking if test file exists...")
+				file, err := os.Open(testFilePath)
+				if err != nil {
+					// can't continue if file cannot be opened/found
+					tt.args.error = &trueVal
+					t.Fatal("Cannot open test file for reading")
+				}
+				defer file.Close()
+
+				t.Log("Uploading test object...")
+				uploadResult, err := ossAPI.UploadObject(tt.args.tempBucketName, tt.args.objectName, testFilePath)
+				if err != nil {
+					// can't continue if upload fails
+					tt.args.error = &trueVal
+					t.Fatal("Could not upload the test object, got: ", err.Error())
+				}
+				if uploadResult.Size == 0 {
+					// can't continue if upload fails
+					tt.args.error = &trueVal
+					t.Fatal("The test object was uploaded but it is zero-sized")
+				}
+				t.Log("Uploaded object details: ", uploadResult)
+
+				t.Log("Creating translation job...")
+				params := mdAPI.DefaultTranslationParams(uploadResult.ObjectId)
+				translationJob, err := mdAPI.StartTranslation(params, md.DefaultXAdsHeaders())
+				if err != nil {
+					// can't continue if translation job creation fails
+					tt.args.error = &trueVal
+					t.Fatal("Could not create the translation job, got: ", err.Error())
+				}
+				t.Log("Translation job: ", translationJob)
+				if translationJob.Result != "created" && translationJob.Result != "success" {
+					// can't continue if translation job creation fails
+					tt.args.error = &trueVal
+					t.Fatal(
+						"The the translation job result is neither \"created\" nor \"success\": ",
+						translationJob.Result,
+					)
+				}
+
+				// make this a fixed value for now, to avoid golang test timeouts
+				timeToWait := time.Duration(5) * time.Second
+
+				t.Log("Initial wait for the translation to get started...")
+				time.Sleep(timeToWait)
+
+				var manifest md.Manifest
+
+				seconds := 0
+				timeout := float64(60 * 60) // 1 hour
+				startTime := time.Now()
+				errorCount := 0
+
+			loopUntilTranslationIsFinished:
+				for time.Since(startTime).Seconds() < timeout && manifest.Status != md.StatusSuccess {
+					seconds++
+
+					t.Log("Getting manifest...")
+					manifest, err = mdAPI.GetManifest(translationJob.URN)
+					if err != nil {
+						errorCount++
+						if errorCount > 10 {
+							t.Errorf("Too many errors getting the manifest for %s: %s", translationJob.URN, err.Error())
+						} else {
+							t.Logf("Problems getting the manifest for %s: %s", translationJob.URN, err.Error())
+							t.Log("Waiting a bit and trying again...")
+							time.Sleep(timeToWait)
+							continue loopUntilTranslationIsFinished
+						}
+					}
+
+					switch manifest.Status {
+					case md.StatusPending:
+						t.Log("Translation pending...")
+						time.Sleep(timeToWait)
+						continue loopUntilTranslationIsFinished
+
+					case md.StatusInProgress:
+						t.Logf("Translation in progress: %s", manifest.Progress)
+						time.Sleep(timeToWait)
+
+					case md.StatusSuccess:
+						t.Log("Translation completed")
+						// break out of the loop
+						break loopUntilTranslationIsFinished
+
+					case md.StatusFailed:
+						// can't continue if translation failed
+						tt.args.error = &trueVal
+						t.Fatal("Translation failed")
+
+					case md.StatusTimeout:
+						// can't continue if translation timed out
+						tt.args.error = &trueVal
+						t.Fatal("Translation timed out")
+
+					default:
+						t.Errorf("Got unexpected status: %s", manifest.Status)
+					}
+				}
+
+				if manifest.Type != "manifest" {
+					t.Error("Expecting 'manifest' type, got ", manifest.Type)
+				}
+
+				if manifest.URN != translationJob.URN {
+					// can't continue if URN doesn't match
+					tt.args.error = &trueVal
+					t.Fatalf("URN not matching: translation=%s\tmanifest=%s", translationJob.URN, manifest.URN)
+				}
+
+				if len(manifest.Derivatives) != 2 {
+					t.Errorf("Expecting to have 2 derivative, got %d", len(manifest.Derivatives))
+				}
+
+				outputType := manifest.Derivatives[0].OutputType
+				if outputType != "svf" {
+					t.Errorf("Expecting first derivative to be 'svf', got %s", outputType)
+				}
+
+				t.Log("Getting properties database URN...")
+				propertiesDatabaseUrn := manifest.GetPropertiesDatabaseUrn()
+				if propertiesDatabaseUrn == "" {
+					t.Error("Expecting a non-empty URN")
+				}
+
+				t.Log("Downloading properties database...")
+				_, err = mdAPI.GetDerivative(manifest.URN, propertiesDatabaseUrn)
+				if err != nil {
+					t.Error("Failed to download the properties database, got: ", err.Error())
+				}
+
+				t.Log("Downloading metadata...")
+				metaData, err := mdAPI.GetMetadata(manifest.URN, md.DefaultXAdsHeaders())
+				if err != nil {
+					// can't continue if metadata download fails
+					tt.args.error = &trueVal
+					t.Fatal("Failed to download the metadata, got: ", err.Error())
+				}
+
+				if metaData.Data.Type != "metadata" {
+					t.Error("Expecting 'metadata' result type, got ", metaData.Data.Type)
+				}
+
+				masterViewGuid := metaData.GetMasterModelViewGuid()
+				if masterViewGuid == "" {
+					// can't continue if master view GUID is empty
+					tt.args.error = &trueVal
+					t.Fatal("Expecting a non-empty master view GUID")
+				}
+
+				t.Log("Downloading all properties for master view: ", masterViewGuid)
+				bytes, err := mdAPI.GetModelViewProperties(manifest.URN, masterViewGuid, md.DefaultXAdsHeaders())
+				if err != nil {
+					t.Error("Failed to download the properties, got: ", err.Error())
+				}
+
+				if len(bytes) == 0 {
+					t.Error("Properties data (byte array) empty")
+				}
+
+				// convert the bytes to JSON
+				jsonProperties, err := json.Marshal(string(bytes))
+				if err != nil {
+					t.Error("Failed to convert the properties to JSON, got: ", err.Error())
+				}
+
+				if len(jsonProperties) == 0 {
+					t.Error("Properties data (JSON) empty")
+				}
+
+				t.Log("Downloading object tree for master view: ", masterViewGuid)
+				tree, err := mdAPI.GetObjectTree(manifest.URN, masterViewGuid, true, md.DefaultXAdsHeaders())
+				if err != nil {
+					t.Error("Failed to download the object tree, got: ", err.Error())
+				}
+
+				if tree.Data.Type != "objects" {
+					t.Error("Expecting 'objects' result type, got ", tree.Data.Type)
+				}
+
+				if len(tree.Data.Objects) == 0 {
+					t.Error("Object tree is empty")
+				}
+
+				t.Cleanup(
+					func() {
+						t.Log("Try to delete the temporary bucket...")
+						err = ossAPI.DeleteBucket(tt.args.tempBucketName)
+						if err != nil {
+							t.Logf("Failed to delete bucket: %s\n", err.Error())
+						}
+					},
 				)
-			}
-		}
-
-	})
-
-	t.Run("Parse Revit manifest", func(t *testing.T) {
-		manifestExample := `
-{
-    "type": "manifest",
-    "hasThumbnail": "true",
-    "status": "success",
-    "progress": "complete",
-    "region": "US",
-    "urn": "dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6dGVzdC1maWxlcy8yMDE3MDcyNF9BaXJwb3J0JTIwTW9kZWwucnZ0",
-    "version": "1.0",
-    "derivatives": [
-        {
-            "name": "20170724_Airport Model.rvt",
-            "hasThumbnail": "true",
-            "status": "success",
-            "progress": "complete",
-            "messages": [
-                {
-                    "type": "warning",
-                    "code": "Revit-MissingLink",
-                    "message": [
-                        "<message>Missing link files: <ul>{0}</ul></message>",
-                        "S-FIDS-Wx-Video.jpg, solutions-airport-bcic2.jpg, zone.png"
-                    ]
-                }
-            ],
-            "outputType": "svf",
-            "children": [
-                {
-                    "guid": "6fac95cb-af5d-3e4f-b943-8a7f55847ff1",
-                    "type": "resource",
-                    "role": "Autodesk.CloudPlatform.PropertyDatabase",
-                    "urn": "urn:adsk.viewing:fs.file:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6dGVzdC1maWxlcy8yMDE3MDcyNF9BaXJwb3J0JTIwTW9kZWwucnZ0/output/Resource/model.sdb",
-                    "mime": "application/autodesk-db",
-                    "status": "success"
-                },
-                {
-                    "guid": "e7adaa0b-8274-132e-cdc1-65f55eb8b096",
-                    "type": "geometry",
-                    "role": "3d",
-                    "name": "{3D}",
-                    "viewableID": "a4646655-27fa-4fcc-b2cb-1c97f89f1e9b-00031929",
-                    "phaseNames": "New Construction",
-                    "status": "success",
-                    "hasThumbnail": "true",
-                    "progress": "complete",
-                    "children": [
-                        {
-                            "guid": "a4646655-27fa-4fcc-b2cb-1c97f89f1e9b-00031929",
-                            "type": "view",
-                            "role": "3d",
-                            "name": "{3D}",
-                            "status": "success",
-                            "progress": "complete",
-                            "camera": [
-                                68.769485,
-                                -500.972656,
-                                82.696663,
-                                -117.377716,
-                                29.634874,
-                                27.679764,
-                                -0.032235,
-                                0.091885,
-                                0.995248,
-                                4.974191,
-                                0,
-                                1,
-                                1
-                            ]
-                        },
-                        {
-                            "guid": "59a17c17-6249-81c1-5ef0-504a39b3e54f",
-                            "type": "resource",
-                            "role": "graphics",
-                            "urn": "urn:adsk.viewing:fs.file:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6dGVzdC1maWxlcy8yMDE3MDcyNF9BaXJwb3J0JTIwTW9kZWwucnZ0/output/Resource/3D View/{3D} 203049/{3D}.svf",
-                            "mime": "application/autodesk-svf"
-                        },
-                        {
-                            "guid": "daefa290-464d-9879-eefb-b60ee4549be1",
-                            "type": "resource",
-                            "role": "thumbnail",
-                            "urn": "urn:adsk.viewing:fs.file:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6dGVzdC1maWxlcy8yMDE3MDcyNF9BaXJwb3J0JTIwTW9kZWwucnZ0/output/Resource/3D View/{3D} 203049/{3D}1.png",
-                            "resolution": [
-                                100,
-                                100
-                            ],
-                            "mime": "image/png",
-                            "status": "success"
-                        },
-                        {
-                            "guid": "7241ccc4-2ed1-b357-abd3-f9acac457769",
-                            "type": "resource",
-                            "role": "thumbnail",
-                            "urn": "urn:adsk.viewing:fs.file:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6dGVzdC1maWxlcy8yMDE3MDcyNF9BaXJwb3J0JTIwTW9kZWwucnZ0/output/Resource/3D View/{3D} 203049/{3D}2.png",
-                            "resolution": [
-                                200,
-                                200
-                            ],
-                            "mime": "image/png",
-                            "status": "success"
-                        },
-                        {
-                            "guid": "71c50af6-78c8-3668-7aa6-62433efc5394",
-                            "type": "resource",
-                            "role": "thumbnail",
-                            "urn": "urn:adsk.viewing:fs.file:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6dGVzdC1maWxlcy8yMDE3MDcyNF9BaXJwb3J0JTIwTW9kZWwucnZ0/output/Resource/3D View/{3D} 203049/{3D}4.png",
-                            "resolution": [
-                                400,
-                                400
-                            ],
-                            "mime": "image/png",
-                            "status": "success"
-                        }
-                    ]
-                }
-            ]
-        },
-        {
-            "status": "success",
-            "progress": "complete",
-            "outputType": "thumbnail",
-            "children": [
-                {
-                    "guid": "db899ab5-939f-e250-d79d-2d1637ce4565",
-                    "type": "resource",
-                    "role": "thumbnail",
-                    "urn": "urn:adsk.viewing:fs.file:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6dGVzdC1maWxlcy8yMDE3MDcyNF9BaXJwb3J0JTIwTW9kZWwucnZ0/output/preview1.png",
-                    "resolution": [
-                        100,
-                        100
-                    ],
-                    "mime": "image/png",
-                    "status": "success"
-                },
-                {
-                    "guid": "3f6c118d-f551-7bf0-03c9-8548d26c9772",
-                    "type": "resource",
-                    "role": "thumbnail",
-                    "urn": "urn:adsk.viewing:fs.file:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6dGVzdC1maWxlcy8yMDE3MDcyNF9BaXJwb3J0JTIwTW9kZWwucnZ0/output/preview2.png",
-                    "resolution": [
-                        200,
-                        200
-                    ],
-                    "mime": "image/png",
-                    "status": "success"
-                },
-                {
-                    "guid": "4e751806-0920-ce32-e9fd-47c3cec21536",
-                    "type": "resource",
-                    "role": "thumbnail",
-                    "urn": "urn:adsk.viewing:fs.file:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6dGVzdC1maWxlcy8yMDE3MDcyNF9BaXJwb3J0JTIwTW9kZWwucnZ0/output/preview4.png",
-                    "resolution": [
-                        400,
-                        400
-                    ],
-                    "mime": "image/png",
-                    "status": "success"
-                }
-            ]
-        }
-    ]
-}`
-
-		result := md.Manifest{}
-
-		buffer := bytes.NewBufferString(manifestExample)
-		decoder := json.NewDecoder(buffer)
-		err := decoder.Decode(&result)
-
-		if err != nil {
-			t.Fatal(err.Error())
-		}
-
-	})
-
+			},
+		)
+	}
 }

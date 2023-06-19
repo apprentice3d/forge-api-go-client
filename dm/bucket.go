@@ -6,37 +6,74 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"net/url"
 	"strconv"
 
+	"github.com/woweh/forge-api-go-client"
 	"github.com/woweh/forge-api-go-client/oauth"
 )
 
-// NewBucketAPI returns a Bucket API client with default configurations
-// and populates the BucketAPIPath.
-func NewBucketAPI(authenticator oauth.ForgeAuthenticator) BucketAPI {
-	return BucketAPI{
-		authenticator,
-		"/oss/v2/buckets",
+// NewOssApi returns an OSS API client with default configurations and populates the BucketApiPath.
+func NewOssApi(authenticator oauth.ForgeAuthenticator, region forge.Region) OssAPI {
+	return OssAPI{
+		Authenticator: authenticator,
+		BucketApiPath: "/oss/v2/buckets",
+		Region:        region,
 	}
 }
 
-// CreateBucket creates and returns details of created bucket, or an error on failure
-func (api BucketAPI) CreateBucket(bucketKey, policyKey string) (result BucketDetails, err error) {
+// RetentionPolicy applies to all objects that are stored in a bucket.
+//   - This cannot be changed at a later time!
+//
+// When creating a bucket, specifically set the policyKey to transient, temporary, or persistent.
+type RetentionPolicy string
+
+const (
+	// PolicyTransient - Think of this type of storage as a cache. Use it for ephemeral results.
+	// For example, you might use this for objects that are part of producing other persistent artifacts, but otherwise are not required to be available later.
+	// Objects older than 24 hours are removed automatically.
+	// Each upload of an object is considered unique, so, for example, if the same rendering is uploaded multiple times, each of them will have its own retention period of 24 hours.
+	PolicyTransient RetentionPolicy = "transient"
+
+	// PolicyTemporary - This type of storage is suitable for artifacts produced for user-uploaded content where after some period of activity, the user may rarely access the artifacts.
+	// When an object has reached 30 days of age, it is deleted.
+	PolicyTemporary RetentionPolicy = "temporary"
+
+	// PolicyPersistent - Persistent storage is intended for user data.
+	// When a file is uploaded, the owner should expect this item to be available for as long as the owner account is active, or until he or she deletes the item.
+	PolicyPersistent RetentionPolicy = "persistent"
+)
+
+// CreateBucket creates and returns details of created bucket, or an error on failure.
+// The region is taken from the OssAPI instance.
+//   - bucketKey: A unique name you assign to a bucket. It must be globally unique across all applications and regions, otherwise the call will fail.
+//     Possible values: -_.a-z0-9 (between 3-128 characters in length).
+//     Note that you cannot change a bucket key.
+//   - policyKey: Data retention policy. Acceptable values: transient, temporary, persistent.
+//     This cannot be changed at a later time. The retention policy on the bucket applies to all objects stored within.
+//
+// References:
+//   - https://aps.autodesk.com/en/docs/data/v2/reference/http/buckets-POST/
+func (api *OssAPI) CreateBucket(bucketKey string, policyKey RetentionPolicy) (result BucketDetails, err error) {
 
 	bearer, err := api.Authenticator.GetToken("bucket:create")
 	if err != nil {
 		return
 	}
 
-	result, err = createBucket(api.getPath(), bucketKey, policyKey, bearer.AccessToken)
+	result, err = createBucket(api.getPath(), bucketKey, policyKey, bearer.AccessToken, api.Region)
 
 	return
 }
 
 // DeleteBucket deletes bucket given its key.
+//   - The bucket must be owned by the application.
+//   - We recommend only deleting small buckets used for acceptance testing or prototyping, since it can take a long time for a bucket to be deleted.
+//   - Note that the bucket name will not be immediately available for reuse.
 //
-//	WARNING: The bucket delete call is undocumented.
-func (api BucketAPI) DeleteBucket(bucketKey string) error {
+// References:
+//   - https://aps.autodesk.com/en/docs/data/v2/reference/http/buckets-:bucketKey-DELETE/
+func (api *OssAPI) DeleteBucket(bucketKey string) error {
 	bearer, err := api.Authenticator.GetToken("bucket:delete")
 	if err != nil {
 		return err
@@ -46,17 +83,58 @@ func (api BucketAPI) DeleteBucket(bucketKey string) error {
 }
 
 // ListBuckets returns a list of all buckets created or associated with Forge secrets used for token creation
-func (api BucketAPI) ListBuckets(region, limit, startAt string) (result ListedBuckets, err error) {
+//
+// References:
+//   - https://aps.autodesk.com/en/docs/data/v2/reference/http/buckets-GET/
+func (api *OssAPI) ListBuckets(region forge.Region, limit, startAt string) (result BucketList, err error) {
+
+	// init the result
+	result = BucketList{}
+
+loop:
 	bearer, err := api.Authenticator.GetToken("bucket:read")
 	if err != nil {
 		return
 	}
 
-	return listBuckets(api.getPath(), region, limit, startAt, bearer.AccessToken)
+	tmpResult, err := listBuckets(api.getPath(), region, limit, startAt, bearer.AccessToken)
+	if err != nil {
+		return
+	}
+
+	// append the result
+	result = append(result, tmpResult.Items...)
+
+	// if there are more items, get them
+	for tmpResult.Next != "" {
+		// extract the startAt from the next link
+		startAt, err = extractStartAt(tmpResult.Next)
+		if err != nil {
+			return
+		}
+		goto loop
+	}
+
+	return
+}
+
+func extractStartAt(nextUrl string) (startAt string, err error) {
+	parsedUrl, err := url.Parse(nextUrl)
+	if err != nil {
+		return "", err
+	}
+	startAt = parsedUrl.Query().Get("startAt")
+	if startAt == "" {
+		return "", errors.New("startAt not found in next url")
+	}
+	return startAt, nil
 }
 
 // GetBucketDetails returns information associated to a bucket. See BucketDetails struct.
-func (api BucketAPI) GetBucketDetails(bucketKey string) (result BucketDetails, err error) {
+//
+// References:
+//   - https://aps.autodesk.com/en/docs/data/v2/reference/http/buckets-:bucketKey-details-GET/
+func (api *OssAPI) GetBucketDetails(bucketKey string) (result BucketDetails, err error) {
 	bearer, err := api.Authenticator.GetToken("bucket:read")
 	if err != nil {
 		return
@@ -69,9 +147,9 @@ func (api BucketAPI) GetBucketDetails(bucketKey string) (result BucketDetails, e
  *	SUPPORT FUNCTIONS
  */
 
-// getPath gets the full bucket API path (= api.Authenticator.GetHostPath() + api.BucketAPIPath).
-func (api BucketAPI) getPath() string {
-	return api.Authenticator.GetHostPath() + api.BucketAPIPath
+// getPath gets the full bucket API path (= api.Authenticator.GetHostPath() + api.BucketApiPath).
+func (api *OssAPI) getPath() string {
+	return api.Authenticator.GetHostPath() + api.BucketApiPath
 }
 
 func getBucketDetails(path, bucketKey, token string) (result BucketDetails, err error) {
@@ -102,7 +180,7 @@ func getBucketDetails(path, bucketKey, token string) (result BucketDetails, err 
 	return
 }
 
-func listBuckets(path, region, limit, startAt, token string) (result ListedBuckets, err error) {
+func listBuckets(path string, region forge.Region, limit, startAt, token string) (result ListedBuckets, err error) {
 	task := http.Client{}
 
 	req, err := http.NewRequest("GET", path, nil)
@@ -113,7 +191,7 @@ func listBuckets(path, region, limit, startAt, token string) (result ListedBucke
 
 	params := req.URL.Query()
 	if len(region) != 0 {
-		params.Add("region", region)
+		params.Add("region", string(region))
 	}
 	if len(limit) != 0 {
 		params.Add("limit", limit)
@@ -139,16 +217,12 @@ func listBuckets(path, region, limit, startAt, token string) (result ListedBucke
 
 	err = json.NewDecoder(response.Body).Decode(&result)
 
-	/* TODO: address the pagination of buckets
-	if result.Next != "" {
-		// get the next batch
-	}
-	*/
-
 	return
 }
 
-func createBucket(path, bucketKey, policyKey, token string) (result BucketDetails, err error) {
+func createBucket(
+	path, bucketKey string, policyKey RetentionPolicy, token string, region forge.Region,
+) (result BucketDetails, err error) {
 
 	task := http.Client{}
 
@@ -156,18 +230,20 @@ func createBucket(path, bucketKey, policyKey, token string) (result BucketDetail
 		CreateBucketRequest{
 			bucketKey,
 			policyKey,
-		})
+		},
+	)
 	if err != nil {
 		return
 	}
 
 	req, err := http.NewRequest("POST", path, bytes.NewReader(body))
-
 	if err != nil {
 		return
 	}
+
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("x-ads-region", string(region))
 	response, err := task.Do(req)
 	if err != nil {
 		return
@@ -191,7 +267,6 @@ func deleteBucket(path, bucketKey, token string) (err error) {
 	task := http.Client{}
 
 	req, err := http.NewRequest("DELETE", path+"/"+bucketKey, nil)
-
 	if err != nil {
 		return
 	}

@@ -10,7 +10,7 @@ import (
 )
 
 // ListObjects returns the bucket contains along with details on each item.
-func (api BucketAPI) ListObjects(bucketKey, limit, beginsWith, startAt string) (result BucketContent, err error) {
+func (api *OssAPI) ListObjects(bucketKey, limit, beginsWith, startAt string) (result BucketContent, err error) {
 
 	bearer, err := api.Authenticator.GetToken("data:read")
 	if err != nil {
@@ -23,7 +23,7 @@ func (api BucketAPI) ListObjects(bucketKey, limit, beginsWith, startAt string) (
 }
 
 // DownloadObject downloads an on object, given the URL-encoded object name.
-func (api BucketAPI) DownloadObject(bucketKey string, objectName string) (result []byte, err error) {
+func (api *OssAPI) DownloadObject(bucketKey string, objectName string) (result []byte, err error) {
 
 	bearer, err := api.Authenticator.GetToken("data:read")
 	if err != nil {
@@ -42,7 +42,7 @@ func (api BucketAPI) DownloadObject(bucketKey string, objectName string) (result
 
 // UploadObject adds to specified bucket the given data (can originate from a multipart-form or direct file read).
 // Return details on uploaded object, including the object URN (> ObjectId). Check uploadOkResult struct.
-func (api BucketAPI) UploadObject(bucketKey, objectName, fileToUpload string) (result UploadResult, err error) {
+func (api *OssAPI) UploadObject(bucketKey, objectName, fileToUpload string) (result UploadResult, err error) {
 
 	job, err := newUploadJob(api, bucketKey, objectName, fileToUpload)
 	if err != nil {
