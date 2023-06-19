@@ -93,8 +93,9 @@ func TestBucketAPI_ListObjects(t *testing.T) {
 		},
 	)
 
-	t.Run(
-		"Delete the temp bucket", func(t *testing.T) {
+	t.Cleanup(
+		func() {
+			t.Log("Cleaning up the temp bucket")
 			err := bucketAPI.DeleteBucket(bucketKey)
 			if err != nil {
 				t.Error("Could not delete temp bucket, got: ", err.Error())
@@ -150,8 +151,9 @@ func TestBucketAPI_UploadObject(t *testing.T) {
 		},
 	)
 
-	t.Run(
-		"Delete the temp bucket", func(t *testing.T) {
+	t.Cleanup(
+		func() {
+			t.Log("Cleaning up the temp bucket")
 			err := bucketAPI.DeleteBucket(bucketKey)
 			if err != nil {
 				t.Error("Could not delete temp bucket, got: ", err.Error())
@@ -164,7 +166,7 @@ func TestBucketAPI_DownloadObject(t *testing.T) {
 
 	bucketAPI := getBucketAPI(t)
 
-	bucketKey := "forge_unit_testing_download_object"
+	bucketKey := "forge_unit_testing_upload_and_download_object"
 
 	t.Run(
 		"Create a temp bucket to store an object", func(t *testing.T) {
@@ -220,8 +222,9 @@ func TestBucketAPI_DownloadObject(t *testing.T) {
 		},
 	)
 
-	t.Run(
-		"Delete the temp bucket", func(t *testing.T) {
+	t.Cleanup(
+		func() {
+			t.Log("Cleaning up the temp bucket")
 			err := bucketAPI.DeleteBucket(bucketKey)
 			if err != nil {
 				t.Error("Could not delete temp bucket, got: ", err.Error())

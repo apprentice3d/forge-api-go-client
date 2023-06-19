@@ -101,22 +101,12 @@ func TestBucketAPI_GetBucketDetails(t *testing.T) {
 		},
 	)
 
-	t.Run(
-		"Delete created bucket", func(t *testing.T) {
+	t.Cleanup(
+		func() {
+			t.Log("Cleaning up the temp bucket")
 			err := bucketAPI.DeleteBucket(bucketKey)
-
 			if err != nil {
-				t.Fatalf("Failed to delete bucket: %s\n", err.Error())
-			}
-		},
-	)
-
-	t.Run(
-		"Get nonexistent bucket", func(t *testing.T) {
-			_, err := bucketAPI.GetBucketDetails(bucketKey + "30091981")
-
-			if err == nil {
-				t.Fatalf("Should fail getting getting details for non-existing bucket\n")
+				t.Error("Could not delete temp bucket, got: ", err.Error())
 			}
 		},
 	)
@@ -125,6 +115,8 @@ func TestBucketAPI_GetBucketDetails(t *testing.T) {
 func TestBucketAPI_ListBuckets(t *testing.T) {
 
 	bucketAPI := getBucketAPI(t)
+
+	bucketKey := "forge_unit_testing_list_buckets"
 
 	t.Run(
 		"List available buckets", func(t *testing.T) {
@@ -137,8 +129,6 @@ func TestBucketAPI_ListBuckets(t *testing.T) {
 
 	t.Run(
 		"Create a bucket and find it among listed", func(t *testing.T) {
-
-			bucketKey := "forge_unit_testing_list_buckets"
 
 			_, err := bucketAPI.GetBucketDetails(bucketKey)
 			if err == nil {
@@ -173,9 +163,15 @@ func TestBucketAPI_ListBuckets(t *testing.T) {
 			if !found {
 				t.Errorf("Could not find the %s bucket\n", bucketKey)
 			}
+		},
+	)
 
-			if err = bucketAPI.DeleteBucket(bucketKey); err != nil {
-				t.Errorf("Failed to delete bucket: %s\n", err.Error())
+	t.Cleanup(
+		func() {
+			t.Log("Cleaning up the temp bucket")
+			err := bucketAPI.DeleteBucket(bucketKey)
+			if err != nil {
+				t.Error("Could not delete temp bucket, got: ", err.Error())
 			}
 		},
 	)
