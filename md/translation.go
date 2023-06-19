@@ -112,51 +112,68 @@ type FormatSpec struct {
 }
 
 // AdvancedSpec is a set of extra translation options.
-// You *can* specify them if the input file type is IFC, Revit, or Navisworks and the output is SVF/SVF2.
-// You *must* specify them if the output is OBJ.
+//   - You *can* specify them if the input file type is IFC, Revit, or Navisworks and the output is SVF/SVF2.
+//   - You *must* specify them if the output is OBJ.
 type AdvancedSpec struct {
-	// SVF/SVF2 option to be specified when the input file type is _IFC_. Specifies what _IFC_ loader to use during translation.
-	ConversionMethod ConversionMethod `json:"conversionMethod,omitempty"`
-	/* SVF/SVF2 option to be specified when the input file type is _IFC_. Specifies how storeys are translated.
-	   NOTE: These options are applicable only when conversionMethod is set to modern or v3. */
-	BuildingStoreys Option `json:"buildingStoreys,omitempty"`
-	/* SVF/SVF2 option to be specified when the input file type is _IFC_. Specifies how spaces are translated.
-	   NOTE: These options are applicable only when conversionMethod is set to modern or v3. */
-	Spaces Option `json:"spaces,omitempty"`
-	/* SVF/SVF2 option to be specified when the input file type is _IFC_. Specifies how openings are translated.
-	   NOTE: These options are applicable only when conversionMethod is set to modern or v3. */
-	OpeningElements Option `json:"openingElements,omitempty"`
-	/* SVF/SVF2 option to be specified when the input file type is _Revit_.
-	Generates master views when translating from the _Revit_ input format to SVF/SVF2.
-	This option is ignored for all other input formats. This attribute defaults to false. */
+	// ConversionMethod specifies what _IFC_ loader to use during translation (_IFC_ => SVF/SVF2).
+	ConversionMethod IfcConversionMethod `json:"conversionMethod,omitempty"`
+
+	// BuildingStoreys specifies how storeys are translated (_IFC_ => SVF/SVF2).
+	// NOTE: These options are applicable **only** when conversionMethod is set to modern or v3.
+	BuildingStoreys IfcOption `json:"buildingStoreys,omitempty"`
+
+	// Spaces specifies how spaces are translated (_IFC_ => SVF/SVF2).
+	// NOTE: These options are applicable **only** when conversionMethod is set to modern or v3.
+	Spaces IfcOption `json:"spaces,omitempty"`
+
+	// OpeningElements specifies how openings are translated (_IFC_ => SVF/SVF2).
+	// NOTE: These options are applicable **only** when conversionMethod is set to modern or v3.
+	OpeningElements IfcOption `json:"openingElements,omitempty"`
+
+	// TwoDViews specifies the format that 2D views must be rendered to (_Revit_ => SVF/SVF2).
+	TwoDViews Rvt2dViews `json:"2dviews,omitempty"`
+
+	// ExtractorVersion specifies what version of the Revit translator/extractor to use (_Revit_ => SVF/SVF2).
+	ExtractorVersion RvtExtractorVersion `json:"extractorVersion,omitempty"`
+
+	// GenerateMasterViews specifies if master views shall be created (_Revit_ => SVF/SVF2).
+	// This attribute defaults to false.
 	GenerateMasterViews *bool `json:"generateMasterViews,omitempty"`
-	/* SVF/SVF2 option to be specified when the input file type is _Revit_.
-	Specifies the materials to apply to the generated SVF/SVF2 derivatives. */
-	MaterialMode MaterialMode `json:"materialMode,omitempty"`
-	// SVF/SVF2 option to be specified when the input file type is _Navisworks_.
+
+	// MaterialMode specifies the materials to apply to the generated SVF/SVF2 derivatives (_Revit_ => SVF/SVF2).
+	MaterialMode RvtMaterialMode `json:"materialMode,omitempty"`
+
+	// HiddenObjects specifies whether hidden objects must be extracted or not (_Navisworks_ => SVF/SVF2).
 	HiddenObjects *bool `json:"hiddenObjects,omitempty"`
-	// SVF/SVF2 option to be specified when the input file type is _Navisworks_.
+
+	// BasicMaterialProperties specifies whether basic material properties must be extracted or not (_Navisworks_ => SVF/SVF2).
 	BasicMaterialProperties *bool `json:"basicMaterialProperties,omitempty"`
-	// SVF/SVF2 option to be specified when the input file type is _Navisworks_.
+
+	// AutodeskMaterialProperties specifies how to handle Autodesk material properties (_Navisworks_ => SVF/SVF2).
 	AutodeskMaterialProperties *bool `json:"autodeskMaterialProperties,omitempty"`
-	// SVF/SVF2 option to be specified when the input file type is _Navisworks_.
+
+	// TimeLinerProperties specifies whether timeliner properties must be extracted or not (_Navisworks_ => SVF/SVF2).
 	TimeLinerProperties *bool `json:"timelinerProperties,omitempty"`
-	// OBJ option for creating a single or multiple OBJ files.
-	ExportFileStructure ExportFileStructure `json:"exportFileStructure,omitempty"`
-	/* OBJ option for translating models into different units.
+
+	// ExportFileStructure specifies if a single or multiple OBJ files shall be generated (SVF/SVF2 => _OBJ_).
+	ExportFileStructure ObjExportFileStructure `json:"exportFileStructure,omitempty"`
+
+	/* Unit specifies the unit for translating models (SVF/SVF2 => _OBJ_).
 	This causes the values to change. For example, from millimeters (10, 123, 31) to centimeters (1.0, 12.3, 3.1).
 	If the source unit or the unit you are translating into is not supported, the values remain unchanged. */
-	Unit Unit `json:"unit,omitempty"`
-	/* OBJ option required for geometry extraction.
-	   The model view ID (guid). Currently, only valid for 3d views. */
+	Unit ObjUnit `json:"unit,omitempty"`
+
+	// ModelGuid specifies the model view ID (guid) required for geometry extraction (SVF/SVF2 => _OBJ_).
+	// Currently, only valid for 3d views.
 	ModelGuid string `json:"modelGuid,omitempty"`
-	/* OBJ option required for geometry extraction. List object ids to be translated.
-	   -1 will extract the entire model. Currently, only valid for 3d views. */
+
+	// ObjectIds are required for geometry extraction (SVF/SVF2 => _OBJ_). List object ids to be translated.
+	//   NOTE: -1 will extract the entire model. Currently, only valid for 3d views.
 	ObjectIds *[]int `json:"objectIds,omitempty"`
 }
 
-// translate triggers a translation job with the given TranslationParams and xAdsHeaders.XAdsHeaders.
-func translate(path string, params TranslationParams, xAdsHeaders *XAdsHeaders, token string) (
+// startTranslation triggers a translation job with the given TranslationParams and xAdsHeaders.XAdsHeaders.
+func startTranslation(path string, params TranslationParams, xAdsHeaders *XAdsHeaders, token string) (
 	result TranslationJob, err error,
 ) {
 
@@ -170,6 +187,10 @@ func translate(path string, params TranslationParams, xAdsHeaders *XAdsHeaders, 
 	if err != nil {
 		return
 	}
+
+	log.Println("Creating translation job...")
+	log.Println("- Base64  encoded design URN: ", params.Input.URN)
+	log.Println("- URL: ", req.URL.String())
 
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Authorization", "Bearer "+token)
@@ -193,6 +214,8 @@ func translate(path string, params TranslationParams, xAdsHeaders *XAdsHeaders, 
 	decoder := json.NewDecoder(response.Body)
 
 	err = decoder.Decode(&result)
+
+	log.Println("Translation job created successfully")
 
 	return
 }

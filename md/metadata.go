@@ -50,13 +50,13 @@ func getMetadata(path, urn, token string, xHeaders XAdsHeaders) (result MetaData
 		return
 	}
 
-	req.Header.Set("Authorization", "Bearer "+token)
-	req.Header.Add("x-ads-force", strconv.FormatBool(xHeaders.Overwrite))
-	req.Header.Add("x-ads-derivative-format", string(xHeaders.Format))
-
 	log.Println("Requesting metadata...")
 	log.Println("- Base64  encoded design URN: ", urn)
 	log.Println("- URL: ", req.URL.String())
+
+	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Add("x-ads-force", strconv.FormatBool(xHeaders.Overwrite))
+	req.Header.Add("x-ads-derivative-format", string(xHeaders.Format))
 
 	response, err := task.Do(req)
 	if err != nil {
@@ -73,6 +73,8 @@ func getMetadata(path, urn, token string, xHeaders XAdsHeaders) (result MetaData
 	}
 
 	err = json.NewDecoder(response.Body).Decode(&result)
+
+	log.Println("Received metadata.")
 
 	return
 }
@@ -125,6 +127,8 @@ retry:
 
 	err = json.NewDecoder(response.Body).Decode(&result)
 
+	log.Println("Received object tree.")
+
 	return
 }
 
@@ -172,6 +176,8 @@ retry:
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}
+
+	log.Println("Receiving properties...")
 
 	return io.ReadAll(response.Body)
 }

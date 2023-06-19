@@ -18,8 +18,8 @@ type OssAPI struct {
 
 // CreateBucketRequest contains the data necessary to be passed upon bucket creation
 type CreateBucketRequest struct {
-	BucketKey string `json:"bucketKey"`
-	PolicyKey string `json:"policyKey"`
+	BucketKey string          `json:"bucketKey"`
+	PolicyKey RetentionPolicy `json:"policyKey"`
 }
 
 // BucketDetails reflects the body content received upon creation of a bucket
@@ -31,7 +31,7 @@ type BucketDetails struct {
 		AuthID string `json:"authId"`
 		Access string `json:"access"`
 	} `json:"permissions"`
-	PolicyKey string `json:"policyKey"`
+	PolicyKey RetentionPolicy `json:"policyKey"`
 }
 
 // ErrorResult reflects the body content when a request failed (g.e. Bad request or key conflict)
@@ -42,9 +42,9 @@ type ErrorResult struct {
 type BucketList []BucketInfo
 
 type BucketInfo struct {
-	BucketKey   string `json:"bucketKey"`
-	CreatedDate int64  `json:"createdDate"`
-	PolicyKey   string `json:"policyKey"`
+	BucketKey   string          `json:"bucketKey"`
+	CreatedDate int64           `json:"createdDate"`
+	PolicyKey   RetentionPolicy `json:"policyKey"`
 }
 
 // ListedBuckets reflects the response when query Data Management API for buckets associated with current Forge secrets.

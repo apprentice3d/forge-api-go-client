@@ -9,10 +9,10 @@ import (
 
 func Test_IfcAdvancedSpec_Json(t *testing.T) {
 	type args struct {
-		conversionMethod md.ConversionMethod
-		storeys          md.Option
-		spaces           md.Option
-		openings         md.Option
+		conversionMethod md.IfcConversionMethod
+		storeys          md.IfcOption
+		spaces           md.IfcOption
+		openings         md.IfcOption
 	}
 	tests := []struct {
 		name string
@@ -21,12 +21,12 @@ func Test_IfcAdvancedSpec_Json(t *testing.T) {
 	}{
 		{
 			name: "All params are filled in",
-			args: args{conversionMethod: md.V3, storeys: md.Hide, spaces: md.Show, openings: md.Skip},
+			args: args{conversionMethod: md.IfcV3, storeys: md.IfcHide, spaces: md.IfcShow, openings: md.IfcSkip},
 			want: "{\"conversionMethod\":\"v3\",\"buildingStoreys\":\"hide\",\"spaces\":\"show\",\"openingElements\":\"skip\"}",
 		},
 		{
-			name: "Legacy method - no additional parameters",
-			args: args{conversionMethod: md.Legacy},
+			name: "IfcLegacy method - no additional parameters",
+			args: args{conversionMethod: md.IfcLegacy},
 			want: "{\"conversionMethod\":\"legacy\"}",
 		},
 	}
@@ -49,7 +49,9 @@ func Test_IfcAdvancedSpec_Json(t *testing.T) {
 func Test_RevitAdvancedSpec_Json(t *testing.T) {
 	type args struct {
 		generateMasterViews bool
-		materialMode        md.MaterialMode
+		materialMode        md.RvtMaterialMode
+		twoDViews           md.Rvt2dViews
+		version             md.RvtExtractorVersion
 	}
 	tests := []struct {
 		name string
@@ -58,19 +60,21 @@ func Test_RevitAdvancedSpec_Json(t *testing.T) {
 	}{
 		{
 			name: "All params are filled in",
-			args: args{true, md.Auto},
-			want: "{\"generateMasterViews\":true,\"materialMode\":\"auto\"}",
+			args: args{true, md.RvtAuto, md.RvtPdf, md.RvtNext},
+			want: "{\"2dviews\":\"pdf\",\"extractorVersion\":\"next\",\"generateMasterViews\":true,\"materialMode\":\"auto\"}",
 		},
 		{
-			name: "Only generateMasterViews, no materialMode",
-			args: args{false, ""},
+			name: "Only generateMasterViews",
+			args: args{false, "", "", ""},
 			want: "{\"generateMasterViews\":false}",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(
 			tt.name, func(t *testing.T) {
-				advancedSpec := md.RevitAdvancedSpec(tt.args.generateMasterViews, tt.args.materialMode)
+				advancedSpec := md.RevitAdvancedSpec(
+					tt.args.generateMasterViews, tt.args.materialMode, tt.args.twoDViews, tt.args.version,
+				)
 				bytes, _ := json.Marshal(advancedSpec)
 				gotJson := string(bytes)
 				if gotJson != tt.want {
@@ -94,19 +98,19 @@ func TestNavisworksAdvancedSpec(t *testing.T) {
 		want string
 	}{
 		{
-			name: "All params are filled in",
+			name: "True False True False",
 			args: args{true, false, true, false},
 			want: "{\"hiddenObjects\":true,\"basicMaterialProperties\":false,\"autodeskMaterialProperties\":true,\"timelinerProperties\":false}",
 		},
 		{
-			name: "Only hiddenObjects parameter",
-			args: args{true, false, false, false},
-			want: "{\"hiddenObjects\":true}",
+			name: "All True",
+			args: args{true, true, true, true},
+			want: "{\"hiddenObjects\":true,\"basicMaterialProperties\":true,\"autodeskMaterialProperties\":true,\"timelinerProperties\":true}",
 		},
 		{
-			name: "Only hiddenObjects and timelinerProperties parameters",
-			args: args{true, false, false, false},
-			want: "{\"hiddenObjects\":true,\"timelinerProperties\":false}",
+			name: "All False",
+			args: args{false, false, false, false},
+			want: "{\"hiddenObjects\":false,\"basicMaterialProperties\":false,\"autodeskMaterialProperties\":false,\"timelinerProperties\":false}",
 		},
 	}
 	for _, tt := range tests {
@@ -128,8 +132,8 @@ func TestNavisworksAdvancedSpec(t *testing.T) {
 
 func Test_ObjAdvancedSpec_Json(t *testing.T) {
 	type args struct {
-		exportFileStructure md.ExportFileStructure
-		unit                md.Unit
+		exportFileStructure md.ObjExportFileStructure
+		unit                md.ObjUnit
 		modelGuid           string
 		objectIds           []int
 	}
@@ -141,13 +145,14 @@ func Test_ObjAdvancedSpec_Json(t *testing.T) {
 		{
 			name: "All params are filled in",
 			args: args{
-				exportFileStructure: md.Single, unit: md.Meter, modelGuid: "justSomeGuid", objectIds: []int{1, 2, 3},
+				exportFileStructure: md.ObjSingle, unit: md.ObjMeter, modelGuid: "justSomeGuid",
+				objectIds: []int{1, 2, 3},
 			},
 			want: "{\"exportFileStructure\":\"single\",\"unit\":\"meter\",\"modelGuid\":\"justSomeGuid\",\"objectIds\":[1,2,3]}",
 		},
 		{
 			name: "Minimum params are filled in",
-			args: args{exportFileStructure: "", unit: md.None, modelGuid: "justSomeGuid", objectIds: []int{1, 2, 3}},
+			args: args{exportFileStructure: "", unit: md.ObjNone, modelGuid: "justSomeGuid", objectIds: []int{1, 2, 3}},
 			want: "{\"modelGuid\":\"justSomeGuid\",\"objectIds\":[1,2,3]}",
 		},
 	}
@@ -170,11 +175,11 @@ func Test_ObjAdvancedSpec_Json(t *testing.T) {
 func Test_AdvancedSpec_IsEmpty(t *testing.T) {
 
 	// if no AdvancedSpec is defined, it shouldn't be in the json
-	expectedJson := "{\"type\":\"svf2\",\"views\":[\"3d\"]}"
+	expectedJson := "{\"type\":\"svf\",\"views\":[\"3d\"]}"
 
 	formatSpec := md.FormatSpec{
-		Type:  md.SVF2,
-		Views: []md.ViewType{md.View3D},
+		Type:  md.SVF,
+		Views: md.ViewType3D(),
 	}
 	bytes, _ := json.Marshal(formatSpec)
 	gotJson := string(bytes)

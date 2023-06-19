@@ -42,7 +42,7 @@ func (a *ModelDerivativeAPI) StartTranslation(params TranslationParams, xHeaders
 	}
 	path := a.Authenticator.GetHostPath() + a.ModelDerivativePath
 
-	return translate(path, params, &xHeaders, bearer.AccessToken)
+	return startTranslation(path, params, &xHeaders, bearer.AccessToken)
 }
 
 // NewTranslationParams creates a TranslationParams struct with the given objectID, outputType, views, and advanced options.

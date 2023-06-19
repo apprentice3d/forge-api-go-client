@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -26,6 +27,10 @@ func getDerivative(path, urn, derivativeUrn, token string) (result []byte, err e
 		return
 	}
 
+	log.Println("Requesting derivative URN...")
+	log.Println("- Base64  encoded design URN: ", urn)
+	log.Println("- URL: ", req.URL.String())
+
 	req.Header.Set("Authorization", "Bearer "+token)
 	response, err := task.Do(req)
 	if err != nil {
@@ -46,6 +51,13 @@ func getDerivative(path, urn, derivativeUrn, token string) (result []byte, err e
 	if err != nil {
 		return
 	}
+	// https://aps.autodesk.com/en/docs/model-derivative/v2/reference/http/urn-manifest-derivativeUrn-signedcookies-GET/#http-headers
+	// Signed cookie to use with download URL.
+	// There will be three headers in the response named Set-Cookie
+	if len(response.Header.Values("Set-Cookie")) != 3 {
+		err = errors.New("invalid number of Set-Cookie headers in the response")
+		return
+	}
 
 	signedCookieValue := strings.Join(response.Header.Values("Set-Cookie"), ";")
 
@@ -60,6 +72,9 @@ func downloadDerivative(downloadUrl derivativeDownloadUrl, cookieValue string) (
 	if err != nil {
 		return
 	}
+
+	log.Println("Start downloading derivative...")
+	log.Println("- URL: ", downloadUrl.Url)
 
 	req.Header.Set("Cookie", cookieValue)
 	req.Header.Set("Content-Type", downloadUrl.ContentType)
@@ -84,6 +99,8 @@ func downloadDerivative(downloadUrl derivativeDownloadUrl, cookieValue string) (
 		err = errors.New("downloaded file size is different than the expected size")
 		return
 	}
+
+	log.Println("Finished downloading derivative.")
 
 	return result, nil
 }

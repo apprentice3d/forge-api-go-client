@@ -12,13 +12,22 @@ import (
 	"github.com/woweh/forge-api-go-client/dm"
 )
 
-/*  NOTE:
-Since tests are run in parallel, you should use a unique bucketKey per test.
+/*
+NOTE:
+- You can only run these tests when you have a valid client ID and secret.
+  => You probably want to run the tests locally, with your own credentials.
+- A bucketKey (= bucket name) must be globally unique across all applications and regions
+- Rules for bucketKey names: -_.a-z0-9 (between 3-128 characters in length)
+- Buckets can only be deleted by the user who created them.
+  => You might want to change the bucketKey if the bucket already exists.
+- A bucket name will not be immediately available for reuse after deletion.
+  => Best use a unique bucket name for each subtest.
+  => You can also use a timestamp to make sure the bucket name is unique.
 */
 
 const (
 	objectKey    string = "rst_basic_sample_project.rvt"
-	testFilePath string = "../assets/" + objectKey
+	testFilePath        = "../assets/" + objectKey
 )
 
 func getBucketAPI(t *testing.T) dm.OssAPI {
@@ -39,7 +48,7 @@ func getBucketAPI(t *testing.T) dm.OssAPI {
 		t.Fatal("Error authenticating, authenticator is nil.")
 	}
 
-	return dm.NewOssApi(authenticator, forge.EMEA)
+	return dm.NewOssApi(authenticator, forge.US)
 }
 
 func TestBucketAPI_ListObjects(t *testing.T) {
@@ -50,15 +59,13 @@ func TestBucketAPI_ListObjects(t *testing.T) {
 
 	t.Run(
 		"Create a temp bucket to store an object", func(t *testing.T) {
+
 			_, err := bucketAPI.GetBucketDetails(bucketKey)
 			if err == nil {
-				t.Log("The temp bucket already exists, try to delete it.")
-				err := bucketAPI.DeleteBucket(bucketKey)
-				if err != nil {
-					t.Error("Could not delete temp bucket, got: ", err.Error())
-				}
+				t.Skip("The temp bucket already exists.")
 			}
-			_, err = bucketAPI.CreateBucket(bucketKey, "transient")
+
+			_, err = bucketAPI.CreateBucket(bucketKey, dm.PolicyTransient)
 			if err != nil {
 				t.Error("Could not create temp bucket, got: ", err.Error())
 			}
@@ -86,6 +93,14 @@ func TestBucketAPI_ListObjects(t *testing.T) {
 		},
 	)
 
+	t.Run(
+		"Delete the temp bucket", func(t *testing.T) {
+			err := bucketAPI.DeleteBucket(bucketKey)
+			if err != nil {
+				t.Error("Could not delete temp bucket, got: ", err.Error())
+			}
+		},
+	)
 }
 
 func TestBucketAPI_UploadObject(t *testing.T) {
@@ -98,13 +113,10 @@ func TestBucketAPI_UploadObject(t *testing.T) {
 		"Create a temp bucket to store an object", func(t *testing.T) {
 			_, err := bucketAPI.GetBucketDetails(bucketKey)
 			if err == nil {
-				t.Log("The temp bucket already exists, try to delete it.")
-				err := bucketAPI.DeleteBucket(bucketKey)
-				if err != nil {
-					t.Error("Could not delete temp bucket, got: ", err.Error())
-				}
+				t.Skip("The temp bucket already exists, try to delete it.")
 			}
-			_, err = bucketAPI.CreateBucket(bucketKey, "transient")
+
+			_, err = bucketAPI.CreateBucket(bucketKey, dm.PolicyTransient)
 			if err != nil {
 				t.Error("Could not create temp bucket, got: ", err.Error())
 			}
@@ -158,13 +170,10 @@ func TestBucketAPI_DownloadObject(t *testing.T) {
 		"Create a temp bucket to store an object", func(t *testing.T) {
 			_, err := bucketAPI.GetBucketDetails(bucketKey)
 			if err == nil {
-				t.Log("The temp bucket already exists, try to delete it.")
-				err := bucketAPI.DeleteBucket(bucketKey)
-				if err != nil {
-					t.Error("Could not delete temp bucket, got: ", err.Error())
-				}
+				t.Skip("The temp bucket already exists.")
 			}
-			_, err = bucketAPI.CreateBucket(bucketKey, "transient")
+
+			_, err = bucketAPI.CreateBucket(bucketKey, dm.PolicyTransient)
 			if err != nil {
 				t.Error("Could not create temp bucket, got: ", err.Error())
 			}
