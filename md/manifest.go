@@ -38,7 +38,7 @@ type Manifest struct {
 type Derivative struct {
 	Name         string      `json:"name"`
 	HasThumbnail string      `json:"hasThumbnail"`
-	Status       string      `json:"status"`
+	Status       Status      `json:"status"`
 	Progress     string      `json:"progress"`
 	Messages     []Message   `json:"messages,omitempty"`
 	OutputType   string      `json:"outputType"`
