@@ -19,6 +19,7 @@ To-do:
   - revoke token
 
 Example code:
+```go`
 
 	func ExampleTwoLeggedAuth_Authenticate() {
 
@@ -50,5 +51,7 @@ Example code:
 			bearer.ExpiresIn)
 
 	}
+
+```
 */
 package oauth

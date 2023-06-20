@@ -10,7 +10,7 @@
 [![Model-Derivative](https://img.shields.io/badge/Model%20Derivative-v2-green.svg)](https://aps.autodesk.com/en/docs/model-derivative/v2/developers_guide/)
 
 
-Golang client for building APS based applications ([Autodesk Platform Services], formerly *"Forge"*).
+Golang API client for building APS based applications ([Autodesk Platform Services], formerly *"Forge"*).
 
 This is a fork of the [forge-api-go-client by Denis Grigor](https://github.com/apprentice3d/forge-api-go-client).  
 The original client is no longer maintained.  
@@ -32,14 +32,14 @@ The following APIs are not maintained:
 Autodesk is constantly adding new APIs and changing existing APIs.  
 A lot of the new APIs are not covered by this client.
 
-You are invited to contribute!  
-Please fork and add missing APIs.
+You are invited to contribute 🧑🏽‍💻!  
+Please fork  and add missing APIs.
 
 ---
 ## Updates from the original client
 
-The client has been extended with the following features:
-
+The client has been extended with the following features.  
+Note that there are a number of breaking changes.
 
 ### Authentication (oauth):
 - Update to OAuth V2.  
@@ -47,17 +47,20 @@ The client has been extended with the following features:
 
 
 ### Data Management API (dm):
-- Update `upload object` and `download object` to use the direct-to-s3 approach.  
-  Note that the UploadObject method has a breaking change!  
+- Update `upload object` and `download object` to use the direct-to-s3 approach (breaking change).  
   See:
   - https://forge.autodesk.com/blog/data-management-oss-object-storage-service-migrating-direct-s3-approach
   - https://forge.autodesk.com/en/docs/data/v2/reference/http/buckets-:bucketKey-objects-:objectKey-signeds3upload-GET/
   - https://forge.autodesk.com/en/docs/data/v2/reference/http/buckets-:bucketKey-objects-:objectKey-signeds3download-GET/
 - Add support for regions (US <> EMEA):  
   See: https://aps.autodesk.com/blog/data-management-and-model-derivative-regions
+- dm Initialization now requires a region (breaking change).
+- BucketAPI is renamed to OssAPI (breaking change).
+- The API is changed to use pointer receivers.
 - Update ListBuckets to list all buckets.  
   See: https://aps.autodesk.com/en/docs/data/v2/reference/http/buckets-GET/
-- Fix and update unit tests.
+- Fix and update unit tests. You need a valid APS account (client ID and secret) to run the tests.  
+  => Best run the tests locally, or on a private CI server.
 
 
 ### Model Derivative API (md):
@@ -69,12 +72,19 @@ The client has been extended with the following features:
   - https://aps.autodesk.com/en/docs/model-derivative/v2/reference/http/urn-manifest-derivativeUrn-signedcookies-GET/
 - Add support for regions (US <> EMEA):  
   See: https://aps.autodesk.com/blog/data-management-and-model-derivative-regions
+- md Initialization now requires a region (breaking change).  
 - Add support for downloading all properties.  
   See: https://aps.autodesk.com/en/docs/model-derivative/v2/reference/http/metadata/urn-metadata-guid-properties-GET/
 - Add support for fetching the object tree.  
   See: https://aps.autodesk.com/en/docs/model-derivative/v2/reference/http/metadata/urn-metadata-guid-GET/
-- Fix and update unit tests.
+- The API is changed to use pointer receivers.
+- Fix and update unit tests. You need a valid APS account (client ID and secret) to run the tests.  
+  => Best run the tests locally, or on a private CI server.
 
 ---
+## TODO:
+- Create proper changelog.
+- Add support for more APIs.
 
+---
 [Autodesk Platform Services]: https://aps.autodesk.com/
