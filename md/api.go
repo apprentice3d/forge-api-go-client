@@ -45,18 +45,18 @@ func (a *ModelDerivativeAPI) StartTranslation(params TranslationParams, xHeaders
 	return startTranslation(path, params, &xHeaders, bearer.AccessToken)
 }
 
-// NewTranslationParams creates a TranslationParams struct with the given objectID, outputType, views, and advanced options.
+// NewTranslationParams creates a TranslationParams struct with the given urn, outputType, views, and advanced options.
 //   - The region will be taken from the ModelDerivativeAPI.
 //   - The advanced options can be nil.
 //
-// Make sure to use the correct views and advanced options for the given outputType.
+// Make sure to use the correct combination of views and advanced options for the given outputType.
 // There are no checks for this.
 func (a *ModelDerivativeAPI) NewTranslationParams(
-	objectId string, outputType OutputType, views []ViewType, advanced *AdvancedSpec,
+	urn string, outputType OutputType, views []ViewType, advanced *AdvancedSpec,
 ) TranslationParams {
 	return TranslationParams{
 		Input: InputSpec{
-			URN: UrnFromObjectId(objectId),
+			URN: urn,
 		},
 		Output: OutputSpec{
 			Destination: DestSpec{a.Region},
@@ -71,18 +71,22 @@ func (a *ModelDerivativeAPI) NewTranslationParams(
 	}
 }
 
-// DefaultTranslationParams creates a TranslationParams struct with the given objectID.
+// DefaultTranslationParams creates a TranslationParams struct with the given urn.
 //   - The region will be taken from the ModelDerivativeAPI.
 //   - The outputType will be SVF.
 //   - The views will be 2D and 3D.
 //   - The advanced options will be nil.
-func (a *ModelDerivativeAPI) DefaultTranslationParams(objectId string) TranslationParams {
-	return a.NewTranslationParams(objectId, SVF, ViewTypes2DAnd3D(), nil)
+func (a *ModelDerivativeAPI) DefaultTranslationParams(urn string) TranslationParams {
+	return a.NewTranslationParams(urn, SVF, ViewTypes2DAnd3D(), nil)
 }
 
 // UrnFromObjectId creates a Base64 (URL Safe) encoded URN from the given objectID.
 //
-// dm.UploadObject will return an objectID that can be used here.
+// OssApi.UploadObject will return an objectID that can be used here.
+//
+// The URN is required as input for translating the object (CAD file), see:
+//   - NewTranslationParams
+//   - DefaultTranslationParams
 func UrnFromObjectId(objectID string) string {
 	return base64.RawStdEncoding.EncodeToString([]byte(objectID))
 }
