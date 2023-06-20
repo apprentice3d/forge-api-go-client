@@ -27,7 +27,7 @@ func TestAPI_DefaultTranslationParams_JSON_Creation(t *testing.T) {
 	referenceExample := `
 {
         "input": {
-          "urn": "anVzdCBhIHRlc3QgdXJu"
+          "urn": "just a test urn"
         },
         "output": {
 			"destination": {

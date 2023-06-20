@@ -191,7 +191,7 @@ func TestModelDerivativeAPI_HappyPath_AllFunctions(t *testing.T) {
 				t.Log("Uploaded object details: ", uploadResult)
 
 				t.Log("Creating translation job...")
-				params := mdAPI.DefaultTranslationParams(uploadResult.ObjectId)
+				params := mdAPI.DefaultTranslationParams(md.UrnFromObjectId(uploadResult.ObjectId))
 				translationJob, err := mdAPI.StartTranslation(params, md.DefaultXAdsHeaders())
 				if err != nil {
 					// can't continue if translation job creation fails
