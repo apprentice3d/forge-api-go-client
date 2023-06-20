@@ -29,6 +29,9 @@ The following APIs are not maintained:
 1. Reality Capture (rc)
 2. Design Automation (da)
 
+Autodesk is constantly adding new APIs and changing existing APIs.  
+A lot of the new APIs are not covered by this client.
+
 You are invited to contribute!  
 Please fork and add missing APIs.
 
@@ -44,14 +47,17 @@ The client has been extended with the following features:
 
 
 ### Data Management API (dm):
-- Update the upload object and download object to use the direct-to-s3 approach.  
-  Note that UploadObject method has a breaking change!  
+- Update `upload object` and `download object` to use the direct-to-s3 approach.  
+  Note that the UploadObject method has a breaking change!  
   See:
   - https://forge.autodesk.com/blog/data-management-oss-object-storage-service-migrating-direct-s3-approach
   - https://forge.autodesk.com/en/docs/data/v2/reference/http/buckets-:bucketKey-objects-:objectKey-signeds3upload-GET/
   - https://forge.autodesk.com/en/docs/data/v2/reference/http/buckets-:bucketKey-objects-:objectKey-signeds3download-GET/
 - Add support for regions (US <> EMEA):  
   See: https://aps.autodesk.com/blog/data-management-and-model-derivative-regions
+- Update ListBuckets to list all buckets.  
+  See: https://aps.autodesk.com/en/docs/data/v2/reference/http/buckets-GET/
+- Fix and update unit tests.
 
 
 ### Model Derivative API (md):
@@ -64,13 +70,11 @@ The client has been extended with the following features:
 - Add support for regions (US <> EMEA):  
   See: https://aps.autodesk.com/blog/data-management-and-model-derivative-regions
 - Add support for downloading all properties.  
-  See: https://aps.autodesk.com/en/docs/model-derivative/v2/reference/http/metadata/urn-metadata-guid-properties-GET/ 
-
+  See: https://aps.autodesk.com/en/docs/model-derivative/v2/reference/http/metadata/urn-metadata-guid-properties-GET/
+- Add support for fetching the object tree.  
+  See: https://aps.autodesk.com/en/docs/model-derivative/v2/reference/http/metadata/urn-metadata-guid-GET/
+- Fix and update unit tests.
 
 ---
-
-## To Do:
-- (dm) Update ListBuckets to list all buckets (support paging).
-- (md) Add support for fetching the object tree.
 
 [Autodesk Platform Services]: https://aps.autodesk.com/

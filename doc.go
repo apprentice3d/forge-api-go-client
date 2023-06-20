@@ -1,25 +1,25 @@
-// Package forge is an opinionated Autodesk Forge SDK for the Go programming language.
+// Package forge is an opinionated APS (formerly `Forge`) API client.
 //
-// The Forge SDK for Go provides APIs that developers can use to build Go applications
-// that use Autodesk Forge Services such as
-// Data Management, Model Derivative, Reality Capture and others.
+// The forge package provides APIs that developers can use to build Go applications
+// that use Autodesk Platform Services such as Data Management and Model Derivative.
 //
-// The SDK removes the complexity of coding directly against a web service
+// The API removes the complexity of coding directly against a web service
 // interface, and it hides a lot of the lower-level plumbing, such as authentication.
 //
-// Getting More Information
+// # Getting More Information
 //
-// Checkout the https://developer.autodesk.com/ portal for overviews, tutorials and
-// detailed documentation for each Autodesk Forge Service.
+// Checkout the https://aps.autodesk.com/ portal for overviews, tutorials and
+// detailed documentation for each Autodesk Platform Service.
 //
-// Checkout LearnForge http://learnforge.autodesk.io for a step-by-step tutorial on
-// building a Forge powered web application in different language, including Go using this library.
+// Checkout https://tutorials.autodesk.io/ for step-by-step tutorials on
+// building APS powered web application in different language.
 //
-// Overview of SDK's Packages
+// # Overview of the forge APIs Packages
 //
-// The SDK is composed of several parts, corresponding to each Forge Service, but all of them
-// are relying on OAuth service for 2-legged and 3-legged authentication necessary to access
-// Forge Services.
-//   * oauth - provides common shared types such as Config, Logger,
-//     and utilities to make working with API parameters easier.
+// The API is composed of several parts, corresponding to each Autodesk Platform Service,
+// but all of them are relying on OAuth service for 2-legged and 3-legged authentication
+// necessary to access Autodesk Platform Services.
+//   - oauth - provides 2-legged and 3-legged authentication
+//   - dm - provides access to Data Management service
+//   - md - provides access to Model Derivative service
 package forge
