@@ -59,8 +59,8 @@ const (
 var (
 	// defaultChunkSize is the default size of download/upload chunks.
 	//  NOTE:
-	//  The minimum size seems to be 5 MB!
-	//  Using a value < 5 MB causes errors when completing the upload [400, TooSmall]!
+	//  The minimum size seems to be 5 MB.
+	//  Using a value < 5 MB causes errors when completing the upload [400, TooSmall].
 	defaultChunkSize = int64(100 * megaByte)
 )
 
@@ -75,6 +75,8 @@ func newUploadJob(api *OssAPI, bucketKey, objectName, fileToUpload string) (job 
 	// - In the examples, typically a chunk size of 5 or 10 MB is used.
 	// - In the old API, the boundary for multipart uploads was 100 MB.
 	//   => See const defaultChunkSize
+	totalParts := ceilingOfIntDivision(int(fileInfo.Size()), int(defaultChunkSize))
+	numberOfBatches := ceilingOfIntDivision(totalParts, maxParts)
 
 	job = uploadJob{
 		api:               api,
@@ -83,8 +85,8 @@ func newUploadJob(api *OssAPI, bucketKey, objectName, fileToUpload string) (job 
 		fileToUpload:      fileToUpload,
 		minutesExpiration: minutesExpiration,
 		fileSize:          fileInfo.Size(),
-		totalParts:        ceilingOfIntDivision(int(job.fileSize), int(defaultChunkSize)),
-		numberOfBatches:   ceilingOfIntDivision(job.totalParts, maxParts),
+		totalParts:        totalParts,
+		numberOfBatches:   numberOfBatches,
 		uploadKey:         "",
 	}
 
