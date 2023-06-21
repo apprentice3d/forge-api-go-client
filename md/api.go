@@ -2,6 +2,7 @@ package md
 
 import (
 	"encoding/base64"
+	"strings"
 
 	"github.com/woweh/forge-api-go-client"
 	"github.com/woweh/forge-api-go-client/oauth"
@@ -115,6 +116,39 @@ func (m *Manifest) GetPropertiesDatabaseUrn() string {
 			if child.Role == "Autodesk.CloudPlatform.PropertyDatabase" {
 				return child.URN
 			}
+		}
+	}
+	return ""
+}
+
+// GetProgressReport returns the ProgressReport (status and progress) of a translation.
+func (m *Manifest) GetProgressReport() ProgressReport {
+	return m.ProgressReport
+}
+
+// GetProgressReportOfChild returns the ProgressReport of a translation of a given outputType for a specific child, identified by its GUID string.
+// If the child is not found, an empty ProgressReport is returned.
+func (m *Manifest) GetProgressReportOfChild(derivativeOutputType, childGuid string) ProgressReport {
+	for _, derivative := range m.Derivatives {
+		// strings.EqualFold => ignore casing
+		if strings.EqualFold(derivative.OutputType, derivativeOutputType) {
+			for _, child := range derivative.Children {
+				if child.GUID == childGuid {
+					return child.ProgressReport
+				}
+			}
+		}
+	}
+	return ProgressReport{}
+}
+
+// GetSourceFileName returns the source file name of the translation.
+// If the source file name is not found, an empty string is returned.
+func (m *Manifest) GetSourceFileName() string {
+	// Is this always the name of the first derivative?
+	for _, derivative := range m.Derivatives {
+		if len(derivative.Name) > 0 {
+			return derivative.Name
 		}
 	}
 	return ""

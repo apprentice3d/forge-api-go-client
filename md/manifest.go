@@ -24,11 +24,15 @@ const (
 	StatusTimeout    Status = "timeout"
 )
 
+type ProgressReport struct {
+	Status   Status `json:"status"`
+	Progress string `json:"progress"`
+}
+
 type Manifest struct {
+	ProgressReport
 	Type         string       `json:"type"`
 	HasThumbnail string       `json:"hasThumbnail"`
-	Status       Status       `json:"status"`
-	Progress     string       `json:"progress"`
 	Region       string       `json:"region"`
 	URN          string       `json:"urn"`
 	Version      string       `json:"version"`
@@ -36,10 +40,9 @@ type Manifest struct {
 }
 
 type Derivative struct {
+	ProgressReport
 	Name         string      `json:"name"`
 	HasThumbnail string      `json:"hasThumbnail"`
-	Status       Status      `json:"status"`
-	Progress     string      `json:"progress"`
 	Messages     []Message   `json:"messages,omitempty"`
 	OutputType   string      `json:"outputType"`
 	Properties   *Properties `json:"properties,omitempty"`
@@ -67,12 +70,11 @@ type DocumentInformation struct {
 }
 
 type Child struct {
+	ProgressReport
 	GUID         string    `json:"guid"`
 	Type         string    `json:"type"`
 	Role         string    `json:"role"`
 	Name         string    `json:"name,omitempty"`
-	Status       string    `json:"status,omitempty"`
-	Progress     string    `json:"progress,omitempty"`
 	Mime         string    `json:"mime,omitempty"`
 	UseAsDefault *bool     `json:"useAsDefault,omitempty"`
 	HasThumbnail string    `json:"hasThumbnail,omitempty"`

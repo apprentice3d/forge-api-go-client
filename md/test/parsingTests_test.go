@@ -8,6 +8,7 @@ These tests are meant to test the public API of the md package.
 import (
 	"bytes"
 	"encoding/json"
+	"os"
 	"testing"
 
 	"github.com/woweh/forge-api-go-client"
@@ -70,20 +71,13 @@ func TestAPI_DefaultTranslationParams_JSON_Creation(t *testing.T) {
 func TestParseManifest(t *testing.T) {
 	t.Run(
 		"Parse pending manifest", func(t *testing.T) {
-			manifest := `
-			{
-			  "type": "manifest",
-			  "hasThumbnail": "false",
-			  "status": "pending",
-			  "progress": "0% complete",
-			  "region": "US",
-			  "urn": "dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6bW9kZWxkZXJpdmF0aXZlL0E1LnppcA",
-			  "derivatives": [
-			  ]
+			manifest, err := os.ReadFile("../assets/pending_manifest.json")
+			if err != nil {
+				t.Fatal(err.Error())
 			}
-			`
+
 			var decodedManifest md.Manifest
-			err := json.Unmarshal([]byte(manifest), &decodedManifest)
+			err = json.Unmarshal(manifest, &decodedManifest)
 			if err != nil {
 				t.Error(err.Error())
 			}
@@ -91,86 +85,18 @@ func TestParseManifest(t *testing.T) {
 			if len(decodedManifest.Derivatives) != 0 {
 				t.Error("There should not be derivatives")
 			}
-
 		},
 	)
 
 	t.Run(
 		"Parse in progress manifest", func(t *testing.T) {
-			manifest := `
-			{
-				  "type": "manifest",
-				  "hasThumbnail": "true",
-				  "status": "inprogress",
-				  "progress": "99% complete",
-				  "region": "US",
-				  "urn": "dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6bW9kZWxkZXJpdmF0aXZlL0E1LnppcA",
-				  "derivatives": [
-					{
-					  "name": "A5.iam",
-					  "hasThumbnail": "true",
-					  "status": "success",
-					  "progress": "99% complete",
-					  "outputType": "svf",
-					  "children": [
-						{
-						  "guid": "d998268f-eeb4-da87-0db4-c5dbbc4926d0",
-						  "type": "geometry",
-						  "role": "3d",
-						  "name": "Scene",
-						  "status": "success",
-						  "progress": "99% complete",
-						  "hasThumbnail": "true",
-						  "children": [
-							{
-							  "guid": "4f981e94-8241-4eaf-b08b-cd337c6b8b1f",
-							  "type": "resource",
-							  "progress": "99% complete",
-							  "role": "graphics",
-							  "mime": "application/autodesk-svf"
-							},
-							{
-							  "guid": "d718eb7e-fa8a-42f9-8b32-e323c0fbea0c",
-							  "type": "resource",
-							  "urn": "urn:adsk.viewing:fs.file:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6bW9kZWxkZXJpdmF0aXZlL0E1LnppcA/output/1/A5.svf.png01_thumb_400x400.png",
-							  "resolution": [
-								400.0,
-								400.0
-							  ],
-							  "mime": "image/png",
-							  "role": "thumbnail"
-							},
-							{
-							  "guid": "34dc340b-835f-47f7-9da5-b8219aefe741",
-							  "type": "resource",
-							  "urn": "urn:adsk.viewing:fs.file:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6bW9kZWxkZXJpdmF0aXZlL0E1LnppcA/output/1/A5.svf.png01_thumb_200x200.png",
-							  "resolution": [
-								200.0,
-								200.0
-							  ],
-							  "mime": "image/png",
-							  "role": "thumbnail"
-							},
-							{
-							  "guid": "299c6ba6-650e-423e-bbd6-3aaff44ee104",
-							  "type": "resource",
-							  "urn": "urn:adsk.viewing:fs.file:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6bW9kZWxkZXJpdmF0aXZlL0E1LnppcA/output/1/A5.svf.png01_thumb_100x100.png",
-							  "resolution": [
-								100.0,
-								100.0
-							  ],
-							  "mime": "image/png",
-							  "role": "thumbnail"
-							}
-						  ]
-						}
-					  ]
-					}
-				  ]
+			manifest, err := os.ReadFile("../assets/in_progress_manifest.json")
+			if err != nil {
+				t.Fatal(err.Error())
 			}
-			`
+
 			var decodedManifest md.Manifest
-			err := json.Unmarshal([]byte(manifest), &decodedManifest)
+			err = json.Unmarshal(manifest, &decodedManifest)
 			if err != nil {
 				t.Error(err.Error())
 			}
@@ -180,97 +106,29 @@ func TestParseManifest(t *testing.T) {
 			}
 
 			if len(decodedManifest.Derivatives[0].Children) != 1 {
-				t.Error("Failed to parse childern derivatives")
+				t.Error("Failed to parse children derivatives")
 			}
 
 			if len(decodedManifest.Derivatives[0].Children[0].Children) != 4 {
-				t.Error("Failed to parse childern of derivative's children [funny]")
+				t.Error("Failed to parse children of derivative's children [funny]")
 			}
 
 			if decodedManifest.Derivatives[0].Children[0].Children[0].URN != "" {
 				child := decodedManifest.Derivatives[0].Children[0].Children[0]
 				t.Errorf("URN should be empty: %s => %s", child.Name, child.URN)
 			}
-
 		},
 	)
 
 	t.Run(
 		"Parse complete failed manifest", func(t *testing.T) {
-			manifest := `
-			{
-			  "type": "manifest",
-			  "hasThumbnail": "false",
-			  "status": "failed",
-			  "progress": "complete",
-			  "region": "US",
-			  "urn": "dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6bW9kZWxkZXJpdmF0aXZlL0E1LnppcA",
-			  "derivatives": [
-				{
-				  "name": "A5.iam",
-				  "hasThumbnail": "false",
-				  "status": "failed",
-				  "progress": "complete",
-				  "messages": [
-					{
-					  "type": "warning",
-					  "message": "The drawing's thumbnails were not properly created.",
-					  "code": "TranslationWorker-ThumbnailGenerationFailed"
-					}
-				  ],
-				  "outputType": "svf",
-				  "children": [
-					{
-					  "guid": "d998268f-eeb4-da87-0db4-c5dbbc4926d0",
-					  "type": "geometry",
-					  "role": "3d",
-					  "name": "Scene",
-					  "status": "success",
-					  "messages": [
-						{
-						  "type": "warning",
-						  "code": "ATF-1023",
-						  "message": [
-							"The file: {0} does not exist.",
-							"C:\\Users\\ADSK\\Documents\\A5\\Top.ipt"
-						  ]
-						},
-						{
-						  "type": "warning",
-						  "code": "ATF-1023",
-						  "message": [
-							"The file: {0} does not exist.",
-							"C:\\Users\\ADSK\\Documents\\A5\\Bottom.ipt"
-						  ]
-						},
-						{
-						  "type": "error",
-						  "code": "ATF-1026",
-						  "message": [
-							"The file: {0} is empty.",
-							"C:/worker/viewing-inventor-lmv/tmp/job-1/5/output/1/A5.svf"
-						  ]
-						}
-					  ],
-					  "progress": "complete",
-					  "hasThumbnail": "false",
-					  "children": [
-						{
-						  "guid": "4f981e94-8241-4eaf-b08b-cd337c6b8b1f",
-						  "type": "resource",
-						  "urn": "urn:adsk.viewing:fs.file:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6bW9kZWxkZXJpdmF0aXZlL0E1LnppcA/output/1/A5.svf",
-						  "role": "graphics",
-						  "mime": "application/autodesk-svf"
-						}
-					  ]
-					}
-				  ]
-				}
-			  ]
+			manifest, err := os.ReadFile("../assets/failed_manifest.json")
+			if err != nil {
+				t.Fatal(err.Error())
 			}
-			`
+
 			var decodedManifest md.Manifest
-			err := json.Unmarshal([]byte(manifest), &decodedManifest)
+			err = json.Unmarshal(manifest, &decodedManifest)
 			if err != nil {
 				t.Error(err.Error())
 			}
@@ -280,11 +138,11 @@ func TestParseManifest(t *testing.T) {
 			}
 
 			if len(decodedManifest.Derivatives[0].Children) != 1 {
-				t.Error("Failed to parse childern derivatives")
+				t.Error("Failed to parse children derivatives")
 			}
 
 			if len(decodedManifest.Derivatives[0].Children[0].Children) != 1 {
-				t.Error("Failed to parse childern of derivative's children [funny]")
+				t.Error("Failed to parse children of derivative's children [funny]")
 			}
 
 			if decodedManifest.Derivatives[0].Children[0].Children[0].URN == "" {
@@ -292,7 +150,7 @@ func TestParseManifest(t *testing.T) {
 			}
 
 			if decodedManifest.Derivatives[0].Messages[0].Type != "warning" {
-				t.Error("Chould contain a warning message")
+				t.Error("Should contain a warning message")
 			}
 
 			if len(decodedManifest.Derivatives[0].Children[0].Messages) != 3 {
@@ -307,249 +165,34 @@ func TestParseManifest(t *testing.T) {
 			}
 
 			// use type assertion to check if the message is an array and assign it to a variable
-			if msgs, ok := decodedManifest.Derivatives[0].Children[0].Messages[2].Message.([]interface{}); !ok {
+			if messages, ok := decodedManifest.Derivatives[0].Children[0].Messages[2].Message.([]interface{}); !ok {
 				t.Error("Derivative child message should be an array")
 			} else {
 				// check if the message is an array of strings
-				if _, ok := msgs[0].(string); !ok {
+				if _, okay := messages[0].(string); !okay {
 					t.Error("Derivative child message should be an array of strings")
 				}
 
-				if len(msgs) != 2 {
+				if len(messages) != 2 {
 					t.Error("Derivative child message should contain 2 message descriptions")
 				}
 			}
 
 			if decodedManifest.Derivatives[0].Children[0].Children[0].Role != "graphics" {
-				t.Error("Failed to parse childern of derivative's children [funny]")
+				t.Error("Failed to parse children of derivative's children [funny]")
 			}
-
 		},
 	)
 
 	t.Run(
 		"Parse complete success manifest", func(t *testing.T) {
-			manifest := `
-			{
-			  "type": "manifest",
-			  "hasThumbnail": "true",
-			  "status": "success",
-			  "progress": "complete",
-			  "region": "US",
-			  "urn": "dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6bW9kZWxkZXJpdmF0aXZlL0E1LnppcA",
-			  "derivatives": [
-				{
-				  "name": "A5.iam",
-				  "hasThumbnail": "true",
-				  "status": "success",
-				  "progress": "complete",
-				  "outputType": "svf",
-				  "children": [
-					{
-					  "guid": "d998268f-eeb4-da87-0db4-c5dbbc4926d0",
-					  "type": "geometry",
-					  "role": "3d",
-					  "name": "Scene",
-					  "status": "success",
-					  "progress": "complete",
-					  "hasThumbnail": "true",
-					  "children": [
-						{
-						  "guid": "4f981e94-8241-4eaf-b08b-cd337c6b8b1f",
-						  "type": "resource",
-						  "urn": "urn:adsk.viewing:fs.file:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6bW9kZWxkZXJpdmF0aXZlL0E1LnppcA/output/1/A5.svf",
-						  "role": "graphics",
-						  "mime": "application/autodesk-svf"
-						},
-						{
-						  "guid": "d718eb7e-fa8a-42f9-8b32-e323c0fbea0c",
-						  "type": "resource",
-						  "urn": "urn:adsk.viewing:fs.file:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6bW9kZWxkZXJpdmF0aXZlL0E1LnppcA/output/1/A5.svf.png01_thumb_400x400.png",
-						  "resolution": [
-							400.0,
-							400.0
-						  ],
-						  "mime": "image/png",
-						  "role": "thumbnail"
-						},
-						{
-						  "guid": "34dc340b-835f-47f7-9da5-b8219aefe741",
-						  "type": "resource",
-						  "urn": "urn:adsk.viewing:fs.file:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6bW9kZWxkZXJpdmF0aXZlL0E1LnppcA/output/1/A5.svf.png01_thumb_200x200.png",
-						  "resolution": [
-							200.0,
-							200.0
-						  ],
-						  "mime": "image/png",
-						  "role": "thumbnail"
-						},
-						{
-						  "guid": "299c6ba6-650e-423e-bbd6-3aaff44ee104",
-						  "type": "resource",
-						  "urn": "urn:adsk.viewing:fs.file:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6bW9kZWxkZXJpdmF0aXZlL0E1LnppcA/output/1/A5.svf.png01_thumb_100x100.png",
-						  "resolution": [
-							100.0,
-							100.0
-						  ],
-						  "mime": "image/png",
-						  "role": "thumbnail"
-						}
-					  ]
-					},
-					{
-					  "guid": "b86dcf4d-dd4e-561a-1b52-50ee01f7af4f",
-					  "hasThumbnail": "true",
-					  "progress": "complete",
-					  "role": "2d",
-					  "status": "success",
-					  "type": "geometry",
-					  "children": [
-						{
-						  "guid": "cfe81eb4-fbc6-17c0-beba-3ab845d228f0",
-						  "mime": "image/png",
-						  "resolution": [
-							100,
-							100
-						  ],
-						  "role": "thumbnail",
-						  "status": "success",
-						  "type": "resource",
-						  "urn": "urn:adsk.viewing:fs.file:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6bW9kZWxkZXJpdmF0aXZlL0E1LnppcA/output/661c6096-056d-e58c-6c87-38769662932f_f2d/02___Floor1.png"
-						},
-						{
-						  "guid": "03c34714-36c7-b2bf-eb19-245f26c15e50",
-						  "mime": "image/png",
-						  "resolution": [
-							200,
-							200
-						  ],
-						  "role": "thumbnail",
-						  "status": "success",
-						  "type": "resource",
-						  "urn": "urn:adsk.viewing:fs.file:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6bW9kZWxkZXJpdmF0aXZlL0E1LnppcA/output/661c6096-056d-e58c-6c87-38769662932f_f2d/02___Floor2.png"
-						},
-						{
-						  "guid": "b680b9ec-5240-6858-b7ef-7e9adafd9d9a",
-						  "mime": "image/png",
-						  "resolution": [
-							400,
-							400
-						  ],
-						  "role": "thumbnail",
-						  "status": "success",
-						  "type": "resource",
-						  "urn": "urn:adsk.viewing:fs.file:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6bW9kZWxkZXJpdmF0aXZlL0E1LnppcA/output/661c6096-056d-e58c-6c87-38769662932f_f2d/02___Floor4.png"
-						},
-						{
-						  "guid": "a81433d1-e3e7-97f8-17f2-e85c1bbc1f66",
-						  "mime": "application/autodesk-f2d",
-						  "role": "graphics",
-						  "status": "success",
-						  "type": "resource",
-						  "urn": "urn:adsk.viewing:fs.file:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6bW9kZWxkZXJpdmF0aXZlL0E1LnppcA/output/661c6096-056d-e58c-6c87-38769662932f_f2d/primaryGraphics.f2d"
-						},
-						{
-						  "guid": "5d2d63c3-943e-4111-b0fe-75abfeb85cb8",
-						  "name": "Floor Plan: 02 - Floor",
-						  "role": "2d",
-						  "type": "view",
-						  "viewbox": [
-							0,
-							0,
-							279.4,
-							215.9
-						  ]
-						}
-					  ]
-					}
-				  ]
-				},
-				{
-				  "status": "success",
-				  "progress": "complete",
-				  "outputType": "step",
-				  "children": [
-					{
-					  "guid": "a6128518-dcf0-967b-31a1-3439a375daeb",
-					  "role": "STEP",
-					  "mime": "application/octet-stream",
-					  "urn": "urn:adsk.viewing:fs.file:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6bW9kZWxkZXJpdmF0aXZlL0E1LnppcA/output/1/A5.stp",
-					  "status": "success",
-					  "type": "resource"
-					}
-				  ]
-				},
-				{
-				  "name": "A5.iam",
-				  "hasThumbnail": "true",
-				  "status": "success",
-				  "progress": "complete",
-				  "outputType": "thumbnail",
-				  "children": [
-					{
-					  "guid": "63c50197-c285-411b-bcfd-b3f19b1d37ef",
-					  "mime": "image/png",
-					  "resolution": [
-						256,
-						256
-					  ],
-					  "role": "thumbnail",
-					  "type": "resource",
-					  "urn": "urn:adsk.viewing:fs.file:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6bW9kZWxkZXJpdmF0aXZlL0E1LnppcA/output/256x256.png"
-					}
-				  ]
-				},
-				{
-				  "status": "success",
-				  "progress": "complete",
-				  "outputType": "obj",
-				  "children": [
-					{
-					  "guid": "1122e136-ea24-31ee-a7ef-ad065fafad42",
-					  "type": "resource",
-					  "role": "obj",
-					  "modelGUID": "4f981e94-8241-4eaf-b08b-cd337c6b8b1f",
-					  "objectIds": [
-						2,
-						3,
-						4
-					  ],
-					  "status": "success",
-					  "urn": "urn:adsk.viewing:fs.file:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6bW9kZWxkZXJpdmF0aXZlL0E1LnppcA/output/geometry/bc3339b2-73cd-4fba-9cb3-15363703a354.obj"
-					},
-					{
-					  "guid": "29c1c0d4-7a35-350a-b3e5-fb221b054e29",
-					  "type": "resource",
-					  "role": "obj",
-					  "modelGUID": "4f981e94-8241-4eaf-b08b-cd337c6b8b1f",
-					  "objectIds": [
-						2,
-						3,
-						4
-					  ],
-					  "status": "success",
-					  "urn": "urn:adsk.viewing:fs.file:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6bW9kZWxkZXJpdmF0aXZlL0E1LnppcA/output/geometry/bc3339b2-73cd-4fba-9cb3-15363703a354.mtl"
-					},
-					{
-					  "guid": "3e9752f1-5989-38b1-bff1-1f2d81841c8a",
-					  "type": "resource",
-					  "role": "obj",
-					  "modelGUID": "4f981e94-8241-4eaf-b08b-cd337c6b8b1f",
-					  "objectIds": [
-						2,
-						3,
-						4
-					  ],
-					  "status": "success",
-					  "urn": "urn:adsk.viewing:fs.file:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6bW9kZWxkZXJpdmF0aXZlL0E1LnppcA/output/geometry/bc3339b2-73cd-4fba-9cb3-15363703a354.zip"
-					}
-				  ]
-				}
-			  ]
+			manifest, err := os.ReadFile("../assets/success_manifest.json")
+			if err != nil {
+				t.Fatal(err.Error())
 			}
-			`
+
 			var decodedManifest md.Manifest
-			err := json.Unmarshal([]byte(manifest), &decodedManifest)
+			err = json.Unmarshal(manifest, &decodedManifest)
 			if err != nil {
 				t.Error(err.Error())
 			}
@@ -591,184 +234,58 @@ func TestParseManifest(t *testing.T) {
 					)
 				}
 			}
-
 		},
 	)
 
 	t.Run(
 		"Parse Revit manifest", func(t *testing.T) {
-			manifestExample := `
-{
-    "type": "manifest",
-    "hasThumbnail": "true",
-    "status": "success",
-    "progress": "complete",
-    "region": "US",
-    "urn": "dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6dGVzdC1maWxlcy8yMDE3MDcyNF9BaXJwb3J0JTIwTW9kZWwucnZ0",
-    "version": "1.0",
-    "derivatives": [
-        {
-            "name": "20170724_Airport Model.rvt",
-            "hasThumbnail": "true",
-            "status": "success",
-            "progress": "complete",
-            "messages": [
-                {
-                    "type": "warning",
-                    "code": "Revit-MissingLink",
-                    "message": [
-                        "<message>Missing link files: <ul>{0}</ul></message>",
-                        "S-FIDS-Wx-Video.jpg, solutions-airport-bcic2.jpg, zone.png"
-                    ]
-                }
-            ],
-            "outputType": "svf",
-            "children": [
-                {
-                    "guid": "6fac95cb-af5d-3e4f-b943-8a7f55847ff1",
-                    "type": "resource",
-                    "role": "Autodesk.CloudPlatform.PropertyDatabase",
-                    "urn": "urn:adsk.viewing:fs.file:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6dGVzdC1maWxlcy8yMDE3MDcyNF9BaXJwb3J0JTIwTW9kZWwucnZ0/output/Resource/model.sdb",
-                    "mime": "application/autodesk-db",
-                    "status": "success"
-                },
-                {
-                    "guid": "e7adaa0b-8274-132e-cdc1-65f55eb8b096",
-                    "type": "geometry",
-                    "role": "3d",
-                    "name": "{3D}",
-                    "viewableID": "a4646655-27fa-4fcc-b2cb-1c97f89f1e9b-00031929",
-                    "phaseNames": "NewMdApi Construction",
-                    "status": "success",
-                    "hasThumbnail": "true",
-                    "progress": "complete",
-                    "children": [
-                        {
-                            "guid": "a4646655-27fa-4fcc-b2cb-1c97f89f1e9b-00031929",
-                            "type": "view",
-                            "role": "3d",
-                            "name": "{3D}",
-                            "status": "success",
-                            "progress": "complete",
-                            "camera": [
-                                68.769485,
-                                -500.972656,
-                                82.696663,
-                                -117.377716,
-                                29.634874,
-                                27.679764,
-                                -0.032235,
-                                0.091885,
-                                0.995248,
-                                4.974191,
-                                0,
-                                1,
-                                1
-                            ]
-                        },
-                        {
-                            "guid": "59a17c17-6249-81c1-5ef0-504a39b3e54f",
-                            "type": "resource",
-                            "role": "graphics",
-                            "urn": "urn:adsk.viewing:fs.file:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6dGVzdC1maWxlcy8yMDE3MDcyNF9BaXJwb3J0JTIwTW9kZWwucnZ0/output/Resource/3D View/{3D} 203049/{3D}.svf",
-                            "mime": "application/autodesk-svf"
-                        },
-                        {
-                            "guid": "daefa290-464d-9879-eefb-b60ee4549be1",
-                            "type": "resource",
-                            "role": "thumbnail",
-                            "urn": "urn:adsk.viewing:fs.file:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6dGVzdC1maWxlcy8yMDE3MDcyNF9BaXJwb3J0JTIwTW9kZWwucnZ0/output/Resource/3D View/{3D} 203049/{3D}1.png",
-                            "resolution": [
-                                100,
-                                100
-                            ],
-                            "mime": "image/png",
-                            "status": "success"
-                        },
-                        {
-                            "guid": "7241ccc4-2ed1-b357-abd3-f9acac457769",
-                            "type": "resource",
-                            "role": "thumbnail",
-                            "urn": "urn:adsk.viewing:fs.file:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6dGVzdC1maWxlcy8yMDE3MDcyNF9BaXJwb3J0JTIwTW9kZWwucnZ0/output/Resource/3D View/{3D} 203049/{3D}2.png",
-                            "resolution": [
-                                200,
-                                200
-                            ],
-                            "mime": "image/png",
-                            "status": "success"
-                        },
-                        {
-                            "guid": "71c50af6-78c8-3668-7aa6-62433efc5394",
-                            "type": "resource",
-                            "role": "thumbnail",
-                            "urn": "urn:adsk.viewing:fs.file:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6dGVzdC1maWxlcy8yMDE3MDcyNF9BaXJwb3J0JTIwTW9kZWwucnZ0/output/Resource/3D View/{3D} 203049/{3D}4.png",
-                            "resolution": [
-                                400,
-                                400
-                            ],
-                            "mime": "image/png",
-                            "status": "success"
-                        }
-                    ]
-                }
-            ]
-        },
-        {
-            "status": "success",
-            "progress": "complete",
-            "outputType": "thumbnail",
-            "children": [
-                {
-                    "guid": "db899ab5-939f-e250-d79d-2d1637ce4565",
-                    "type": "resource",
-                    "role": "thumbnail",
-                    "urn": "urn:adsk.viewing:fs.file:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6dGVzdC1maWxlcy8yMDE3MDcyNF9BaXJwb3J0JTIwTW9kZWwucnZ0/output/preview1.png",
-                    "resolution": [
-                        100,
-                        100
-                    ],
-                    "mime": "image/png",
-                    "status": "success"
-                },
-                {
-                    "guid": "3f6c118d-f551-7bf0-03c9-8548d26c9772",
-                    "type": "resource",
-                    "role": "thumbnail",
-                    "urn": "urn:adsk.viewing:fs.file:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6dGVzdC1maWxlcy8yMDE3MDcyNF9BaXJwb3J0JTIwTW9kZWwucnZ0/output/preview2.png",
-                    "resolution": [
-                        200,
-                        200
-                    ],
-                    "mime": "image/png",
-                    "status": "success"
-                },
-                {
-                    "guid": "4e751806-0920-ce32-e9fd-47c3cec21536",
-                    "type": "resource",
-                    "role": "thumbnail",
-                    "urn": "urn:adsk.viewing:fs.file:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6dGVzdC1maWxlcy8yMDE3MDcyNF9BaXJwb3J0JTIwTW9kZWwucnZ0/output/preview4.png",
-                    "resolution": [
-                        400,
-                        400
-                    ],
-                    "mime": "image/png",
-                    "status": "success"
-                }
-            ]
-        }
-    ]
-}`
-
-			result := md.Manifest{}
-
-			buffer := bytes.NewBufferString(manifestExample)
-			decoder := json.NewDecoder(buffer)
-			err := decoder.Decode(&result)
-
+			manifestJson, err := os.ReadFile("../assets/revit_manifest.json")
 			if err != nil {
 				t.Fatal(err.Error())
 			}
 
+			result := md.Manifest{}
+
+			buffer := bytes.NewBuffer(manifestJson)
+			decoder := json.NewDecoder(buffer)
+			err = decoder.Decode(&result)
+			if err != nil {
+				t.Fatal(err.Error())
+			}
+
+			revitFileName := result.GetSourceFileName()
+			if revitFileName != "20170724_Airport Model.rvt" {
+				t.Error("Wrong source file name")
+			}
+
+			sp := result.GetProgressReport()
+			if sp.Status != md.StatusSuccess {
+				t.Error("Wrong status")
+			}
+			if sp.Progress != "complete" {
+				t.Error("Wrong progress")
+			}
+
+			propDbUrn := result.GetPropertiesDatabaseUrn()
+			if propDbUrn != "urn:adsk.viewing:fs.file:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6dGVzdC1maWxlcy8yMDE3MDcyNF9BaXJwb3J0JTIwTW9kZWwucnZ0/output/Resource/model.sdb" {
+				t.Error("Wrong properties database urn")
+			}
+
+			svfSp := result.GetProgressReportOfChild("svf", "6fac95cb-af5d-3e4f-b943-8a7f55847ff1")
+			if svfSp.Status != md.StatusSuccess {
+				t.Error("Wrong status")
+			}
+			if svfSp.Progress != "" {
+				t.Error("Wrong progress")
+			}
+
+			tnSP := result.GetProgressReportOfChild("thumbnail", "db899ab5-939f-e250-d79d-2d1637ce4565")
+			if tnSP.Status != md.StatusSuccess {
+				t.Error("Wrong status")
+			}
+			if tnSP.Progress != "" {
+				t.Error("Wrong progress")
+			}
 		},
 	)
 }
