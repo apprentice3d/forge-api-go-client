@@ -122,7 +122,8 @@ type ErrorMessage struct {
 
 // Error is inner struct encountered in cases when the server reported status OK, but still contains details
 // on encountered errors. Check the bug section of this documentation for more info.
-// 	This bug was reported to the engineering team
+//
+//	This bug was reported to the engineering team
 type Error struct {
 	Code    string `json:"code"`
 	Message string `json:"msg"`

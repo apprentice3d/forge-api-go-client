@@ -30,7 +30,7 @@ type ActivityConfig struct {
 	Description string           `json:"description"`
 	AppBundles  []string         `json:"appbundles"`
 	Engine      string           `json:"engine"`
-	Parameters  map[string]Param `json:"paramaters"`
+	Parameters  map[string]Param `json:"parameters"`
 	Settings    Setting          `json:"settings"`
 }
 
@@ -88,12 +88,14 @@ func createActivity(path string, activity ActivityConfig, token string) (result 
 	task := http.Client{}
 
 	body, err := json.Marshal(
-		activity)
+		activity,
+	)
 	if err != nil {
 		return
 	}
 
-	req, err := http.NewRequest("POST",
+	req, err := http.NewRequest(
+		"POST",
 		path+"/activities",
 		bytes.NewReader(body),
 	)
@@ -125,7 +127,8 @@ func createActivity(path string, activity ActivityConfig, token string) (result 
 func deleteActivity(path string, activityId string, token string) (err error) {
 
 	task := http.Client{}
-	req, err := http.NewRequest("DELETE",
+	req, err := http.NewRequest(
+		"DELETE",
 		path+"/activities/"+activityId,
 		nil,
 	)
@@ -153,7 +156,8 @@ func deleteActivity(path string, activityId string, token string) (err error) {
 func listActivityAliases(path string, activityId, token string) (list AliasesList, err error) {
 
 	task := http.Client{}
-	req, err := http.NewRequest("GET",
+	req, err := http.NewRequest(
+		"GET",
 		path+"/activities/"+activityId+"/aliases",
 		nil,
 	)
@@ -185,12 +189,14 @@ func createActivityAlias(path, activityId, alias string, version uint, token str
 		Alias{
 			alias,
 			version,
-		})
+		},
+	)
 	if err != nil {
 		return
 	}
 
-	req, err := http.NewRequest("POST",
+	req, err := http.NewRequest(
+		"POST",
 		path+"/activities/"+activityId+"/aliases",
 		bytes.NewReader(body),
 	)
@@ -226,12 +232,14 @@ func modifyActivityAlias(path, activityId, alias string, version uint, token str
 	body, err := json.Marshal(
 		struct {
 			Version uint `json:"version"`
-		}{version})
+		}{version},
+	)
 	if err != nil {
 		return
 	}
 
-	req, err := http.NewRequest("PATCH",
+	req, err := http.NewRequest(
+		"PATCH",
 		path+"/activities/"+activityId+"/aliases/"+alias,
 		bytes.NewReader(body),
 	)
@@ -264,7 +272,8 @@ func getActivityAliasDetails(path, activityId, alias, token string) (result Alia
 
 	task := http.Client{}
 
-	req, err := http.NewRequest("GET",
+	req, err := http.NewRequest(
+		"GET",
 		path+"/activities/"+activityId+"/aliases/"+alias,
 		nil,
 	)
@@ -296,7 +305,8 @@ func getActivityAliasDetails(path, activityId, alias, token string) (result Alia
 func deleteActivityAlias(path string, activityId, alias, token string) (err error) {
 
 	task := http.Client{}
-	req, err := http.NewRequest("DELETE",
+	req, err := http.NewRequest(
+		"DELETE",
 		path+"/activities/"+activityId+"/aliases/"+alias,
 		nil,
 	)
@@ -324,7 +334,8 @@ func deleteActivityAlias(path string, activityId, alias, token string) (err erro
 func listActivityVersions(path string, activityId, token string) (list VersionList, err error) {
 
 	task := http.Client{}
-	req, err := http.NewRequest("GET",
+	req, err := http.NewRequest(
+		"GET",
 		path+"/activities/"+activityId+"/versions",
 		nil,
 	)
@@ -355,12 +366,14 @@ func createActivityVersion(path, activityId, engine string, token string) (resul
 	body, err := json.Marshal(
 		struct {
 			Engine string `json:"engine"`
-		}{engine})
+		}{engine},
+	)
 	if err != nil {
 		return
 	}
 
-	req, err := http.NewRequest("POST",
+	req, err := http.NewRequest(
+		"POST",
 		path+"/activities/"+activityId+"/versions",
 		bytes.NewReader(body),
 	)
@@ -393,7 +406,8 @@ func getActivityVersionDetails(path, activityId string, version uint, token stri
 
 	task := http.Client{}
 
-	req, err := http.NewRequest("GET",
+	req, err := http.NewRequest(
+		"GET",
 		path+"/activities/"+activityId+"/versions/"+strconv.Itoa(int(version)),
 		nil,
 	)
@@ -425,7 +439,8 @@ func getActivityVersionDetails(path, activityId string, version uint, token stri
 func deleteActivityVersion(path, activityId string, version uint, token string) (err error) {
 
 	task := http.Client{}
-	req, err := http.NewRequest("DELETE",
+	req, err := http.NewRequest(
+		"DELETE",
 		path+"/activities/"+activityId+"/versions/"+strconv.Itoa(int(version)),
 		nil,
 	)

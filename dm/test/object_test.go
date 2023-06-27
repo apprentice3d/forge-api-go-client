@@ -215,7 +215,7 @@ func TestBucketAPI_DownloadObject(t *testing.T) {
 			}
 
 			if len(result) == 0 {
-				t.Errorf("The object %s was downloaded sucessfully, but it is empty.", objectKey)
+				t.Errorf("The object %s was downloaded successfully, but it is empty.", objectKey)
 			}
 
 		},

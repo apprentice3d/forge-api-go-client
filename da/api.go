@@ -57,8 +57,9 @@ func (api API) EngineDetails(id string) (list EngineDetails, err error) {
 }
 
 // CreateApp creates an app with given name and using specified engine
-// 	name - should be unique and will be the appID
-// 	engine - engineId to be used by this app (check EngineList)
+//
+//	name - should be unique and will be the appID
+//	engine - engineId to be used by this app (check EngineList)
 func (api API) CreateApp(name, engine string) (app AppBundle, err error) {
 
 	bearer, err := api.Authenticator.GetToken("code:all")
@@ -96,8 +97,9 @@ func (api API) AppList() (list AppList, err error) {
 }
 
 // CreateActivity creates an activity given an app
-// 	name - should be unique and will be the appID
-// 	engine - engineId to be used by this app (check EngineList)
+//
+//	name - should be unique and will be the appID
+//	engine - engineId to be used by this app (check EngineList)
 func (api API) CreateActivity(config ActivityConfig) (activity Activity, err error) {
 
 	bearer, err := api.Authenticator.GetToken("code:all")

@@ -1,8 +1,8 @@
 // Package recap contains the Go wrappers for calls to Forge Reality Capture API
 // https://developer.autodesk.com/api/reality-capture-cover-page/
 //
-// 	The workflow is the following:
-// 		- create a photoScene
+//	The workflow is the following:
+//		- create a photoScene
 //		- upload images to photoScene
 //		- start photoScene processing
 //		- get the result
@@ -27,9 +27,10 @@ func NewAPI(authenticator oauth.ForgeAuthenticator) ReCapAPI {
 }
 
 // CreatePhotoScene prepares a scene with a given name, expected output formats and sceneType
-// 	name - should not be empty
-// 	formats - should be of type rcm, rcs, obj, ortho or report
-// 	sceneType - should be either "aerial" or "object"
+//
+//	name - should not be empty
+//	formats - should be of type rcm, rcs, obj, ortho or report
+//	sceneType - should be either "aerial" or "object"
 func (api ReCapAPI) CreatePhotoScene(name string, formats []string, sceneType string) (scene PhotoScene, err error) {
 
 	bearer, err := api.Authenticator.GetToken("data:write")
@@ -83,6 +84,7 @@ func (api ReCapAPI) StartSceneProcessing(sceneID string) (result SceneStartProce
 }
 
 // GetSceneProgress polls the scene processing status and progress
+//
 //	Note: instead of polling, consider using the callback parameter that can be specified upon scene creation
 func (api ReCapAPI) GetSceneProgress(sceneID string) (progress SceneProgressReply, err error) {
 	bearer, err := api.Authenticator.GetToken("data:read")
@@ -95,6 +97,7 @@ func (api ReCapAPI) GetSceneProgress(sceneID string) (progress SceneProgressRepl
 }
 
 // GetSceneResults requests result in a specified format
+//
 //	Note: The link specified in SceneResultReplies will be available for the time specified in reply,
 //	even if the scene is deleted
 func (api ReCapAPI) GetSceneResults(sceneID string, format string) (result SceneResultReply, err error) {
