@@ -7,6 +7,8 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+
+	"github.com/woweh/forge-api-go-client"
 )
 
 // BUG: When translating a non-Revit model, the
@@ -33,7 +35,7 @@ type Manifest struct {
 	ProgressReport
 	Type         string       `json:"type"`
 	HasThumbnail string       `json:"hasThumbnail"`
-	Region       string       `json:"region"`
+	Region       forge.Region `json:"region"`
 	URN          string       `json:"urn"`
 	Version      string       `json:"version"`
 	Derivatives  []Derivative `json:"derivatives"`
