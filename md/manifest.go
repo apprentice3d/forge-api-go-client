@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/woweh/forge-api-go-client"
 )
@@ -25,6 +26,36 @@ const (
 	StatusFailed     Status = "failed"
 	StatusTimeout    Status = "timeout"
 )
+
+// IsSuccess returns true if the status is success.
+func (s *Status) IsSuccess() bool {
+	// case insensitive comparison!
+	return strings.EqualFold(string(*s), string(StatusSuccess))
+}
+
+// IsFailed returns true if the status is failed.
+func (s *Status) IsFailed() bool {
+	// case insensitive comparison!
+	return strings.EqualFold(string(*s), string(StatusFailed))
+}
+
+// IsPending returns true if the status is pending.
+func (s *Status) IsPending() bool {
+	// case insensitive comparison!
+	return strings.EqualFold(string(*s), string(StatusPending))
+}
+
+// IsInProgress returns true if the status is in progress.
+func (s *Status) IsInProgress() bool {
+	// case insensitive comparison!
+	return strings.EqualFold(string(*s), string(StatusInProgress))
+}
+
+// IsTimeout returns true if the status is timeout.
+func (s *Status) IsTimeout() bool {
+	// case insensitive comparison!
+	return strings.EqualFold(string(*s), string(StatusTimeout))
+}
 
 type ProgressReport struct {
 	Status   Status `json:"status"`
