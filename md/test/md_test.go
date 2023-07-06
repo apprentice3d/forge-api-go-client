@@ -301,7 +301,7 @@ func TestModelDerivativeAPI_HappyPath_AllFunctions(t *testing.T) {
 				}
 
 				t.Log("Downloading metadata...")
-				metaData, err := mdAPI.GetMetadata(manifest.URN, md.DefaultXAdsHeaders())
+				metaData, err := mdAPI.GetMetadata(manifest.URN)
 				if err != nil {
 					// can't continue if metadata download fails
 					tt.args.error = &trueVal

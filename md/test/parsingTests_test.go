@@ -73,50 +73,67 @@ func TestAPI_DefaultTranslationParams_JSON_Creation(t *testing.T) {
 func TestParseManifest(t *testing.T) {
 	t.Run(
 		"Parse pending manifest", func(t *testing.T) {
-			manifest, err := os.ReadFile("../assets/pending_manifest.json")
+			manifestJson, err := os.ReadFile("../assets/pending_manifest.json")
 			if err != nil {
 				t.Fatal(err.Error())
 			}
 
-			var decodedManifest md.Manifest
-			err = json.Unmarshal(manifest, &decodedManifest)
+			var manifest md.Manifest
+			err = json.Unmarshal(manifestJson, &manifest)
 			if err != nil {
 				t.Error(err.Error())
 			}
 
-			if len(decodedManifest.Derivatives) != 0 {
+			if !manifest.Status.IsPending() {
+				t.Error("Status should be pending")
+			}
+
+			if manifest.Status.IsTimeout() {
+				t.Error("Status should not be timeout")
+			}
+
+			if len(manifest.Derivatives) != 0 {
 				t.Error("There should not be derivatives")
+			}
+
+			pr := manifest.GetProgressReportOfChild("abc", "def")
+			if !pr.IsEmpty() {
+				t.Error("Progress report should be empty")
 			}
 		},
 	)
 
 	t.Run(
 		"Parse in progress manifest", func(t *testing.T) {
-			manifest, err := os.ReadFile("../assets/in_progress_manifest.json")
+			manifestJson, err := os.ReadFile("../assets/in_progress_manifest.json")
 			if err != nil {
 				t.Fatal(err.Error())
 			}
 
-			var decodedManifest md.Manifest
-			err = json.Unmarshal(manifest, &decodedManifest)
+			var manifest md.Manifest
+			err = json.Unmarshal(manifestJson, &manifest)
 			if err != nil {
 				t.Error(err.Error())
 			}
 
-			if len(decodedManifest.Derivatives) != 1 {
+			if !manifest.Status.IsInProgress() {
+				t.Error("Status should be in progress")
+			}
+
+			if len(manifest.Derivatives) != 1 {
 				t.Error("Failed to parse derivatives")
 			}
 
-			if len(decodedManifest.Derivatives[0].Children) != 1 {
+			if len(manifest.Derivatives[0].Children) != 1 {
 				t.Error("Failed to parse children derivatives")
 			}
 
-			if len(decodedManifest.Derivatives[0].Children[0].Children) != 4 {
+			if len(manifest.Derivatives[0].Children[0].Children) != 4 {
 				t.Error("Failed to parse children of derivative's children [funny]")
 			}
 
-			if decodedManifest.Derivatives[0].Children[0].Children[0].URN != "" {
-				child := decodedManifest.Derivatives[0].Children[0].Children[0]
+			if manifest.Derivatives[0].Children[0].Children[0].URN != "" {
+				child := manifest.Derivatives[0].Children[0].Children[0]
 				t.Errorf("URN should be empty: %s => %s", child.Name, child.URN)
 			}
 		},
@@ -124,50 +141,62 @@ func TestParseManifest(t *testing.T) {
 
 	t.Run(
 		"Parse complete failed manifest", func(t *testing.T) {
-			manifest, err := os.ReadFile("../assets/failed_manifest.json")
+			manifestJson, err := os.ReadFile("../assets/failed_manifest.json")
 			if err != nil {
 				t.Fatal(err.Error())
 			}
 
-			var decodedManifest md.Manifest
-			err = json.Unmarshal(manifest, &decodedManifest)
+			var manifest md.Manifest
+			err = json.Unmarshal(manifestJson, &manifest)
 			if err != nil {
 				t.Error(err.Error())
 			}
 
-			if len(decodedManifest.Derivatives) != 1 {
+			if !manifest.Status.IsFailed() {
+				t.Error("Status should be failed")
+			}
+
+			if !manifest.Region.IsUS() {
+				t.Error("Region should be US")
+			}
+
+			if manifest.Region.IsEMEA() {
+				t.Error("Region should not be EMEA")
+			}
+
+			if len(manifest.Derivatives) != 1 {
 				t.Error("Failed to parse derivatives")
 			}
 
-			if len(decodedManifest.Derivatives[0].Children) != 1 {
+			if len(manifest.Derivatives[0].Children) != 1 {
 				t.Error("Failed to parse children derivatives")
 			}
 
-			if len(decodedManifest.Derivatives[0].Children[0].Children) != 1 {
+			if len(manifest.Derivatives[0].Children[0].Children) != 1 {
 				t.Error("Failed to parse children of derivative's children [funny]")
 			}
 
-			if decodedManifest.Derivatives[0].Children[0].Children[0].URN == "" {
+			if manifest.Derivatives[0].Children[0].Children[0].URN == "" {
 				t.Error("URN should not be empty")
 			}
 
-			if decodedManifest.Derivatives[0].Messages[0].Type != "warning" {
+			if manifest.Derivatives[0].Messages[0].Type != "warning" {
 				t.Error("Should contain a warning message")
 			}
 
-			if len(decodedManifest.Derivatives[0].Children[0].Messages) != 3 {
+			if len(manifest.Derivatives[0].Children[0].Messages) != 3 {
 				t.Error("Derivative child should contain 3 error message")
 			}
 
-			if decodedManifest.Derivatives[0].Children[0].Messages[0].Type != "warning" {
+			if manifest.Derivatives[0].Children[0].Messages[0].Type != "warning" {
 				t.Error("Derivative child message should be a warning message")
 			}
-			if decodedManifest.Derivatives[0].Children[0].Messages[2].Type != "error" {
+			if manifest.Derivatives[0].Children[0].Messages[2].Type != "error" {
 				t.Error("Derivative child message should be an error message")
 			}
 
 			// use type assertion to check if the message is an array and assign it to a variable
-			if messages, ok := decodedManifest.Derivatives[0].Children[0].Messages[2].Message.([]interface{}); !ok {
+			if messages, ok := manifest.Derivatives[0].Children[0].Messages[2].Message.([]interface{}); !ok {
 				t.Error("Derivative child message should be an array")
 			} else {
 				// check if the message is an array of strings
@@ -180,7 +209,7 @@ func TestParseManifest(t *testing.T) {
 				}
 			}
 
-			if decodedManifest.Derivatives[0].Children[0].Children[0].Role != "graphics" {
+			if manifest.Derivatives[0].Children[0].Children[0].Role != "graphics" {
 				t.Error("Failed to parse children of derivative's children [funny]")
 			}
 		},
@@ -188,53 +217,73 @@ func TestParseManifest(t *testing.T) {
 
 	t.Run(
 		"Parse complete success manifest", func(t *testing.T) {
-			manifest, err := os.ReadFile("../assets/success_manifest.json")
+			manifestJson, err := os.ReadFile("../assets/success_manifest.json")
 			if err != nil {
 				t.Fatal(err.Error())
 			}
 
-			var decodedManifest md.Manifest
-			err = json.Unmarshal(manifest, &decodedManifest)
+			var manifest md.Manifest
+			err = json.Unmarshal(manifestJson, &manifest)
 			if err != nil {
 				t.Error(err.Error())
 			}
 
-			if len(decodedManifest.Derivatives) != 4 {
+			if !manifest.Status.IsSuccess() {
+				t.Error("Status should be success")
+			}
+
+			if !manifest.Region.IsUS() {
+				t.Error("Region should be US")
+			}
+
+			if manifest.Region.IsEMEA() {
+				t.Error("Region should not be EMEA")
+			}
+
+			if len(manifest.Derivatives) != 4 {
 				t.Error("Failed to parse derivatives")
 			}
 
-			if len(decodedManifest.Derivatives[0].Children) == 1 {
+			if len(manifest.Derivatives[0].Children) == 1 {
 				t.Errorf(
 					"Failed to parse childern derivatives, expecting 1, got %d",
-					len(decodedManifest.Derivatives[0].Children),
+					len(manifest.Derivatives[0].Children),
 				)
 			}
 
-			if len(decodedManifest.Derivatives[0].Children[0].Children) != 4 {
+			if len(manifest.Derivatives[0].Children[0].Children) != 4 {
 				t.Errorf(
 					"Failed to parse childern of derivative's children [funny], expecting 4, got %d",
-					len(decodedManifest.Derivatives[0].Children[0].Children),
+					len(manifest.Derivatives[0].Children[0].Children),
 				)
 			}
 
-			if decodedManifest.Derivatives[0].Children[0].Children[0].URN == "" {
+			if manifest.Derivatives[0].Children[0].Children[0].URN == "" {
 				t.Error("URN should not be empty")
 			}
 
-			if len(decodedManifest.Derivatives[0].Messages) != 0 {
+			if len(manifest.Derivatives[0].Messages) != 0 {
 				t.Error("Derivative should not contain any error messages")
 			}
 
 			expectedOutputTypes := []string{"svf", "step", "thumbnail", "obj"}
 
-			for idx := range decodedManifest.Derivatives {
-				if decodedManifest.Derivatives[idx].OutputType != expectedOutputTypes[idx] {
+			for idx := range manifest.Derivatives {
+				if manifest.Derivatives[idx].OutputType != expectedOutputTypes[idx] {
 					t.Errorf(
 						"Wrong derivative type parsing: expectd %s, got %s",
-						decodedManifest.Derivatives[idx].OutputType,
+						manifest.Derivatives[idx].OutputType,
 						expectedOutputTypes[idx],
 					)
 				}
+			}
+
+			objPr := manifest.GetProgressReportOfChild("obj", "4f981e94-8241-4eaf-b08b-cd337c6b8b1f")
+			if objPr.Status != md.StatusSuccess {
+				t.Error("Wrong status")
+			}
+			if objPr.Progress != "" {
+				t.Error("Wrong progress")
 			}
 		},
 	)
@@ -246,21 +295,21 @@ func TestParseManifest(t *testing.T) {
 				t.Fatal(err.Error())
 			}
 
-			result := md.Manifest{}
+			manifest := md.Manifest{}
 
 			buffer := bytes.NewBuffer(manifestJson)
 			decoder := json.NewDecoder(buffer)
-			err = decoder.Decode(&result)
+			err = decoder.Decode(&manifest)
 			if err != nil {
 				t.Fatal(err.Error())
 			}
 
-			revitFileName := result.GetSourceFileName()
+			revitFileName := manifest.GetSourceFileName()
 			if revitFileName != "20170724_Airport Model.rvt" {
 				t.Error("Wrong source file name")
 			}
 
-			sp := result.GetProgressReport()
+			sp := manifest.GetProgressReport()
 			if sp.Status != md.StatusSuccess {
 				t.Error("Wrong status")
 			}
@@ -268,25 +317,9 @@ func TestParseManifest(t *testing.T) {
 				t.Error("Wrong progress")
 			}
 
-			propDbUrn := result.GetPropertiesDatabaseUrn()
+			propDbUrn := manifest.GetPropertiesDatabaseUrn()
 			if propDbUrn != "urn:adsk.viewing:fs.file:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6dGVzdC1maWxlcy8yMDE3MDcyNF9BaXJwb3J0JTIwTW9kZWwucnZ0/output/Resource/model.sdb" {
 				t.Error("Wrong properties database urn")
-			}
-
-			svfSp := result.GetProgressReportOfChild("svf", "6fac95cb-af5d-3e4f-b943-8a7f55847ff1")
-			if svfSp.Status != md.StatusSuccess {
-				t.Error("Wrong status")
-			}
-			if svfSp.Progress != "" {
-				t.Error("Wrong progress")
-			}
-
-			tnSP := result.GetProgressReportOfChild("thumbnail", "db899ab5-939f-e250-d79d-2d1637ce4565")
-			if tnSP.Status != md.StatusSuccess {
-				t.Error("Wrong status")
-			}
-			if tnSP.Progress != "" {
-				t.Error("Wrong progress")
 			}
 		},
 	)
