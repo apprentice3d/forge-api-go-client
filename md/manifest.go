@@ -57,6 +57,11 @@ func (s *Status) IsTimeout() bool {
 	return strings.EqualFold(string(*s), string(StatusTimeout))
 }
 
+// IsEmpty returns true if this ProgressReport is empty.
+func (pr *ProgressReport) IsEmpty() bool {
+	return pr.Status == "" && pr.Progress == ""
+}
+
 type ProgressReport struct {
 	Status   Status `json:"status"`
 	Progress string `json:"progress"`
