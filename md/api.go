@@ -126,14 +126,15 @@ func (m *Manifest) GetProgressReport() ProgressReport {
 	return m.ProgressReport
 }
 
-// GetProgressReportOfChild returns the ProgressReport of a translation of a given outputType for a specific child, identified by its GUID string.
+// GetProgressReportOfChild returns the ProgressReport of a translation of a given outputType for a specific child,
+// identified by its model/view GUID string.
 // If the child is not found, an empty ProgressReport is returned.
-func (m *Manifest) GetProgressReportOfChild(derivativeOutputType, childGuid string) ProgressReport {
+func (m *Manifest) GetProgressReportOfChild(derivativeOutputType, modelViewGuid string) ProgressReport {
 	for _, derivative := range m.Derivatives {
 		// strings.EqualFold => ignore casing
 		if strings.EqualFold(derivative.OutputType, derivativeOutputType) {
 			for _, child := range derivative.Children {
-				if child.GUID == childGuid {
+				if child.ModelGUID != nil && *child.ModelGUID == modelViewGuid {
 					return child.ProgressReport
 				}
 			}
