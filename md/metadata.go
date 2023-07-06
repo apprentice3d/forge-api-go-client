@@ -42,7 +42,7 @@ const (
 	maxRetries = 12 * 5 // => 5 minutes max
 )
 
-func getMetadata(path, urn, token string, xHeaders XAdsHeaders) (result MetaData, err error) {
+func getMetadata(path, urn, token string) (result MetaData, err error) {
 	task := http.Client{}
 
 	req, err := http.NewRequest("GET", path+"/"+urn+"/metadata", nil)
@@ -55,8 +55,6 @@ func getMetadata(path, urn, token string, xHeaders XAdsHeaders) (result MetaData
 	log.Println("- URL: ", req.URL.String())
 
 	req.Header.Set("Authorization", "Bearer "+token)
-	req.Header.Add("x-ads-force", strconv.FormatBool(xHeaders.Overwrite))
-	req.Header.Add("x-ads-derivative-format", string(xHeaders.Format))
 
 	response, err := task.Do(req)
 	if err != nil {

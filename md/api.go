@@ -178,14 +178,14 @@ func (a *ModelDerivativeAPI) GetDerivative(urn, derivativeUrn string) (jsonData 
 //
 // Reference:
 //   - https://aps.autodesk.com/en/docs/model-derivative/v2/reference/http/metadata/urn-metadata-GET/
-func (a *ModelDerivativeAPI) GetMetadata(urn string, xHeaders XAdsHeaders) (result MetaData, err error) {
+func (a *ModelDerivativeAPI) GetMetadata(urn string) (result MetaData, err error) {
 	bearer, err := a.Authenticator.GetToken("data:read")
 	if err != nil {
 		return
 	}
 	path := a.Authenticator.GetHostPath() + a.ModelDerivativePath
 
-	return getMetadata(path, urn, bearer.AccessToken, xHeaders)
+	return getMetadata(path, urn, bearer.AccessToken)
 }
 
 // GetMasterModelViewGuid returns the GUID of the master view.

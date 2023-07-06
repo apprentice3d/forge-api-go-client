@@ -3,6 +3,8 @@ package md_test
 /*
 package md_test provides "blackbox" tests for the md package.
 These tests are meant to test the public API of the md package.
+
+TODO: add tests to check Region, ProgressReport and Status
 */
 
 import (
