@@ -16,60 +16,100 @@ func TestTwoLeggedAuthentication(t *testing.T) {
 		t.Fatalf("Could not get from env the Forge secrets")
 	}
 
-	t.Run("Valid Forge Secrets", func(t *testing.T) {
-		authenticator := oauth.NewTwoLegged(clientID, clientSecret)
+	t.Run(
+		"Valid Forge Secrets", func(t *testing.T) {
+			authenticator := oauth.NewTwoLegged(clientID, clientSecret)
 
-		bearer, err := authenticator.GetToken("data:read")
+			bearer, err := authenticator.GetToken("data:read")
 
-		if err != nil {
-			t.Error(err.Error())
-		}
+			if err != nil {
+				t.Error(err.Error())
+			}
 
-		if len(bearer.AccessToken) == 0 {
-			t.Errorf("Wrong bearer content: %v", bearer)
-		}
-	})
+			if len(bearer.AccessToken) == 0 {
+				t.Errorf("Wrong bearer content: %v", bearer)
+			}
+		},
+	)
 
-	t.Run("Invalid Forge Secrets", func(t *testing.T) {
-		authenticator := oauth.NewTwoLegged("", clientSecret)
+	t.Run(
+		"Multiple scopes", func(t *testing.T) {
+			authenticator := oauth.NewTwoLegged(clientID, clientSecret)
 
-		bearer, err := authenticator.GetToken("data:read")
+			bearer, err := authenticator.GetToken("data:read data:search viewables:read")
 
-		if err == nil {
-			t.Errorf("Expected to fail due to wrong credentials, but got %v", bearer)
-		}
+			if err != nil {
+				t.Error(err.Error())
+			}
 
-		if len(bearer.AccessToken) != 0 {
-			t.Errorf("expected to not receive a token, but received: %s", bearer.AccessToken)
-		}
-	})
+			if len(bearer.AccessToken) == 0 {
+				t.Errorf("Wrong bearer content: %v", bearer)
+			}
+		},
+	)
 
-	t.Run("Invalid scope", func(t *testing.T) {
-		authenticator := oauth.NewTwoLegged(clientID, clientSecret)
+	t.Run(
+		"Invalid Forge Secrets", func(t *testing.T) {
+			authenticator := oauth.NewTwoLegged("", clientSecret)
 
-		bearer, err := authenticator.GetToken("data:invalidScopeValue")
+			bearer, err := authenticator.GetToken("data:read")
 
-		if err == nil {
-			t.Errorf("Expected to fail due to wrong scope, but got %v\n", bearer)
-		}
+			if err == nil {
+				t.Errorf("Expected to fail due to wrong credentials, but got %v", bearer)
+			}
 
-		if len(bearer.AccessToken) != 0 {
-			t.Errorf("expected to not receive a token, but received: %s", bearer.AccessToken)
-		}
-	})
+			if len(bearer.AccessToken) != 0 {
+				t.Errorf("expected to not receive a token, but received: %s", bearer.AccessToken)
+			}
+		},
+	)
 
-	t.Run("Invalid or unreachable host", func(t *testing.T) {
-		authenticator := oauth.NewTwoLegged(clientID, clientSecret)
-		authenticator.Host = "http://localhost"
+	t.Run(
+		"Invalid scope", func(t *testing.T) {
+			authenticator := oauth.NewTwoLegged(clientID, clientSecret)
 
-		bearer, err := authenticator.GetToken("data:read")
+			bearer, err := authenticator.GetToken("data:invalidScopeValue")
 
-		if err == nil {
-			t.Errorf("Expected to fail due to wrong host, but got %v\n", bearer)
-		}
+			if err == nil {
+				t.Errorf("Expected to fail due to wrong scope, but got %v\n", bearer)
+			}
 
-		if len(bearer.AccessToken) != 0 {
-			t.Errorf("expected to not receive a token, but received: %s", bearer.AccessToken)
-		}
-	})
+			if len(bearer.AccessToken) != 0 {
+				t.Errorf("expected to not receive a token, but received: %s", bearer.AccessToken)
+			}
+		},
+	)
+
+	t.Run(
+		"Invalid multiple scopes, wrong separators", func(t *testing.T) {
+			authenticator := oauth.NewTwoLegged(clientID, clientSecret)
+
+			bearer, err := authenticator.GetToken("data:read;data:search,viewables:read")
+
+			if err == nil {
+				t.Errorf("Expected to fail due to wrong scope, but got %v\n", bearer)
+			}
+
+			if len(bearer.AccessToken) != 0 {
+				t.Errorf("expected to not receive a token, but received: %s", bearer.AccessToken)
+			}
+		},
+	)
+
+	t.Run(
+		"Invalid or unreachable host", func(t *testing.T) {
+			authenticator := oauth.NewTwoLegged(clientID, clientSecret)
+			authenticator.Host = "http://localhost"
+
+			bearer, err := authenticator.GetToken("data:read")
+
+			if err == nil {
+				t.Errorf("Expected to fail due to wrong host, but got %v\n", bearer)
+			}
+
+			if len(bearer.AccessToken) != 0 {
+				t.Errorf("expected to not receive a token, but received: %s", bearer.AccessToken)
+			}
+		},
+	)
 }

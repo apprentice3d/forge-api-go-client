@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+
+	"github.com/woweh/forge-api-go-client"
 )
 
 // NewTwoLegged returns a 2-legged authenticator with default host and authPath
@@ -16,16 +18,21 @@ func NewTwoLegged(clientID, clientSecret string) *TwoLeggedAuth {
 		AuthData{
 			clientID,
 			clientSecret,
-			"https://developer.api.autodesk.com",
+			forge.HostName,
 			"/authentication/v2",
 		},
 	}
 }
 
 // GetToken allows getting a token with a given scope
+//
+// Parameter:
+// - scope: a space separated list, like "data:read data:search viewables:read".
+//
 // References:
 // - https://aps.autodesk.com/en/docs/oauth/v2/reference/http/gettoken-POST/ -
 // - https://aps.autodesk.com/en/docs/oauth/v2/tutorials/get-2-legged-token/
+// - https://aps.autodesk.com/en/docs/oauth/v2/developers_guide/scopes/
 func (a *TwoLeggedAuth) GetToken(scope string) (bearer Bearer, err error) {
 
 	task := http.Client{}
@@ -68,12 +75,16 @@ func (a *TwoLeggedAuth) GetRefreshToken() string {
 	return ""
 }
 
-// GetHostPath returns host path, usually different in case of prd stg and dev environments
-func (a *AuthData) GetHostPath() string {
+// HostPath returns host path, usually different in case of prd stg and dev environments
+// Note:
+//   - This might be useful for Autodesk internal use, but not for external developers.
+func (a *AuthData) HostPath() string {
 	return a.Host
 }
 
 // SetHostPath allows changing the host, usually useful for switching between prd stg and dev environments
+// Note:
+//   - This might be useful for Autodesk internal use, but not for external developers.
 func (a *AuthData) SetHostPath(host string) {
 	a.Host = host
 }

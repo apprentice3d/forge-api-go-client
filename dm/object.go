@@ -10,27 +10,27 @@ import (
 )
 
 // ListObjects returns the bucket contains along with details on each item.
-func (api *OssAPI) ListObjects(bucketKey, limit, beginsWith, startAt string) (result BucketContent, err error) {
+func (a *OssAPI) ListObjects(bucketKey, limit, beginsWith, startAt string) (result BucketContent, err error) {
 
-	bearer, err := api.Authenticator.GetToken("data:read")
+	bearer, err := a.Authenticator.GetToken("data:read")
 	if err != nil {
 		return
 	}
 
-	result, err = listObjects(api.getPath(), bucketKey, limit, beginsWith, startAt, bearer.AccessToken)
+	result, err = listObjects(a.BaseUrl(), bucketKey, limit, beginsWith, startAt, bearer.AccessToken)
 
 	return
 }
 
 // DownloadObject downloads an on object, given the URL-encoded object name.
-func (api *OssAPI) DownloadObject(bucketKey string, objectName string) (result []byte, err error) {
+func (a *OssAPI) DownloadObject(bucketKey string, objectName string) (result []byte, err error) {
 
-	bearer, err := api.Authenticator.GetToken("data:read")
+	bearer, err := a.Authenticator.GetToken("data:read")
 	if err != nil {
 		return
 	}
 
-	downloadUrl, err := getSignedDownloadUrl(api.getPath(), bucketKey, objectName, bearer.AccessToken)
+	downloadUrl, err := getSignedDownloadUrl(a.BaseUrl(), bucketKey, objectName, bearer.AccessToken)
 	if err != nil {
 		return
 	}
@@ -42,9 +42,9 @@ func (api *OssAPI) DownloadObject(bucketKey string, objectName string) (result [
 
 // UploadObject adds to specified bucket the given data (can originate from a multipart-form or direct file read).
 // Return details on uploaded object, including the object URN (> ObjectId). Check uploadOkResult struct.
-func (api *OssAPI) UploadObject(bucketKey, objectName, fileToUpload string) (result UploadResult, err error) {
+func (a *OssAPI) UploadObject(bucketKey, objectName, fileToUpload string) (result UploadResult, err error) {
 
-	job, err := newUploadJob(api, bucketKey, objectName, fileToUpload)
+	job, err := newUploadJob(a, bucketKey, objectName, fileToUpload)
 	if err != nil {
 		return
 	}
@@ -97,6 +97,18 @@ func listObjects(path, bucketKey, limit, beginsWith, startAt, token string) (res
 	err = json.NewDecoder(response.Body).Decode(&result)
 
 	return
+}
+
+// signedDownloadUrl reflects the response from the "signeds3download" endpoint.
+type signedDownloadUrl struct {
+	Status string `json:"status"`
+	Url    string `json:"url"`
+	Params struct {
+		ContentType        string `json:"content-type"`
+		ContentDisposition string `json:"content-disposition"`
+	} `json:"params"`
+	Size int    `json:"size"`
+	Sha1 string `json:"sha1"`
 }
 
 func getSignedDownloadUrl(path, bucketKey, objectName string, token string) (result signedDownloadUrl, err error) {

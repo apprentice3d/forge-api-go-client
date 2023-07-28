@@ -5,7 +5,7 @@ package oauth
 //	This provides useful when an API accepts both 2-legged and 3-legged context tokens
 type ForgeAuthenticator interface {
 	GetToken(scope string) (Bearer, error)
-	GetHostPath() string
+	HostPath() string
 	GetRefreshToken() string
 }
 

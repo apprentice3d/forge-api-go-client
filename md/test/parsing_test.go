@@ -4,7 +4,7 @@ package md_test
 package md_test provides "blackbox" tests for the md package.
 These tests are meant to test the public API of the md package.
 
-TODO: add tests to check Region, ProgressReport and Status
+TODO: add tests to check region, ProgressReport and Status
 */
 
 import (
@@ -157,11 +157,11 @@ func TestParseManifest(t *testing.T) {
 			}
 
 			if !manifest.Region.IsUS() {
-				t.Error("Region should be US")
+				t.Error("region should be US")
 			}
 
 			if manifest.Region.IsEMEA() {
-				t.Error("Region should not be EMEA")
+				t.Error("region should not be EMEA")
 			}
 
 			if len(manifest.Derivatives) != 1 {
@@ -233,11 +233,11 @@ func TestParseManifest(t *testing.T) {
 			}
 
 			if !manifest.Region.IsUS() {
-				t.Error("Region should be US")
+				t.Error("region should be US")
 			}
 
 			if manifest.Region.IsEMEA() {
-				t.Error("Region should not be EMEA")
+				t.Error("region should not be EMEA")
 			}
 
 			if len(manifest.Derivatives) != 4 {

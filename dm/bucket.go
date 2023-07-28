@@ -13,13 +13,33 @@ import (
 	"github.com/woweh/forge-api-go-client/oauth"
 )
 
-// NewOssApi returns an OSS API client with default configurations and populates the BucketApiPath.
+// NewOssApi returns an OSS API client with default configurations and populates the RelativePath.
 func NewOssApi(authenticator oauth.ForgeAuthenticator, region forge.Region) OssAPI {
 	return OssAPI{
 		Authenticator: authenticator,
-		BucketApiPath: "/oss/v2/buckets",
-		Region:        region,
+		relativePath:  "/oss/v2/buckets",
+		region:        region,
 	}
+}
+
+// Region of the OSS API.
+func (a *OssAPI) Region() forge.Region {
+	return a.region
+}
+
+// SetRegion sets the Region of the OSS API.
+func (a *OssAPI) SetRegion(region forge.Region) {
+	a.region = region
+}
+
+// RelativePath of the OSS API.
+func (a *OssAPI) RelativePath() string {
+	return a.relativePath
+}
+
+// BaseUrl of the OSS API.
+func (a *OssAPI) BaseUrl() string {
+	return a.Authenticator.HostPath() + a.relativePath
 }
 
 // RetentionPolicy applies to all objects that are stored in a bucket.
@@ -54,14 +74,14 @@ const (
 //
 // References:
 //   - https://aps.autodesk.com/en/docs/data/v2/reference/http/buckets-POST/
-func (api *OssAPI) CreateBucket(bucketKey string, policyKey RetentionPolicy) (result BucketDetails, err error) {
+func (a *OssAPI) CreateBucket(bucketKey string, policyKey RetentionPolicy) (result BucketDetails, err error) {
 
-	bearer, err := api.Authenticator.GetToken("bucket:create")
+	bearer, err := a.Authenticator.GetToken("bucket:create")
 	if err != nil {
 		return
 	}
 
-	result, err = createBucket(api.getPath(), bucketKey, policyKey, bearer.AccessToken, api.Region)
+	result, err = createBucket(a.BaseUrl(), bucketKey, policyKey, bearer.AccessToken, a.region)
 
 	return
 }
@@ -73,31 +93,31 @@ func (api *OssAPI) CreateBucket(bucketKey string, policyKey RetentionPolicy) (re
 //
 // References:
 //   - https://aps.autodesk.com/en/docs/data/v2/reference/http/buckets-:bucketKey-DELETE/
-func (api *OssAPI) DeleteBucket(bucketKey string) error {
-	bearer, err := api.Authenticator.GetToken("bucket:delete")
+func (a *OssAPI) DeleteBucket(bucketKey string) error {
+	bearer, err := a.Authenticator.GetToken("bucket:delete")
 	if err != nil {
 		return err
 	}
 
-	return deleteBucket(api.getPath(), bucketKey, bearer.AccessToken)
+	return deleteBucket(a.BaseUrl(), bucketKey, bearer.AccessToken)
 }
 
 // ListBuckets returns a list of all buckets created or associated with Forge secrets used for token creation
 //
 // References:
 //   - https://aps.autodesk.com/en/docs/data/v2/reference/http/buckets-GET/
-func (api *OssAPI) ListBuckets(region forge.Region, limit, startAt string) (result BucketList, err error) {
+func (a *OssAPI) ListBuckets(region forge.Region, limit, startAt string) (result BucketList, err error) {
 
 	// init the result
 	result = BucketList{}
 
 loop:
-	bearer, err := api.Authenticator.GetToken("bucket:read")
+	bearer, err := a.Authenticator.GetToken("bucket:read")
 	if err != nil {
 		return
 	}
 
-	tmpResult, err := listBuckets(api.getPath(), region, limit, startAt, bearer.AccessToken)
+	tmpResult, err := listBuckets(a.BaseUrl(), region, limit, startAt, bearer.AccessToken)
 	if err != nil {
 		return
 	}
@@ -134,23 +154,18 @@ func extractStartAt(nextUrl string) (startAt string, err error) {
 //
 // References:
 //   - https://aps.autodesk.com/en/docs/data/v2/reference/http/buckets-:bucketKey-details-GET/
-func (api *OssAPI) GetBucketDetails(bucketKey string) (result BucketDetails, err error) {
-	bearer, err := api.Authenticator.GetToken("bucket:read")
+func (a *OssAPI) GetBucketDetails(bucketKey string) (result BucketDetails, err error) {
+	bearer, err := a.Authenticator.GetToken("bucket:read")
 	if err != nil {
 		return
 	}
 
-	return getBucketDetails(api.getPath(), bucketKey, bearer.AccessToken)
+	return getBucketDetails(a.BaseUrl(), bucketKey, bearer.AccessToken)
 }
 
 /*
  *	SUPPORT FUNCTIONS
  */
-
-// getPath gets the full bucket API path (= api.Authenticator.GetHostPath() + api.BucketApiPath).
-func (api *OssAPI) getPath() string {
-	return api.Authenticator.GetHostPath() + api.BucketApiPath
-}
 
 func getBucketDetails(path, bucketKey, token string) (result BucketDetails, err error) {
 	task := http.Client{}

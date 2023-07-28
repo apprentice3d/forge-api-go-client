@@ -10,24 +10,66 @@ import (
 
 // ModelDerivativeAPI struct holds all paths necessary to access Model Derivative API
 type ModelDerivativeAPI struct {
-	Authenticator       oauth.ForgeAuthenticator
-	ModelDerivativePath string
-	Region              forge.Region
+	// Forge authenticator, used to get access token, either 2-legged or 3-legged
+	Authenticator oauth.ForgeAuthenticator
+	// The relativePath depends on the region => either usPath or euPath
+	relativePath string
+	// The region where data resides, either US or EU (EMEA)
+	region forge.Region
 }
+
+const (
+	usPath = "/modelderivative/v2/designdata"
+	euPath = "/modelderivative/v2/regions/eu/designdata"
+)
 
 // NewMdApi returns a Model Derivative API client for a specific region.
 func NewMdApi(authenticator oauth.ForgeAuthenticator, region forge.Region) ModelDerivativeAPI {
 	// default to US region
-	path := "/modelderivative/v2/designdata"
-	if region == forge.EMEA {
-		path = "/modelderivative/v2/regions/eu/designdata"
+	path := usPath
+	if region == forge.EU {
+		path = euPath
 	}
 
 	return ModelDerivativeAPI{
-		Authenticator:       authenticator,
-		ModelDerivativePath: path,
-		Region:              region,
+		Authenticator: authenticator,
+		relativePath:  path,
+		region:        region,
 	}
+}
+
+// Region of the ModelDerivativeAPI.
+func (a *ModelDerivativeAPI) Region() forge.Region {
+	return a.region
+}
+
+// SetRegion sets the Region _AND_ RelativePath of the ModelDerivativeAPI.
+//   - If the region is US, the relativePath will be usPath (/modelderivative/v2/designdata)
+//   - If the region is EU (== EMEA), the relativePath will be euPath (/modelderivative/v2/regions/eu/designdata)
+//
+// References:
+// - https://aps.autodesk.com/en/docs/model-derivative/v2/reference/http/
+func (a *ModelDerivativeAPI) SetRegion(region forge.Region) {
+	a.region = region
+	if region == forge.US {
+		a.relativePath = usPath
+	} else if region == forge.EU {
+		a.relativePath = euPath
+	}
+}
+
+// RelativePath of the ModelDerivativeAPI.
+// Please note that the relativePath depends on the region.
+//
+// References:
+// - https://aps.autodesk.com/en/docs/model-derivative/v2/reference/http/
+func (a *ModelDerivativeAPI) RelativePath() string {
+	return a.relativePath
+}
+
+// BaseUrl of the ModelDerivativeAPI.
+func (a *ModelDerivativeAPI) BaseUrl() string {
+	return a.Authenticator.HostPath() + a.relativePath
 }
 
 // StartTranslation starts a translation job with the given TranslationParams and XAdsHeaders.
@@ -41,9 +83,8 @@ func (a *ModelDerivativeAPI) StartTranslation(params TranslationParams, xHeaders
 	if err != nil {
 		return
 	}
-	path := a.Authenticator.GetHostPath() + a.ModelDerivativePath
 
-	return startTranslation(path, params, &xHeaders, bearer.AccessToken)
+	return startTranslation(a.BaseUrl(), params, &xHeaders, bearer.AccessToken)
 }
 
 // NewTranslationParams creates a TranslationParams struct with the given urn, outputType, views, and advanced options.
@@ -60,7 +101,7 @@ func (a *ModelDerivativeAPI) NewTranslationParams(
 			URN: urn,
 		},
 		Output: OutputSpec{
-			Destination: DestSpec{a.Region},
+			Destination: DestSpec{a.region},
 			Formats: []FormatSpec{
 				{
 					Type:     outputType,
@@ -102,9 +143,7 @@ func (a *ModelDerivativeAPI) GetManifest(urn string) (result Manifest, err error
 		return
 	}
 
-	path := a.Authenticator.GetHostPath() + a.ModelDerivativePath
-
-	return getManifest(path, urn, bearer.AccessToken)
+	return getManifest(a.BaseUrl(), urn, bearer.AccessToken)
 }
 
 // GetPropertiesDatabaseUrn returns the URN of the SQLite properties database from the manifest.
@@ -165,9 +204,8 @@ func (a *ModelDerivativeAPI) GetDerivative(urn, derivativeUrn string) (jsonData 
 	if err != nil {
 		return
 	}
-	path := a.Authenticator.GetHostPath() + a.ModelDerivativePath
 
-	return getDerivative(path, urn, derivativeUrn, bearer.AccessToken)
+	return getDerivative(a.BaseUrl(), urn, derivativeUrn, bearer.AccessToken)
 }
 
 // GetMetadata returns a list of model views (Viewables) in the source design specified by the `urn` URI parameter.
@@ -183,9 +221,8 @@ func (a *ModelDerivativeAPI) GetMetadata(urn string) (result MetaData, err error
 	if err != nil {
 		return
 	}
-	path := a.Authenticator.GetHostPath() + a.ModelDerivativePath
 
-	return getMetadata(path, urn, bearer.AccessToken)
+	return getMetadata(a.BaseUrl(), urn, bearer.AccessToken)
 }
 
 // GetMasterModelViewGuid returns the GUID of the master view.
@@ -228,9 +265,7 @@ func (a *ModelDerivativeAPI) GetModelViewProperties(urn, modelGuid string, xHead
 		return
 	}
 
-	path := a.Authenticator.GetHostPath() + a.ModelDerivativePath
-
-	return getModelViewProperties(path, urn, modelGuid, bearer.AccessToken, xHeaders)
+	return getModelViewProperties(a.BaseUrl(), urn, modelGuid, bearer.AccessToken, xHeaders)
 }
 
 // GetObjectTree returns a hierarchical list of objects (object tree) in the model view specified by the modelGuid URI parameter.
@@ -250,7 +285,5 @@ func (a *ModelDerivativeAPI) GetObjectTree(urn, modelGuid string, forceGet bool,
 		return
 	}
 
-	path := a.Authenticator.GetHostPath() + a.ModelDerivativePath
-
-	return getObjectTree(path, urn, modelGuid, bearer.AccessToken, forceGet, xHeaders)
+	return getObjectTree(a.BaseUrl(), urn, modelGuid, bearer.AccessToken, forceGet, xHeaders)
 }

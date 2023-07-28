@@ -8,7 +8,11 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+
+	"github.com/woweh/forge-api-go-client"
 )
+
+// TODO: Review and test 3-legged authentication
 
 // NewThreeLegged returns a 3-legged authenticator with default host and authPath,
 // giving client secrets, redirectURI and optionally with a starting refresh token (useful for CLI apps)
@@ -17,7 +21,7 @@ func NewThreeLegged(clientID, clientSecret, redirectURI, refreshToken string) *T
 		AuthData{
 			clientID,
 			clientSecret,
-			"https://developer.api.autodesk.com",
+			forge.HostName,
 			"/authentication/v2",
 		},
 		redirectURI,
@@ -27,9 +31,14 @@ func NewThreeLegged(clientID, clientSecret, redirectURI, refreshToken string) *T
 
 // Authorize method returns an URL to redirect an end user, where it will be asked to give his consent for app to
 // access the specified resources.
+//
+// Parameter:
+// - scope: a space separated list, like "data:read viewables:read".
+//
 // References:
 // - https://aps.autodesk.com/en/docs/oauth/v2/tutorials/get-3-legged-token/
 // - https://aps.autodesk.com/en/docs/oauth/v2/reference/http/authorize-GET/
+// - https://aps.autodesk.com/en/docs/oauth/v2/developers_guide/scopes/
 func (a *ThreeLeggedAuth) Authorize(scope, state string) (string, error) {
 
 	request, err := http.NewRequest("GET", a.Host+a.authPath+"/authorize", nil)

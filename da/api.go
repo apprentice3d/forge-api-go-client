@@ -24,7 +24,7 @@ func (api API) UserId() (nickname string, err error) {
 	if err != nil {
 		return
 	}
-	path := api.Authenticator.GetHostPath() + api.DesignAutomationPath
+	path := api.Authenticator.HostPath() + api.DesignAutomationPath
 	nickname, err = getUserID(path, bearer.AccessToken)
 
 	return
@@ -37,7 +37,7 @@ func (api API) EngineList() (list EngineList, err error) {
 	if err != nil {
 		return
 	}
-	path := api.Authenticator.GetHostPath() + api.DesignAutomationPath
+	path := api.Authenticator.HostPath() + api.DesignAutomationPath
 	list, err = listEngines(path, bearer.AccessToken)
 
 	return
@@ -50,7 +50,7 @@ func (api API) EngineDetails(id string) (list EngineDetails, err error) {
 	if err != nil {
 		return
 	}
-	path := api.Authenticator.GetHostPath() + api.DesignAutomationPath
+	path := api.Authenticator.HostPath() + api.DesignAutomationPath
 	list, err = getEngineDetails(path, id, bearer.AccessToken)
 
 	return
@@ -66,7 +66,7 @@ func (api API) CreateApp(name, engine string) (app AppBundle, err error) {
 	if err != nil {
 		return
 	}
-	path := api.Authenticator.GetHostPath() + api.DesignAutomationPath
+	path := api.Authenticator.HostPath() + api.DesignAutomationPath
 	app, err = createApp(path, name, engine, bearer.AccessToken)
 
 	app.authenticator = api.Authenticator
@@ -90,7 +90,7 @@ func (api API) AppList() (list AppList, err error) {
 	if err != nil {
 		return
 	}
-	path := api.Authenticator.GetHostPath() + api.DesignAutomationPath
+	path := api.Authenticator.HostPath() + api.DesignAutomationPath
 	list, err = listApps(path, bearer.AccessToken)
 
 	return
@@ -106,7 +106,7 @@ func (api API) CreateActivity(config ActivityConfig) (activity Activity, err err
 	if err != nil {
 		return
 	}
-	path := api.Authenticator.GetHostPath() + api.DesignAutomationPath
+	path := api.Authenticator.HostPath() + api.DesignAutomationPath
 	activity, err = createActivity(path, config, bearer.AccessToken)
 
 	activity.authenticator = api.Authenticator

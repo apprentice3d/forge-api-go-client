@@ -54,10 +54,11 @@ func NewInformationQuerier(authenticator ForgeAuthenticator) Information {
 // AboutMe is used to get the profile of an authorizing end user
 func (i Information) AboutMe() (profile UserProfile, err error) {
 
-	requestPath := i.Authenticator.GetHostPath() + i.InformationalAPIPath
+	requestPath := i.Authenticator.HostPath() + i.InformationalAPIPath
 	task := http.Client{}
 
-	req, err := http.NewRequest("GET",
+	req, err := http.NewRequest(
+		"GET",
 		requestPath,
 		nil,
 	)

@@ -37,7 +37,7 @@ func (api ReCapAPI) CreatePhotoScene(name string, formats []string, sceneType st
 	if err != nil {
 		return
 	}
-	path := api.Authenticator.GetHostPath() + api.ReCapPath
+	path := api.Authenticator.HostPath() + api.ReCapPath
 	scene, err = createPhotoScene(path, name, formats, sceneType, bearer.AccessToken)
 
 	return
@@ -51,7 +51,7 @@ func (api ReCapAPI) AddFileToSceneUsingLink(sceneID string, link string) (upload
 	if err != nil {
 		return
 	}
-	path := api.Authenticator.GetHostPath() + api.ReCapPath
+	path := api.Authenticator.HostPath() + api.ReCapPath
 
 	uploads, err = addFileToSceneUsingLink(path, sceneID, link, bearer.AccessToken)
 	return
@@ -65,7 +65,7 @@ func (api ReCapAPI) AddFileToSceneUsingData(sceneID string, data []byte) (upload
 	if err != nil {
 		return
 	}
-	path := api.Authenticator.GetHostPath() + api.ReCapPath
+	path := api.Authenticator.HostPath() + api.ReCapPath
 
 	uploads, err = addFileToSceneUsingFileData(path, sceneID, data, bearer.AccessToken)
 
@@ -78,7 +78,7 @@ func (api ReCapAPI) StartSceneProcessing(sceneID string) (result SceneStartProce
 	if err != nil {
 		return
 	}
-	path := api.Authenticator.GetHostPath() + api.ReCapPath
+	path := api.Authenticator.HostPath() + api.ReCapPath
 	result, err = startSceneProcessing(path, sceneID, bearer.AccessToken)
 	return
 }
@@ -91,7 +91,7 @@ func (api ReCapAPI) GetSceneProgress(sceneID string) (progress SceneProgressRepl
 	if err != nil {
 		return
 	}
-	path := api.Authenticator.GetHostPath() + api.ReCapPath
+	path := api.Authenticator.HostPath() + api.ReCapPath
 	progress, err = getSceneProgress(path, sceneID, bearer.AccessToken)
 	return
 }
@@ -105,7 +105,7 @@ func (api ReCapAPI) GetSceneResults(sceneID string, format string) (result Scene
 	if err != nil {
 		return
 	}
-	path := api.Authenticator.GetHostPath() + api.ReCapPath
+	path := api.Authenticator.HostPath() + api.ReCapPath
 	result, err = getSceneResult(path, sceneID, bearer.AccessToken, format)
 	return
 }
@@ -116,7 +116,7 @@ func (api ReCapAPI) CancelSceneProcessing(sceneID string) (ID string, err error)
 	if err != nil {
 		return
 	}
-	path := api.Authenticator.GetHostPath() + api.ReCapPath
+	path := api.Authenticator.HostPath() + api.ReCapPath
 	_, err = cancelSceneProcessing(path, sceneID, bearer.AccessToken)
 
 	return sceneID, err
@@ -128,7 +128,7 @@ func (api ReCapAPI) DeleteScene(sceneID string) (ID string, err error) {
 	if err != nil {
 		return
 	}
-	path := api.Authenticator.GetHostPath() + api.ReCapPath
+	path := api.Authenticator.HostPath() + api.ReCapPath
 	_, err = deleteScene(path, sceneID, bearer.AccessToken)
 	ID = sceneID
 	return
