@@ -51,7 +51,7 @@ func getMetadata(path, urn, token string) (result MetaData, err error) {
 	}
 
 	log.Println("Requesting metadata...")
-	log.Println("- Base64  encoded design URN: ", urn)
+	log.Println("- Base64 encoded design URL: ", urn)
 	log.Println("- URL: ", req.URL.String())
 
 	req.Header.Set("Authorization", "Bearer "+token)
@@ -98,7 +98,7 @@ retry:
 	req.Header.Add("x-ads-derivative-format", string(xHeaders.Format))
 
 	log.Println("Requesting object tree...")
-	log.Println("- Base64  encoded design URN: ", urn)
+	log.Println("- Base64 encoded design URL: ", urn)
 	log.Println("- Unique model view ID: ", modelGuid)
 	log.Println("- URL: ", req.URL.String())
 
@@ -150,7 +150,7 @@ retry:
 	req.Header.Add("x-ads-derivative-format", string(xHeaders.Format))
 
 	log.Println("Requesting all properties...")
-	log.Println("- Base64  encoded design URN: ", urn)
+	log.Println("- Base64 encoded design URL: ", urn)
 	log.Println("- Unique model view ID: ", modelGuid)
 	log.Println("- URL: ", req.URL.String())
 

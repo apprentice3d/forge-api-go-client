@@ -136,7 +136,7 @@ func getManifest(path, urn, token string) (result Manifest, err error) {
 	}
 
 	log.Println("Requesting manifest...")
-	log.Println("- Base64  encoded design URN: ", urn)
+	log.Println("- Base64 encoded design URL: ", urn)
 	log.Println("- URL: ", req.URL.String())
 
 	req.Header.Set("Authorization", "Bearer "+token)

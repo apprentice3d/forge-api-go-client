@@ -18,30 +18,30 @@ type derivativeDownloadUrl struct {
 	Expiration  int64  `json:"expiration"`
 }
 
-func getDerivative(path, urn, derivativeUrn, token string) (result []byte, err error) {
+func getDerivative(path, urn, derivativeUrn, token string, writer io.Writer) (written int64, err error) {
 
 	task := http.Client{}
 
 	req, err := http.NewRequest("GET", path+"/"+urn+"/manifest/"+derivativeUrn+"/signedcookies", nil)
 	if err != nil {
-		return
+		return 0, err
 	}
 
 	log.Println("Requesting derivative URN...")
-	log.Println("- Base64  encoded design URN: ", urn)
+	log.Println("- Base64 encoded design URL: ", urn)
 	log.Println("- URL: ", req.URL.String())
 
 	req.Header.Set("Authorization", "Bearer "+token)
 	response, err := task.Do(req)
 	if err != nil {
-		return
+		return 0, err
 	}
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
 		content, _ := io.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
-		return
+		return 0, err
 	}
 
 	var getUrlResult derivativeDownloadUrl
@@ -49,22 +49,24 @@ func getDerivative(path, urn, derivativeUrn, token string) (result []byte, err e
 	// deserialize the response
 	err = json.NewDecoder(response.Body).Decode(&getUrlResult)
 	if err != nil {
-		return
+		return 0, err
 	}
 	// https://aps.autodesk.com/en/docs/model-derivative/v2/reference/http/urn-manifest-derivativeUrn-signedcookies-GET/#http-headers
 	// Signed cookie to use with download URL.
 	// There will be three headers in the response named Set-Cookie
 	if len(response.Header.Values("Set-Cookie")) != 3 {
 		err = errors.New("invalid number of Set-Cookie headers in the response")
-		return
+		return 0, err
 	}
 
 	signedCookieValue := strings.Join(response.Header.Values("Set-Cookie"), ";")
 
-	return downloadDerivative(getUrlResult, signedCookieValue)
+	return downloadDerivative(getUrlResult, signedCookieValue, writer)
 }
 
-func downloadDerivative(downloadUrl derivativeDownloadUrl, cookieValue string) (result []byte, err error) {
+func downloadDerivative(downloadUrl derivativeDownloadUrl, cookieValue string, writer io.Writer) (
+	written int64, err error,
+) {
 
 	task := http.Client{}
 
@@ -81,26 +83,27 @@ func downloadDerivative(downloadUrl derivativeDownloadUrl, cookieValue string) (
 	req.Header.Set("Content-Length", strconv.Itoa(downloadUrl.Size))
 	response, err := task.Do(req)
 	if err != nil {
-		return
+		return 0, err
 	}
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
 		content, _ := io.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
-		return
+		return 0, err
 	}
 
-	result, err = io.ReadAll(response.Body)
+	written, err = io.Copy(writer, response.Body)
 	if err != nil {
-		return
+		return 0, err
 	}
-	if len(result) != downloadUrl.Size {
+
+	if written != int64(downloadUrl.Size) {
 		err = errors.New("downloaded file size is different than the expected size")
 		return
 	}
 
 	log.Println("Finished downloading derivative.")
 
-	return result, nil
+	return written, nil
 }

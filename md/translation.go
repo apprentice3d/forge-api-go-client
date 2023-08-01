@@ -189,7 +189,7 @@ func startTranslation(path string, params TranslationParams, xAdsHeaders *XAdsHe
 	}
 
 	log.Println("Creating translation job...")
-	log.Println("- Base64  encoded design URN: ", params.Input.URN)
+	log.Println("- Base64 encoded design URL: ", params.Input.URN)
 	log.Println("- URL: ", req.URL.String())
 
 	req.Header.Add("Content-Type", "application/json")

@@ -2,6 +2,7 @@ package md
 
 import (
 	"encoding/base64"
+	"io"
 	"strings"
 
 	"github.com/woweh/forge-api-go-client"
@@ -194,18 +195,38 @@ func (m *Manifest) GetSourceFileName() string {
 	return ""
 }
 
-// GetDerivative downloads a selected derivative. To download the file, you need to specify the file’s URN, which you retrieve from the manifest.
+// GetDerivative downloads a selected derivative.
+// To download the file, you need to specify the file’s URN, which you retrieve from the manifest.
 // You can fetch the manifest using the GetManifest function.
 //
 // References:
 //   - https://aps.autodesk.com/en/docs/model-derivative/v2/reference/http/urn-manifest-derivativeUrn-signedcookies-GET/
-func (a *ModelDerivativeAPI) GetDerivative(urn, derivativeUrn string) (jsonData []byte, err error) {
+//
+// Example:
+//
+// urn := "..."
+// derivativeUrn := "..."
+// writer, err := os.Create("propertiesDb.sqlite")
+//
+//	if err != nil {
+//	  log.Fatal(err)
+//	}
+//
+// defer writer.Close()
+// written, err := client.GetDerivative(urn, derivativeUrn, writer)
+//
+//	if err != nil {
+//	  log.Fatal(err)
+//	}
+//
+// log.Printf("Downloaded %d bytes", written)
+func (a *ModelDerivativeAPI) GetDerivative(urn, derivativeUrn string, writer io.Writer) (written int64, err error) {
 	bearer, err := a.Authenticator.GetToken("data:read")
 	if err != nil {
 		return
 	}
 
-	return getDerivative(a.BaseUrl(), urn, derivativeUrn, bearer.AccessToken)
+	return getDerivative(a.BaseUrl(), urn, derivativeUrn, bearer.AccessToken, writer)
 }
 
 // GetMetadata returns a list of model views (Viewables) in the source design specified by the `urn` URI parameter.
