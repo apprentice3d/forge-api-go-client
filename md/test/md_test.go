@@ -7,6 +7,7 @@ These tests are meant to test the public API of the md package.
 
 import (
 	"encoding/json"
+	"io"
 	"log"
 	"os"
 	"testing"
@@ -295,7 +296,7 @@ func TestModelDerivativeAPI_HappyPath_AllFunctions(t *testing.T) {
 				}
 
 				t.Log("Downloading properties database...")
-				_, err = mdAPI.GetDerivative(manifest.URN, propertiesDatabaseUrn)
+				_, err = mdAPI.GetDerivative(manifest.URN, propertiesDatabaseUrn, io.Writer(nil))
 				if err != nil {
 					t.Error("Failed to download the properties database, got: ", err.Error())
 				}

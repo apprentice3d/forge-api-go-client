@@ -28,7 +28,7 @@ const (
 func NewMdApi(authenticator oauth.ForgeAuthenticator, region forge.Region) ModelDerivativeAPI {
 	// default to US region
 	path := usPath
-	if region == forge.EU {
+	if region.IsEU() {
 		path = euPath
 	}
 
@@ -52,9 +52,9 @@ func (a *ModelDerivativeAPI) Region() forge.Region {
 // - https://aps.autodesk.com/en/docs/model-derivative/v2/reference/http/
 func (a *ModelDerivativeAPI) SetRegion(region forge.Region) {
 	a.region = region
-	if region == forge.US {
+	if region.IsUS() {
 		a.relativePath = usPath
-	} else if region == forge.EU {
+	} else if region.IsEU() {
 		a.relativePath = euPath
 	}
 }
