@@ -158,10 +158,10 @@ func (job *uploadJob) uploadFile() (result UploadResult, err error) {
 
 		// generate signed S3 upload url(s)
 		log.Println("- getting signed URLs...")
-		uploadUrls, err := job.getSignedUploadUrlsWithRetries(firstPart, parts)
-		if err != nil {
-			err = fmt.Errorf("error getting signed URLs for parts %v-%v :\n%w", firstPart, parts, err)
-			return result, err
+		uploadUrls, err2 := job.getSignedUploadUrlsWithRetries(firstPart, parts)
+		if err2 != nil {
+			err2 = fmt.Errorf("error getting signed URLs for parts %v-%v :\n%w", firstPart, parts, err2)
+			return result, err2
 		}
 
 		log.Println("- UploadKey: ", uploadUrls.UploadKey)
@@ -178,11 +178,11 @@ func (job *uploadJob) uploadFile() (result UploadResult, err error) {
 			// read a chunk of the file
 			bytesSlice := make([]byte, defaultChunkSize)
 
-			bytesRead, err := file.Read(bytesSlice)
-			if err != nil {
-				if err != io.EOF {
-					err = fmt.Errorf("error reading the file to upload:\n%w", err)
-					return result, err
+			bytesRead, err3 := file.Read(bytesSlice)
+			if err3 != nil {
+				if err3 != io.EOF {
+					err3 = fmt.Errorf("error reading the file to upload:\n%w", err3)
+					return result, err3
 				}
 				// EOF reached
 			}
@@ -190,10 +190,10 @@ func (job *uploadJob) uploadFile() (result UploadResult, err error) {
 			// upload the chunk to the signed URL
 			if bytesRead > 0 {
 				buffer := bytes.NewBuffer(bytesSlice[:bytesRead])
-				err = uploadChunkWithRetries(url, buffer)
-				if err != nil {
-					err = fmt.Errorf("error uploading a chunk to URL:\n- %v\n%w", url, err)
-					return result, err
+				err3 = uploadChunkWithRetries(url, buffer)
+				if err3 != nil {
+					err3 = fmt.Errorf("error uploading a chunk to URL:\n- %v\n%w", url, err3)
+					return result, err3
 				}
 				log.Println("- number of bytes sent: ", bytesRead)
 			}
