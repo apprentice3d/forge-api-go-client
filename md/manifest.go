@@ -91,7 +91,6 @@ type Message struct {
 	Type string `json:"type"`
 	Code string `json:"code"`
 	// Message can either be a string, or an array of strings.
-	// This is a bug in the REST API.
 	Message any `json:"message,omitempty"`
 }
 
@@ -109,22 +108,23 @@ type DocumentInformation struct {
 
 type Child struct {
 	ProgressReport
-	GUID         string    `json:"guid"`
-	Type         string    `json:"type"`
-	Role         string    `json:"role"`
-	Name         string    `json:"name,omitempty"`
-	Mime         string    `json:"mime,omitempty"`
-	UseAsDefault *bool     `json:"useAsDefault,omitempty"`
-	HasThumbnail string    `json:"hasThumbnail,omitempty"`
-	URN          string    `json:"urn,omitempty"`
-	ViewableID   string    `json:"viewableID,omitempty"`
-	PhaseNames   string    `json:"phaseNames,omitempty"`
-	Resolution   []float32 `json:"resolution,omitempty"`
-	Children     []Child   `json:"children,omitempty"`
-	Camera       []float32 `json:"camera,omitempty"`
-	ModelGUID    *string   `json:"modelGuid,omitempty"`
-	ObjectIDs    []int     `json:"objectIds,omitempty"`
-	Messages     []Message `json:"messages,omitempty"`
+	GUID         string `json:"guid"`
+	Type         string `json:"type"`
+	Role         string `json:"role"`
+	Name         string `json:"name,omitempty"`
+	Mime         string `json:"mime,omitempty"`
+	UseAsDefault *bool  `json:"useAsDefault,omitempty"`
+	HasThumbnail string `json:"hasThumbnail,omitempty"`
+	URN          string `json:"urn,omitempty"`
+	ViewableID   string `json:"viewableID,omitempty"`
+	// PhaseNames can either be a string, or an array of strings.
+	PhaseNames any       `json:"phaseNames,omitempty"`
+	Resolution []float32 `json:"resolution,omitempty"`
+	Children   []Child   `json:"children,omitempty"`
+	Camera     []float32 `json:"camera,omitempty"`
+	ModelGUID  *string   `json:"modelGuid,omitempty"`
+	ObjectIDs  []int     `json:"objectIds,omitempty"`
+	Messages   []Message `json:"messages,omitempty"`
 }
 
 func getManifest(path, urn, token string) (result Manifest, err error) {

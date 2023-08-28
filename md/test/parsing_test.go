@@ -323,4 +323,92 @@ func TestParseManifest(t *testing.T) {
 			}
 		},
 	)
+
+	t.Run(
+		"Parse Revit manifest with multiple phases", func(t *testing.T) {
+			manifestJson, err := os.ReadFile("../assets/revit_manifest_multiple_phases.json")
+			if err != nil {
+				t.Fatal(err.Error())
+			}
+
+			manifest := md.Manifest{}
+
+			buffer := bytes.NewBuffer(manifestJson)
+			decoder := json.NewDecoder(buffer)
+			err = decoder.Decode(&manifest)
+			if err != nil {
+				t.Fatal(err.Error())
+			}
+
+			revitFileName := manifest.GetSourceFileName()
+			if revitFileName != "Snowdon_Towers_Sample_Architectural_24.rvt" {
+				t.Error("Wrong source file name")
+			}
+
+			sp := manifest.GetProgressReport()
+			if sp.Status != md.StatusSuccess {
+				t.Error("Wrong status")
+			}
+			if sp.Progress != "complete" {
+				t.Error("Wrong progress")
+			}
+
+			propDbUrn := manifest.GetPropertiesDatabaseUrn()
+			if propDbUrn != "urn:adsk.viewing:fs.file:dXJuOmFkc2sud2lwZW1lYTpmcy5maWxlOnZmLllWbTRTWnpMUXlpdnFzQUhRXzlSbFE_dmVyc2lvbj0x/output/Resource/model.sdb" {
+				t.Error("Wrong properties database urn")
+			}
+
+			// check if the manifest contains correct phase names
+			for _, derivative := range manifest.Derivatives {
+				childrenHaveValidPhaseNames(t, derivative.Children)
+			}
+		},
+	)
+}
+
+func childrenHaveValidPhaseNames(t *testing.T, children []md.Child) {
+	for _, child := range children {
+		if !hasValidPhaseNames(child) {
+			t.Errorf("Child %s (%s, %s) has invalid phase names", child.Name, child.Role, child.Type)
+		}
+
+		if len(child.Children) > 0 {
+			childrenHaveValidPhaseNames(t, child.Children)
+		}
+	}
+}
+
+func hasValidPhaseNames(c md.Child) bool {
+
+	// PhaseNames can be nil, a string or an array of strings
+
+	if c.PhaseNames == nil {
+		return true
+	}
+
+	// check if phaseName is a string
+	if phaseName, ok := c.PhaseNames.(string); ok {
+		return isValidPhaseName(phaseName)
+	}
+
+	// check if phaseName is an array of strings
+	if phaseNames, ok := c.PhaseNames.([]any); ok {
+		for _, phaseName := range phaseNames {
+			if name, o := phaseName.(string); o {
+				if !isValidPhaseName(name) {
+					return false
+				}
+			}
+		}
+	}
+
+	return true
+}
+
+func isValidPhaseName(s string) bool {
+	// phaseNames in "../assets/revit_manifest_multiple_phases.json"
+	// - Legends
+	// - New Construction
+	// - NewMdApi Construction
+	return s == "New Construction" || s == "NewMdApi Construction" || s == "Legends"
 }

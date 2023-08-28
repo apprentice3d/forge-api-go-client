@@ -29,7 +29,6 @@ NOTE:
   => You might want to change the bucketKey if the bucket already exists.
 - A bucket name will not be immediately available for reuse after deletion.
   => Best use a unique bucket name for each subtest.
-  => You can also use a timestamp to make sure the bucket name is unique.
 */
 
 const (
