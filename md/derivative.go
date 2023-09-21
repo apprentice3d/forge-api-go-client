@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
-	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -26,10 +25,6 @@ func getDerivative(path, urn, derivativeUrn, token string, writer io.Writer) (wr
 	if err != nil {
 		return 0, err
 	}
-
-	log.Println("Requesting derivative URN...")
-	log.Println("- Base64 encoded design URL: ", urn)
-	log.Println("- URL: ", req.URL.String())
 
 	req.Header.Set("Authorization", "Bearer "+token)
 	response, err := task.Do(req)
@@ -75,9 +70,6 @@ func downloadDerivative(downloadUrl derivativeDownloadUrl, cookieValue string, w
 		return
 	}
 
-	log.Println("Start downloading derivative...")
-	log.Println("- URL: ", downloadUrl.Url)
-
 	req.Header.Set("Cookie", cookieValue)
 	req.Header.Set("Content-Type", downloadUrl.ContentType)
 	req.Header.Set("Content-Length", strconv.Itoa(downloadUrl.Size))
@@ -102,8 +94,6 @@ func downloadDerivative(downloadUrl derivativeDownloadUrl, cookieValue string, w
 		err = errors.New("downloaded file size is different than the expected size")
 		return
 	}
-
-	log.Println("Finished downloading derivative.")
 
 	return written, nil
 }

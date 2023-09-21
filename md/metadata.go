@@ -50,10 +50,6 @@ func getMetadata(path, urn, token string) (result MetaData, err error) {
 		return
 	}
 
-	log.Println("Requesting metadata...")
-	log.Println("- Base64 encoded design URL: ", urn)
-	log.Println("- URL: ", req.URL.String())
-
 	req.Header.Set("Authorization", "Bearer "+token)
 
 	response, err := task.Do(req)
@@ -62,8 +58,6 @@ func getMetadata(path, urn, token string) (result MetaData, err error) {
 	}
 	defer response.Body.Close()
 
-	log.Println("Response status code: ", response.StatusCode)
-
 	if response.StatusCode != http.StatusOK {
 		content, _ := io.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
@@ -71,8 +65,6 @@ func getMetadata(path, urn, token string) (result MetaData, err error) {
 	}
 
 	err = json.NewDecoder(response.Body).Decode(&result)
-
-	log.Println("Received metadata.")
 
 	return
 }
@@ -97,18 +89,11 @@ retry:
 	req.Header.Add("x-ads-force", strconv.FormatBool(xHeaders.Overwrite))
 	req.Header.Add("x-ads-derivative-format", string(xHeaders.Format))
 
-	log.Println("Requesting object tree...")
-	log.Println("- Base64 encoded design URL: ", urn)
-	log.Println("- Unique model view ID: ", modelGuid)
-	log.Println("- URL: ", req.URL.String())
-
 	response, err := task.Do(req)
 	if err != nil {
 		return
 	}
 	defer response.Body.Close()
-
-	log.Println("Response status code: ", response.StatusCode)
 
 	if response.StatusCode == http.StatusAccepted {
 		// 202 Accepted => the request has been accepted for processing, but the processing has not been completed.
@@ -124,8 +109,6 @@ retry:
 	}
 
 	err = json.NewDecoder(response.Body).Decode(&result)
-
-	log.Println("Received object tree.")
 
 	return
 }
@@ -149,18 +132,11 @@ retry:
 	req.Header.Add("x-ads-force", strconv.FormatBool(xHeaders.Overwrite))
 	req.Header.Add("x-ads-derivative-format", string(xHeaders.Format))
 
-	log.Println("Requesting all properties...")
-	log.Println("- Base64 encoded design URL: ", urn)
-	log.Println("- Unique model view ID: ", modelGuid)
-	log.Println("- URL: ", req.URL.String())
-
 	response, err := task.Do(req)
 	if err != nil {
 		return
 	}
 	defer response.Body.Close()
-
-	log.Println("Response status code: ", response.StatusCode)
 
 	if response.StatusCode == http.StatusAccepted {
 		// 202 Accepted => the request has been accepted for processing, but the processing has not been completed.
@@ -174,8 +150,6 @@ retry:
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}
-
-	log.Println("Receiving properties...")
 
 	return io.ReadAll(response.Body)
 }

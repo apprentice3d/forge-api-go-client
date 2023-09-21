@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
-	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -135,10 +134,6 @@ func getManifest(path, urn, token string) (result Manifest, err error) {
 		return
 	}
 
-	log.Println("Requesting manifest...")
-	log.Println("- Base64 encoded design URL: ", urn)
-	log.Println("- URL: ", req.URL.String())
-
 	req.Header.Set("Authorization", "Bearer "+token)
 	response, err := task.Do(req)
 	if err != nil {
@@ -153,8 +148,6 @@ func getManifest(path, urn, token string) (result Manifest, err error) {
 	}
 
 	err = json.NewDecoder(response.Body).Decode(&result)
-
-	log.Println("Manifest received.")
 
 	return
 }
