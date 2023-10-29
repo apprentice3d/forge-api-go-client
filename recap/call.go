@@ -4,15 +4,15 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"io/ioutil"
+	"io"
 	"log"
+	"math/rand"
 	"mime/multipart"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
 	"time"
-	"math/rand"
 )
 
 func createPhotoScene(path string, name string, formats []string, sceneType string, token string) (scene PhotoScene, err error) {
@@ -45,7 +45,7 @@ func createPhotoScene(path string, name string, formats []string, sceneType stri
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		content, _ := ioutil.ReadAll(response.Body)
+		content, _ := io.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}
@@ -105,7 +105,7 @@ func addFileToSceneUsingLink(path string, photoSceneID string, link string, toke
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		content, _ := ioutil.ReadAll(response.Body)
+		content, _ := io.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}
@@ -135,7 +135,7 @@ func addFileToSceneUsingFileData(path string, photoSceneID string, data []byte, 
 	writer := multipart.NewWriter(body)
 	writer.WriteField("photosceneid", photoSceneID)
 	writer.WriteField("type", "image")
-	formFile, err := writer.CreateFormFile("file[0]", "data" + strconv.Itoa(rand.Int()))
+	formFile, err := writer.CreateFormFile("file[0]", "data"+strconv.Itoa(rand.Int()))
 	if err != nil {
 		log.Println(err.Error())
 		return
@@ -163,7 +163,7 @@ func addFileToSceneUsingFileData(path string, photoSceneID string, data []byte, 
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		content, _ := ioutil.ReadAll(response.Body)
+		content, _ := io.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}
@@ -205,7 +205,7 @@ func startSceneProcessing(path string, photoSceneID string, token string) (resul
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		content, _ := ioutil.ReadAll(response.Body)
+		content, _ := io.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}
@@ -247,7 +247,7 @@ func getSceneProgress(path string, photoSceneID string, token string) (result Sc
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		content, _ := ioutil.ReadAll(response.Body)
+		content, _ := io.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}
@@ -291,7 +291,7 @@ func getSceneResult(path string, photoSceneID string, token string, format strin
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		content, _ := ioutil.ReadAll(response.Body)
+		content, _ := io.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}
@@ -333,7 +333,7 @@ func cancelSceneProcessing(path string, photoSceneID string, token string) (resu
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		content, _ := ioutil.ReadAll(response.Body)
+		content, _ := io.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}
@@ -377,7 +377,7 @@ func deleteScene(path string, photoSceneID string, token string) (result SceneDe
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		content, _ := ioutil.ReadAll(response.Body)
+		content, _ := io.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}

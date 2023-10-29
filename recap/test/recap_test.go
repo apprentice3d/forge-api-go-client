@@ -2,15 +2,16 @@ package recap_test
 
 import (
 	"fmt"
-	"github.com/apprentice3d/forge-api-go-client/oauth"
-	"github.com/apprentice3d/forge-api-go-client/recap"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"os"
 	"strconv"
 	"testing"
 	"time"
+
+	"github.com/woweh/forge-api-go-client/oauth"
+	"github.com/woweh/forge-api-go-client/recap"
 )
 
 func TestReCapAPIWorkflowUsingRemoteLinks(t *testing.T) {
@@ -32,7 +33,6 @@ func TestReCapAPIWorkflowUsingRemoteLinks(t *testing.T) {
 	// prepare the credentials
 	clientID := os.Getenv("FORGE_CLIENT_ID")
 	clientSecret := os.Getenv("FORGE_CLIENT_SECRET")
-
 
 	authenticator := oauth.NewTwoLegged(clientID, clientSecret)
 	recapAPI := recap.NewAPI(authenticator)
@@ -91,7 +91,6 @@ func TestReCapAPIWorkflowUsingRemoteLinks(t *testing.T) {
 		}
 	})
 
-
 	t.Run("Check the result file size for normal size", func(t *testing.T) {
 		response, err := recapAPI.GetSceneResults(scene.ID, testingFormat)
 		if err != nil {
@@ -129,7 +128,6 @@ func TestReCapAPIWorkflowUsingRemoteLinks(t *testing.T) {
 		return
 
 	})
-
 
 	t.Run("Delete the scene", func(t *testing.T) {
 		_, err := recapAPI.DeleteScene(scene.ID)
@@ -183,7 +181,7 @@ func TestReCapAPIWorkflowUsingLocalFiles(t *testing.T) {
 				t.Fatal(err.Error())
 			}
 
-			data, err := ioutil.ReadAll(response.Body)
+			data, err := io.ReadAll(response.Body)
 			response.Body.Close()
 			if err != nil {
 				t.Fatal(err.Error())

@@ -3,7 +3,7 @@ package da
 import (
 	"encoding/json"
 	"errors"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strconv"
 )
@@ -14,12 +14,10 @@ type EngineList struct {
 
 type EngineDetails struct {
 	ProductVersion string `json:"productVersion"`
-	Description string `json:"description"`
-	Version uint `json:"version"`
-	Id string `json:"id"`
+	Description    string `json:"description"`
+	Version        uint   `json:"version"`
+	Id             string `json:"id"`
 }
-
-
 
 func listEngines(path string, token string) (list EngineList, err error) {
 
@@ -37,7 +35,7 @@ func listEngines(path string, token string) (list EngineList, err error) {
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		content, _ := ioutil.ReadAll(response.Body)
+		content, _ := io.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}
@@ -47,7 +45,6 @@ func listEngines(path string, token string) (list EngineList, err error) {
 
 	return
 }
-
 
 func getEngineDetails(path string, engineID string, token string) (details EngineDetails, err error) {
 
@@ -65,7 +62,7 @@ func getEngineDetails(path string, engineID string, token string) (details Engin
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		content, _ := ioutil.ReadAll(response.Body)
+		content, _ := io.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}

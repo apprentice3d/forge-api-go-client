@@ -1,0 +1,70 @@
+{
+  "type": "manifest",
+  "hasThumbnail": "true",
+  "status": "inprogress",
+  "progress": "99% complete",
+  "region": "US",
+  "urn": "dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6bW9kZWxkZXJpdmF0aXZlL0E1LnppcA",
+  "derivatives": [
+    {
+      "name": "A5.iam",
+      "hasThumbnail": "true",
+      "status": "success",
+      "progress": "99% complete",
+      "outputType": "svf",
+      "children": [
+        {
+          "guid": "d998268f-eeb4-da87-0db4-c5dbbc4926d0",
+          "type": "geometry",
+          "role": "3d",
+          "name": "Scene",
+          "status": "success",
+          "progress": "99% complete",
+          "hasThumbnail": "true",
+          "children": [
+            {
+              "guid": "4f981e94-8241-4eaf-b08b-cd337c6b8b1f",
+              "type": "resource",
+              "progress": "99% complete",
+              "role": "graphics",
+              "mime": "application/autodesk-svf"
+            },
+            {
+              "guid": "d718eb7e-fa8a-42f9-8b32-e323c0fbea0c",
+              "type": "resource",
+              "urn": "urn:adsk.viewing:fs.file:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6bW9kZWxkZXJpdmF0aXZlL0E1LnppcA/output/1/A5.svf.png01_thumb_400x400.png",
+              "resolution": [
+                400.0,
+                400.0
+              ],
+              "mime": "image/png",
+              "role": "thumbnail"
+            },
+            {
+              "guid": "34dc340b-835f-47f7-9da5-b8219aefe741",
+              "type": "resource",
+              "urn": "urn:adsk.viewing:fs.file:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6bW9kZWxkZXJpdmF0aXZlL0E1LnppcA/output/1/A5.svf.png01_thumb_200x200.png",
+              "resolution": [
+                200.0,
+                200.0
+              ],
+              "mime": "image/png",
+              "role": "thumbnail"
+            },
+            {
+              "guid": "299c6ba6-650e-423e-bbd6-3aaff44ee104",
+              "type": "resource",
+              "urn": "urn:adsk.viewing:fs.file:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6bW9kZWxkZXJpdmF0aXZlL0E1LnppcA/output/1/A5.svf.png01_thumb_100x100.png",
+              "resolution": [
+                100.0,
+                100.0
+              ],
+              "mime": "image/png",
+              "role": "thumbnail"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -6,15 +6,14 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
-	"github.com/apprentice3d/forge-api-go-client/oauth"
-	"io/ioutil"
+	"io"
 	"log"
 	"mime/multipart"
 	"net/http"
 	"strconv"
+
+	"github.com/woweh/forge-api-go-client/oauth"
 )
-
-
 
 type AppList struct {
 	InfoList
@@ -35,7 +34,7 @@ type FormData struct {
 }
 
 type AppParameters struct {
-	URL  string `json:"endpointURL"`
+	URL  string   `json:"endpointURL"`
 	Data FormData `json:"formData"`
 }
 
@@ -52,7 +51,7 @@ type AppBundle struct {
 	authenticator oauth.ForgeAuthenticator
 	path          string
 	name          string
-	uploadURL	string
+	uploadURL     string
 }
 
 type AppDetails struct {
@@ -65,19 +64,15 @@ type CreateAppRequest struct {
 	Engine string `json:"engine"`
 }
 
-
-
-
 type AppUploadError struct {
-	Code string `xml:"Code"`
-	Message string `xml:"Message"`
-	Argument string `xml:"Argument"`
+	Code          string `xml:"Code"`
+	Message       string `xml:"Message"`
+	Argument      string `xml:"Argument"`
 	ArgumentValue string `xml:"ArgumentValue"`
-	Condition string `xml:"Condition"`
-	RequestID string `xml:"RequestId"`
-	HostID string `xml:"HostId"`
+	Condition     string `xml:"Condition"`
+	RequestID     string `xml:"RequestId"`
+	HostID        string `xml:"HostId"`
 }
-
 
 // Delete removes the AppBundle, including all versions and aliases.
 func (app *AppBundle) Delete() (err error) {
@@ -102,18 +97,18 @@ func (app *AppBundle) Delete() (err error) {
 	return
 }
 
-//Details gets the details of the specified AppBundle, providing an alias
+// Details gets the details of the specified AppBundle, providing an alias
 func (app *AppBundle) Details(alias string) (details AppDetails, err error) {
 	bearer, err := app.authenticator.GetToken("code:all")
 	if err != nil {
 		return
 	}
-	details, err = getAppDetails(app.path, app.ID + "+" + alias, bearer.AccessToken)
+	details, err = getAppDetails(app.path, app.ID+"+"+alias, bearer.AccessToken)
 
 	return
 }
 
-//Aliases lists all aliases for the specified AppBundle.
+// Aliases lists all aliases for the specified AppBundle.
 func (app AppBundle) Aliases() (list AliasesList, err error) {
 	bearer, err := app.authenticator.GetToken("code:all")
 	if err != nil {
@@ -124,7 +119,8 @@ func (app AppBundle) Aliases() (list AliasesList, err error) {
 	return
 }
 
-//CreateAlias creates a new alias for this AppBundle.
+// CreateAlias creates a new alias for this AppBundle.
+//
 //	Limit: 1. Number of aliases (LimitAliases).
 func (app AppBundle) CreateAlias(alias string, version uint) (result Alias, err error) {
 	bearer, err := app.authenticator.GetToken("code:all")
@@ -136,7 +132,7 @@ func (app AppBundle) CreateAlias(alias string, version uint) (result Alias, err 
 	return
 }
 
-//ModifyAlias will switch the given alias to another existing version
+// ModifyAlias will switch the given alias to another existing version
 func (app AppBundle) ModifyAlias(alias string, version uint) (result Alias, err error) {
 	bearer, err := app.authenticator.GetToken("code:all")
 	if err != nil {
@@ -147,7 +143,7 @@ func (app AppBundle) ModifyAlias(alias string, version uint) (result Alias, err 
 	return
 }
 
-//AliasDetail gets the details on given alias
+// AliasDetail gets the details on given alias
 func (app *AppBundle) AliasDetail(alias string) (details Alias, err error) {
 	bearer, err := app.authenticator.GetToken("code:all")
 	if err != nil {
@@ -158,7 +154,7 @@ func (app *AppBundle) AliasDetail(alias string) (details Alias, err error) {
 	return
 }
 
-//DeleteAlias the alias for this AppBundle.
+// DeleteAlias the alias for this AppBundle.
 func (app AppBundle) DeleteAlias(alias string) (err error) {
 	bearer, err := app.authenticator.GetToken("code:all")
 	if err != nil {
@@ -169,7 +165,7 @@ func (app AppBundle) DeleteAlias(alias string) (err error) {
 	return
 }
 
-//Versions lists all aliases for the specified AppBundle.
+// Versions lists all aliases for the specified AppBundle.
 func (app AppBundle) Versions() (list VersionList, err error) {
 	bearer, err := app.authenticator.GetToken("code:all")
 	if err != nil {
@@ -193,7 +189,6 @@ func (app AppBundle) CreateVersion(engine string) (result AppBundle, err error) 
 	return
 }
 
-
 func (app *AppBundle) VersionDetails(version uint) (details AppData, err error) {
 	bearer, err := app.authenticator.GetToken("code:all")
 	if err != nil {
@@ -203,7 +198,6 @@ func (app *AppBundle) VersionDetails(version uint) (details AppData, err error) 
 
 	return
 }
-
 
 func (app AppBundle) DeleteVersion(version uint) (err error) {
 	bearer, err := app.authenticator.GetToken("code:all")
@@ -215,22 +209,16 @@ func (app AppBundle) DeleteVersion(version uint) (err error) {
 	return
 }
 
-
-
-func (app AppBundle) Upload(data []byte) (err error){
+func (app AppBundle) Upload(data []byte) (err error) {
 
 	err = uploadApp(app.uploadURL, app.Parameters.Data, data)
 
 	return
 }
 
-
-
 /*
  *	SUPPORT FUNCTIONS
  */
-
-
 
 /*
    APPBUNDLE
@@ -252,7 +240,7 @@ func listApps(path string, token string) (list AppList, err error) {
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		content, _ := ioutil.ReadAll(response.Body)
+		content, _ := io.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}
@@ -293,7 +281,7 @@ func createApp(path, name, engine, token string) (result AppBundle, err error) {
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		content, _ := ioutil.ReadAll(response.Body)
+		content, _ := io.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}
@@ -326,7 +314,7 @@ func getAppDetails(path, appID, token string) (result AppDetails, err error) {
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		content, _ := ioutil.ReadAll(response.Body)
+		content, _ := io.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}
@@ -354,14 +342,13 @@ func deleteApp(path string, id string, token string) (err error) {
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusNoContent {
-		content, _ := ioutil.ReadAll(response.Body)
+		content, _ := io.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}
 
 	return
 }
-
 
 /*
 	ALIASES
@@ -383,7 +370,7 @@ func listAppAliases(path string, appName, token string) (list AliasesList, err e
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		content, _ := ioutil.ReadAll(response.Body)
+		content, _ := io.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}
@@ -424,7 +411,7 @@ func createAppAlias(path, appName, alias string, version uint, token string) (re
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		content, _ := ioutil.ReadAll(response.Body)
+		content, _ := io.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}
@@ -465,7 +452,7 @@ func modifyAppAlias(path, appName, alias string, version uint, token string) (re
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		content, _ := ioutil.ReadAll(response.Body)
+		content, _ := io.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}
@@ -498,7 +485,7 @@ func getAliasDetails(path, appName, alias, token string) (result Alias, err erro
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		content, _ := ioutil.ReadAll(response.Body)
+		content, _ := io.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}
@@ -509,8 +496,6 @@ func getAliasDetails(path, appName, alias, token string) (result Alias, err erro
 
 	return
 }
-
-
 
 func deleteAppAlias(path string, appName, alias, token string) (err error) {
 
@@ -528,14 +513,13 @@ func deleteAppAlias(path string, appName, alias, token string) (err error) {
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusNoContent {
-		content, _ := ioutil.ReadAll(response.Body)
+		content, _ := io.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}
 
 	return
 }
-
 
 /*
    VERSIONS
@@ -557,7 +541,7 @@ func listAppVersions(path string, appName, token string) (list VersionList, err 
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		content, _ := ioutil.ReadAll(response.Body)
+		content, _ := io.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}
@@ -573,7 +557,7 @@ func createAppVersion(path, appName, engine string, token string) (result AppBun
 	task := http.Client{}
 
 	body, err := json.Marshal(
-		struct{
+		struct {
 			Engine string `json:"engine"`
 		}{engine})
 	if err != nil {
@@ -597,7 +581,7 @@ func createAppVersion(path, appName, engine string, token string) (result AppBun
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		content, _ := ioutil.ReadAll(response.Body)
+		content, _ := io.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}
@@ -608,8 +592,6 @@ func createAppVersion(path, appName, engine string, token string) (result AppBun
 
 	return
 }
-
-
 
 func getVersionDetails(path, appName string, version uint, token string) (result AppData, err error) {
 
@@ -632,7 +614,7 @@ func getVersionDetails(path, appName string, version uint, token string) (result
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		content, _ := ioutil.ReadAll(response.Body)
+		content, _ := io.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}
@@ -643,8 +625,6 @@ func getVersionDetails(path, appName string, version uint, token string) (result
 
 	return
 }
-
-
 
 func deleteAppVersion(path string, appName string, version uint, token string) (err error) {
 
@@ -662,14 +642,13 @@ func deleteAppVersion(path string, appName string, version uint, token string) (
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusNoContent {
-		content, _ := ioutil.ReadAll(response.Body)
+		content, _ := io.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}
 
 	return
 }
-
 
 func uploadApp(path string, formData FormData, data []byte) (err error) {
 
@@ -721,7 +700,6 @@ func uploadApp(path string, formData FormData, data []byte) (err error) {
 		if err != nil {
 			return
 		}
-
 
 		err = errors.New(fmt.Sprintf("[%d][%s] - %s {%s}",
 			response.StatusCode,

@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"github.com/apprentice3d/forge-api-go-client/oauth"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strconv"
+
+	"github.com/woweh/forge-api-go-client/oauth"
 )
 
 type Param struct {
@@ -29,7 +30,7 @@ type ActivityConfig struct {
 	Description string           `json:"description"`
 	AppBundles  []string         `json:"appbundles"`
 	Engine      string           `json:"engine"`
-	Parameters  map[string]Param `json:"paramaters"`
+	Parameters  map[string]Param `json:"parameters"`
 	Settings    Setting          `json:"settings"`
 }
 
@@ -39,7 +40,6 @@ type Activity struct {
 	authenticator oauth.ForgeAuthenticator
 	path          string
 	name          string
-
 }
 
 func (activity *Activity) Delete() (err error) {
@@ -52,9 +52,9 @@ func (activity *Activity) Delete() (err error) {
 
 	activity.Parameters = make(map[string]Param)
 	activity.ID = ""
-	activity.CommandLine = make([]string,0)
+	activity.CommandLine = make([]string, 0)
 	activity.Description = ""
-	activity.AppBundles = make([]string,0)
+	activity.AppBundles = make([]string, 0)
 	activity.Engine = ""
 	activity.Settings = Setting{}
 	activity.authenticator = nil
@@ -64,8 +64,7 @@ func (activity *Activity) Delete() (err error) {
 	return
 }
 
-
-//CreateAlias creates a new alias for this Activity.
+// CreateAlias creates a new alias for this Activity.
 func (activity Activity) CreateAlias(alias string, version uint) (result Alias, err error) {
 	bearer, err := activity.authenticator.GetToken("code:all")
 	if err != nil {
@@ -76,11 +75,9 @@ func (activity Activity) CreateAlias(alias string, version uint) (result Alias, 
 	return
 }
 
-
 /*
  *	SUPPORT FUNCTIONS
  */
-
 
 /*
   ACTIVITY
@@ -91,12 +88,14 @@ func createActivity(path string, activity ActivityConfig, token string) (result 
 	task := http.Client{}
 
 	body, err := json.Marshal(
-		activity)
+		activity,
+	)
 	if err != nil {
 		return
 	}
 
-	req, err := http.NewRequest("POST",
+	req, err := http.NewRequest(
+		"POST",
 		path+"/activities",
 		bytes.NewReader(body),
 	)
@@ -113,7 +112,7 @@ func createActivity(path string, activity ActivityConfig, token string) (result 
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		content, _ := ioutil.ReadAll(response.Body)
+		content, _ := io.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}
@@ -128,7 +127,8 @@ func createActivity(path string, activity ActivityConfig, token string) (result 
 func deleteActivity(path string, activityId string, token string) (err error) {
 
 	task := http.Client{}
-	req, err := http.NewRequest("DELETE",
+	req, err := http.NewRequest(
+		"DELETE",
 		path+"/activities/"+activityId,
 		nil,
 	)
@@ -141,15 +141,13 @@ func deleteActivity(path string, activityId string, token string) (err error) {
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusNoContent {
-		content, _ := ioutil.ReadAll(response.Body)
+		content, _ := io.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}
 
 	return
 }
-
-
 
 /*
 	ALIASES
@@ -158,7 +156,8 @@ func deleteActivity(path string, activityId string, token string) (err error) {
 func listActivityAliases(path string, activityId, token string) (list AliasesList, err error) {
 
 	task := http.Client{}
-	req, err := http.NewRequest("GET",
+	req, err := http.NewRequest(
+		"GET",
 		path+"/activities/"+activityId+"/aliases",
 		nil,
 	)
@@ -171,7 +170,7 @@ func listActivityAliases(path string, activityId, token string) (list AliasesLis
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		content, _ := ioutil.ReadAll(response.Body)
+		content, _ := io.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}
@@ -190,12 +189,14 @@ func createActivityAlias(path, activityId, alias string, version uint, token str
 		Alias{
 			alias,
 			version,
-		})
+		},
+	)
 	if err != nil {
 		return
 	}
 
-	req, err := http.NewRequest("POST",
+	req, err := http.NewRequest(
+		"POST",
 		path+"/activities/"+activityId+"/aliases",
 		bytes.NewReader(body),
 	)
@@ -212,7 +213,7 @@ func createActivityAlias(path, activityId, alias string, version uint, token str
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		content, _ := ioutil.ReadAll(response.Body)
+		content, _ := io.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}
@@ -231,12 +232,14 @@ func modifyActivityAlias(path, activityId, alias string, version uint, token str
 	body, err := json.Marshal(
 		struct {
 			Version uint `json:"version"`
-		}{version})
+		}{version},
+	)
 	if err != nil {
 		return
 	}
 
-	req, err := http.NewRequest("PATCH",
+	req, err := http.NewRequest(
+		"PATCH",
 		path+"/activities/"+activityId+"/aliases/"+alias,
 		bytes.NewReader(body),
 	)
@@ -253,7 +256,7 @@ func modifyActivityAlias(path, activityId, alias string, version uint, token str
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		content, _ := ioutil.ReadAll(response.Body)
+		content, _ := io.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}
@@ -269,7 +272,8 @@ func getActivityAliasDetails(path, activityId, alias, token string) (result Alia
 
 	task := http.Client{}
 
-	req, err := http.NewRequest("GET",
+	req, err := http.NewRequest(
+		"GET",
 		path+"/activities/"+activityId+"/aliases/"+alias,
 		nil,
 	)
@@ -286,7 +290,7 @@ func getActivityAliasDetails(path, activityId, alias, token string) (result Alia
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		content, _ := ioutil.ReadAll(response.Body)
+		content, _ := io.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}
@@ -298,12 +302,11 @@ func getActivityAliasDetails(path, activityId, alias, token string) (result Alia
 	return
 }
 
-
-
 func deleteActivityAlias(path string, activityId, alias, token string) (err error) {
 
 	task := http.Client{}
-	req, err := http.NewRequest("DELETE",
+	req, err := http.NewRequest(
+		"DELETE",
 		path+"/activities/"+activityId+"/aliases/"+alias,
 		nil,
 	)
@@ -316,14 +319,13 @@ func deleteActivityAlias(path string, activityId, alias, token string) (err erro
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusNoContent {
-		content, _ := ioutil.ReadAll(response.Body)
+		content, _ := io.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}
 
 	return
 }
-
 
 /*
    VERSIONS
@@ -332,7 +334,8 @@ func deleteActivityAlias(path string, activityId, alias, token string) (err erro
 func listActivityVersions(path string, activityId, token string) (list VersionList, err error) {
 
 	task := http.Client{}
-	req, err := http.NewRequest("GET",
+	req, err := http.NewRequest(
+		"GET",
 		path+"/activities/"+activityId+"/versions",
 		nil,
 	)
@@ -345,7 +348,7 @@ func listActivityVersions(path string, activityId, token string) (list VersionLi
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		content, _ := ioutil.ReadAll(response.Body)
+		content, _ := io.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}
@@ -361,14 +364,16 @@ func createActivityVersion(path, activityId, engine string, token string) (resul
 	task := http.Client{}
 
 	body, err := json.Marshal(
-		struct{
+		struct {
 			Engine string `json:"engine"`
-		}{engine})
+		}{engine},
+	)
 	if err != nil {
 		return
 	}
 
-	req, err := http.NewRequest("POST",
+	req, err := http.NewRequest(
+		"POST",
 		path+"/activities/"+activityId+"/versions",
 		bytes.NewReader(body),
 	)
@@ -385,7 +390,7 @@ func createActivityVersion(path, activityId, engine string, token string) (resul
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		content, _ := ioutil.ReadAll(response.Body)
+		content, _ := io.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}
@@ -397,13 +402,12 @@ func createActivityVersion(path, activityId, engine string, token string) (resul
 	return
 }
 
-
-
 func getActivityVersionDetails(path, activityId string, version uint, token string) (result ActivityConfig, err error) {
 
 	task := http.Client{}
 
-	req, err := http.NewRequest("GET",
+	req, err := http.NewRequest(
+		"GET",
 		path+"/activities/"+activityId+"/versions/"+strconv.Itoa(int(version)),
 		nil,
 	)
@@ -420,7 +424,7 @@ func getActivityVersionDetails(path, activityId string, version uint, token stri
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		content, _ := ioutil.ReadAll(response.Body)
+		content, _ := io.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}
@@ -432,12 +436,11 @@ func getActivityVersionDetails(path, activityId string, version uint, token stri
 	return
 }
 
-
-
 func deleteActivityVersion(path, activityId string, version uint, token string) (err error) {
 
 	task := http.Client{}
-	req, err := http.NewRequest("DELETE",
+	req, err := http.NewRequest(
+		"DELETE",
 		path+"/activities/"+activityId+"/versions/"+strconv.Itoa(int(version)),
 		nil,
 	)
@@ -450,7 +453,7 @@ func deleteActivityVersion(path, activityId string, version uint, token string) 
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusNoContent {
-		content, _ := ioutil.ReadAll(response.Body)
+		content, _ := io.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}

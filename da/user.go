@@ -2,7 +2,7 @@ package da
 
 import (
 	"errors"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -23,20 +23,19 @@ func getUserID(path string, token string) (nickname string, err error) {
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		content, _ := ioutil.ReadAll(response.Body)
+		content, _ := io.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}
 
-	data, err := ioutil.ReadAll(response.Body)
+	data, err := io.ReadAll(response.Body)
 
 	if err != nil {
 		return
 	}
 
 	//TODO: Review why the data has quotes in its content and find a more elegant way to remove them
-	nickname = strings.Replace(string(data), "\"", "", -1 )
-
+	nickname = strings.Replace(string(data), "\"", "", -1)
 
 	return
 }

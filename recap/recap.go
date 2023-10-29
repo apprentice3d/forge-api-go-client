@@ -1,21 +1,21 @@
 // Package recap contains the Go wrappers for calls to Forge Reality Capture API
 // https://developer.autodesk.com/api/reality-capture-cover-page/
 //
-// 	The workflow is the following:
-// 		- create a photoScene
+//	The workflow is the following:
+//		- create a photoScene
 //		- upload images to photoScene
 //		- start photoScene processing
 //		- get the result
 package recap
 
 import (
-	"github.com/apprentice3d/forge-api-go-client/oauth"
+	"github.com/woweh/forge-api-go-client/oauth"
 )
 
 // API struct holds all paths necessary to access ReCap API
 type ReCapAPI struct {
 	Authenticator oauth.ForgeAuthenticator
-	ReCapPath string
+	ReCapPath     string
 }
 
 // NewAPI returns a ReCap API client with default configurations
@@ -27,16 +27,17 @@ func NewAPI(authenticator oauth.ForgeAuthenticator) ReCapAPI {
 }
 
 // CreatePhotoScene prepares a scene with a given name, expected output formats and sceneType
-// 	name - should not be empty
-// 	formats - should be of type rcm, rcs, obj, ortho or report
-// 	sceneType - should be either "aerial" or "object"
+//
+//	name - should not be empty
+//	formats - should be of type rcm, rcs, obj, ortho or report
+//	sceneType - should be either "aerial" or "object"
 func (api ReCapAPI) CreatePhotoScene(name string, formats []string, sceneType string) (scene PhotoScene, err error) {
 
 	bearer, err := api.Authenticator.GetToken("data:write")
 	if err != nil {
 		return
 	}
-	path := api.Authenticator.GetHostPath() + api.ReCapPath
+	path := api.Authenticator.HostPath() + api.ReCapPath
 	scene, err = createPhotoScene(path, name, formats, sceneType, bearer.AccessToken)
 
 	return
@@ -50,7 +51,7 @@ func (api ReCapAPI) AddFileToSceneUsingLink(sceneID string, link string) (upload
 	if err != nil {
 		return
 	}
-	path := api.Authenticator.GetHostPath() + api.ReCapPath
+	path := api.Authenticator.HostPath() + api.ReCapPath
 
 	uploads, err = addFileToSceneUsingLink(path, sceneID, link, bearer.AccessToken)
 	return
@@ -64,7 +65,7 @@ func (api ReCapAPI) AddFileToSceneUsingData(sceneID string, data []byte) (upload
 	if err != nil {
 		return
 	}
-	path := api.Authenticator.GetHostPath() + api.ReCapPath
+	path := api.Authenticator.HostPath() + api.ReCapPath
 
 	uploads, err = addFileToSceneUsingFileData(path, sceneID, data, bearer.AccessToken)
 
@@ -77,24 +78,26 @@ func (api ReCapAPI) StartSceneProcessing(sceneID string) (result SceneStartProce
 	if err != nil {
 		return
 	}
-	path := api.Authenticator.GetHostPath() + api.ReCapPath
+	path := api.Authenticator.HostPath() + api.ReCapPath
 	result, err = startSceneProcessing(path, sceneID, bearer.AccessToken)
 	return
 }
 
 // GetSceneProgress polls the scene processing status and progress
+//
 //	Note: instead of polling, consider using the callback parameter that can be specified upon scene creation
 func (api ReCapAPI) GetSceneProgress(sceneID string) (progress SceneProgressReply, err error) {
 	bearer, err := api.Authenticator.GetToken("data:read")
 	if err != nil {
 		return
 	}
-	path := api.Authenticator.GetHostPath() + api.ReCapPath
+	path := api.Authenticator.HostPath() + api.ReCapPath
 	progress, err = getSceneProgress(path, sceneID, bearer.AccessToken)
 	return
 }
 
 // GetSceneResults requests result in a specified format
+//
 //	Note: The link specified in SceneResultReplies will be available for the time specified in reply,
 //	even if the scene is deleted
 func (api ReCapAPI) GetSceneResults(sceneID string, format string) (result SceneResultReply, err error) {
@@ -102,7 +105,7 @@ func (api ReCapAPI) GetSceneResults(sceneID string, format string) (result Scene
 	if err != nil {
 		return
 	}
-	path := api.Authenticator.GetHostPath() + api.ReCapPath
+	path := api.Authenticator.HostPath() + api.ReCapPath
 	result, err = getSceneResult(path, sceneID, bearer.AccessToken, format)
 	return
 }
@@ -113,7 +116,7 @@ func (api ReCapAPI) CancelSceneProcessing(sceneID string) (ID string, err error)
 	if err != nil {
 		return
 	}
-	path := api.Authenticator.GetHostPath() + api.ReCapPath
+	path := api.Authenticator.HostPath() + api.ReCapPath
 	_, err = cancelSceneProcessing(path, sceneID, bearer.AccessToken)
 
 	return sceneID, err
@@ -125,7 +128,7 @@ func (api ReCapAPI) DeleteScene(sceneID string) (ID string, err error) {
 	if err != nil {
 		return
 	}
-	path := api.Authenticator.GetHostPath() + api.ReCapPath
+	path := api.Authenticator.HostPath() + api.ReCapPath
 	_, err = deleteScene(path, sceneID, bearer.AccessToken)
 	ID = sceneID
 	return

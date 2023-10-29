@@ -1,11 +1,10 @@
 package oauth_test
 
 import (
-	"fmt"
-	"github.com/apprentice3d/forge-api-go-client/oauth"
-	"log"
 	"os"
 	"testing"
+
+	"github.com/woweh/forge-api-go-client/oauth"
 )
 
 func TestTwoLeggedAuthentication(t *testing.T) {
@@ -17,91 +16,100 @@ func TestTwoLeggedAuthentication(t *testing.T) {
 		t.Fatalf("Could not get from env the Forge secrets")
 	}
 
-	t.Run("Valid Forge Secrets", func(t *testing.T) {
-		authenticator := oauth.NewTwoLegged(clientID, clientSecret)
+	t.Run(
+		"Valid Forge Secrets", func(t *testing.T) {
+			authenticator := oauth.NewTwoLegged(clientID, clientSecret)
 
-		bearer, err := authenticator.GetToken("data:read")
+			bearer, err := authenticator.GetToken("data:read")
 
-		if err != nil {
-			t.Error(err.Error())
-		}
+			if err != nil {
+				t.Error(err.Error())
+			}
 
-		if len(bearer.AccessToken) == 0 {
-			t.Errorf("Wrong bearer content: %v", bearer)
-		}
-	})
+			if len(bearer.AccessToken) == 0 {
+				t.Errorf("Wrong bearer content: %v", bearer)
+			}
+		},
+	)
 
-	t.Run("Invalid Forge Secrets", func(t *testing.T) {
-		authenticator := oauth.NewTwoLegged("", clientSecret)
+	t.Run(
+		"Multiple scopes", func(t *testing.T) {
+			authenticator := oauth.NewTwoLegged(clientID, clientSecret)
 
-		bearer, err := authenticator.GetToken("data:read")
+			bearer, err := authenticator.GetToken("data:read data:search viewables:read")
 
-		if err == nil {
-			t.Errorf("Expected to fail due to wrong credentials, but got %v", bearer)
-		}
+			if err != nil {
+				t.Error(err.Error())
+			}
 
-		if len(bearer.AccessToken) != 0 {
-			t.Errorf("expected to not receive a token, but received: %s", bearer.AccessToken)
-		}
-	})
+			if len(bearer.AccessToken) == 0 {
+				t.Errorf("Wrong bearer content: %v", bearer)
+			}
+		},
+	)
 
-	t.Run("Invalid scope", func(t *testing.T) {
-		authenticator := oauth.NewTwoLegged(clientID, clientSecret)
+	t.Run(
+		"Invalid Forge Secrets", func(t *testing.T) {
+			authenticator := oauth.NewTwoLegged("", clientSecret)
 
-		bearer, err := authenticator.GetToken("data:improvise")
+			bearer, err := authenticator.GetToken("data:read")
 
-		if err == nil {
-			t.Errorf("Expected to fail due to wrong scope, but got %v\n", bearer)
-		}
+			if err == nil {
+				t.Errorf("Expected to fail due to wrong credentials, but got %v", bearer)
+			}
 
-		if len(bearer.AccessToken) != 0 {
-			t.Errorf("expected to not receive a token, but received: %s", bearer.AccessToken)
-		}
-	})
+			if len(bearer.AccessToken) != 0 {
+				t.Errorf("expected to not receive a token, but received: %s", bearer.AccessToken)
+			}
+		},
+	)
 
-	t.Run("Invalid or unreachable host", func(t *testing.T) {
-		authenticator := oauth.NewTwoLegged(clientID, clientSecret)
-		authenticator.Host = "http://localhost"
+	t.Run(
+		"Invalid scope", func(t *testing.T) {
+			authenticator := oauth.NewTwoLegged(clientID, clientSecret)
 
-		bearer, err := authenticator.GetToken("data:read")
+			bearer, err := authenticator.GetToken("data:invalidScopeValue")
 
-		if err == nil {
-			t.Errorf("Expected to fail due to wrong host, but got %v\n", bearer)
-		}
+			if err == nil {
+				t.Errorf("Expected to fail due to wrong scope, but got %v\n", bearer)
+			}
 
-		if len(bearer.AccessToken) != 0 {
-			t.Errorf("expected to not receive a token, but received: %s", bearer.AccessToken)
-		}
-	})
-}
+			if len(bearer.AccessToken) != 0 {
+				t.Errorf("expected to not receive a token, but received: %s", bearer.AccessToken)
+			}
+		},
+	)
 
-func ExampleTwoLeggedAuth_Authenticate() {
+	t.Run(
+		"Invalid multiple scopes, wrong separators", func(t *testing.T) {
+			authenticator := oauth.NewTwoLegged(clientID, clientSecret)
 
-	// aquire Forge secrets from environment
-	clientID := os.Getenv("FORGE_CLIENT_ID")
-	clientSecret := os.Getenv("FORGE_CLIENT_SECRET")
+			bearer, err := authenticator.GetToken("data:read;data:search,viewables:read")
 
-	if len(clientID) == 0 || len(clientSecret) == 0 {
-		log.Fatalf("Could not get from env the Forge secrets")
-	}
+			if err == nil {
+				t.Errorf("Expected to fail due to wrong scope, but got %v\n", bearer)
+			}
 
-	// create oauth client
-	authenticator := oauth.NewTwoLegged(clientID, clientSecret)
+			if len(bearer.AccessToken) != 0 {
+				t.Errorf("expected to not receive a token, but received: %s", bearer.AccessToken)
+			}
+		},
+	)
 
-	// request a token with needed scopes, separated by spaces
-	bearer, err := authenticator.GetToken("data:read data:write")
+	t.Run(
+		"Invalid or unreachable host", func(t *testing.T) {
+			authenticator := oauth.NewTwoLegged(clientID, clientSecret)
+			authenticator.Host = "http://localhost"
 
-	if err != nil || len(bearer.AccessToken) == 0 {
-		log.Fatalf("Could not get from env the Forge secrets")
-	}
+			bearer, err := authenticator.GetToken("data:read")
 
-	// at this point, the bearer should contain the needed data. Check Bearer struct for more info
-	fmt.Printf("Bearer now contains:\n"+
-		"AccessToken: %s\n"+
-		"TokenType: %s\n"+
-		"Expires in: %d\n",
-		bearer.AccessToken,
-		bearer.TokenType,
-		bearer.ExpiresIn)
+			if err == nil {
+				t.Errorf("Expected to fail due to wrong host, but got %v\n", bearer)
+			}
 
+			if len(bearer.AccessToken) != 0 {
+				t.Errorf("expected to not receive a token, but received: %s", bearer.AccessToken)
+			}
+		},
+	)
 }

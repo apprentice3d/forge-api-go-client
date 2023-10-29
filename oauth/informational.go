@@ -3,7 +3,7 @@ package oauth
 import (
 	"encoding/json"
 	"errors"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strconv"
 )
@@ -51,13 +51,14 @@ func NewInformationQuerier(authenticator ForgeAuthenticator) Information {
 	}
 }
 
-//AboutMe is used to get the profile of an authorizing end user
+// AboutMe is used to get the profile of an authorizing end user
 func (i Information) AboutMe() (profile UserProfile, err error) {
 
-	requestPath := i.Authenticator.GetHostPath() + i.InformationalAPIPath
+	requestPath := i.Authenticator.HostPath() + i.InformationalAPIPath
 	task := http.Client{}
 
-	req, err := http.NewRequest("GET",
+	req, err := http.NewRequest(
+		"GET",
 		requestPath,
 		nil,
 	)
@@ -80,7 +81,7 @@ func (i Information) AboutMe() (profile UserProfile, err error) {
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		content, _ := ioutil.ReadAll(response.Body)
+		content, _ := io.ReadAll(response.Body)
 		err = errors.New("[" + strconv.Itoa(response.StatusCode) + "] " + string(content))
 		return
 	}

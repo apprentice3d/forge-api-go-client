@@ -1,168 +1,179 @@
 package dm_test
 
 import (
-	"fmt"
-	"github.com/apprentice3d/forge-api-go-client/dm"
-	"github.com/apprentice3d/forge-api-go-client/oauth"
-	"log"
-	"os"
 	"testing"
+
+	"github.com/woweh/forge-api-go-client/dm"
 )
+
+/*
+NOTE:
+- You can only run these tests when you have a valid client ID and secret.
+  => You probably want to run the tests locally, with your own credentials.
+- A bucketKey (= bucket name) must be globally unique across all applications and regions
+- Rules for bucketKey names: -_.a-z0-9 (between 3-128 characters in length)
+- Buckets can only be deleted by the user who created them.
+  => You might want to change the bucketKey if the bucket already exists.
+- A bucket name will not be immediately available for reuse after deletion.
+  => Best use a unique bucket name for each subtest.
+  => You can also use a timestamp to make sure the bucket name is unique.
+*/
 
 func TestBucketAPI_CreateBucket(t *testing.T) {
 
-	// prepare the credentials
-	clientID := os.Getenv("FORGE_CLIENT_ID")
-	clientSecret := os.Getenv("FORGE_CLIENT_SECRET")
+	bucketAPI := getBucketAPI(t)
 
-	authenticator := oauth.NewTwoLegged(clientID, clientSecret)
-	bucketAPI := dm.NewBucketAPI(authenticator)
+	bucketKey := "forge_unit_testing_create_bucket"
 
-	t.Run("Create a bucket", func(t *testing.T) {
-		_, err := bucketAPI.CreateBucket("go_testing_bucket", "transient")
+	t.Run(
+		"Create a bucket", func(t *testing.T) {
+			_, err := bucketAPI.GetBucketDetails(bucketKey)
+			if err == nil {
+				t.Skip("The temp bucket already exists.")
+			}
 
-		if err != nil {
-			t.Fatalf("Failed to create a bucket: %s\n", err.Error())
-		}
-	})
+			_, err = bucketAPI.CreateBucket(bucketKey, dm.PolicyTransient)
+			if err != nil {
+				t.Fatalf("Failed to create a bucket: %s\n", err.Error())
+			}
+		},
+	)
 
-	t.Run("Delete created bucket", func(t *testing.T) {
-		err := bucketAPI.DeleteBucket("go_testing_bucket")
+	t.Run(
+		"Delete created bucket", func(t *testing.T) {
+			err := bucketAPI.DeleteBucket(bucketKey)
 
-		if err != nil {
-			t.Fatalf("Failed to delete bucket: %s\n", err.Error())
-		}
-	})
+			if err != nil {
+				t.Fatalf("Failed to delete bucket: %s\n", err.Error())
+			}
+		},
+	)
 
-	t.Run("Create a bucket with invalid name", func(t *testing.T) {
-		_, err := bucketAPI.CreateBucket("goTestingBucket", "transient")
+	t.Run(
+		"Create a bucket with invalid name", func(t *testing.T) {
+			invalidBucketKey := "$Invalid@Bucket%Key!"
+			_, err := bucketAPI.CreateBucket(invalidBucketKey, dm.PolicyTransient)
 
-		if err == nil {
-			t.Fatalf("Should fail creating a bucket with invalid name\n")
-		}
-	})
+			if err == nil {
+				t.Fatal("Should fail creating a bucket with invalid name: ", invalidBucketKey)
+			}
+		},
+	)
 
-	t.Run("Create a bucket with invalid policyKey", func(t *testing.T) {
-		_, err := bucketAPI.CreateBucket("goTestingBucket", "democracy")
+	t.Run(
+		"Create a bucket with invalid policyKey", func(t *testing.T) {
+			_, err := bucketAPI.CreateBucket("all_lower_case_bucket_key", "invalidPolicy")
 
-		if err == nil {
-			t.Fatalf("Should fail creating a bucket with invalid name\n")
-		}
-	})
+			if err == nil {
+				t.Fatalf("Should fail creating a bucket with invalid name\n")
+			}
+		},
+	)
 }
 
 func TestBucketAPI_GetBucketDetails(t *testing.T) {
 
-	// prepare the credentials
-	clientID := os.Getenv("FORGE_CLIENT_ID")
-	clientSecret := os.Getenv("FORGE_CLIENT_SECRET")
+	bucketAPI := getBucketAPI(t)
 
-	authenticator := oauth.NewTwoLegged(clientID, clientSecret)
-	bucketAPI := dm.NewBucketAPI(authenticator)
+	bucketKey := "forge_unit_testing_get_bucket_details"
 
-	testBucketKey := "my_test_bucket_key_for_go"
+	t.Run(
+		"Create a bucket", func(t *testing.T) {
+			_, err := bucketAPI.GetBucketDetails(bucketKey)
+			if err == nil {
+				t.Skip("The temp bucket already exists.")
+			}
 
-	t.Run("Create a bucket", func(t *testing.T) {
-		_, err := bucketAPI.CreateBucket(testBucketKey, "transient")
+			_, err = bucketAPI.CreateBucket(bucketKey, dm.PolicyTransient)
+			if err != nil {
+				t.Fatalf("Failed to create a bucket: %s\n", err.Error())
+			}
+		},
+	)
 
-		if err != nil {
-			t.Fatalf("Failed to create a bucket: %s\n", err.Error())
-		}
-	})
+	t.Run(
+		"Get bucket details", func(t *testing.T) {
+			_, err := bucketAPI.GetBucketDetails(bucketKey)
 
-	t.Run("Get bucket details", func(t *testing.T) {
-		_, err := bucketAPI.GetBucketDetails(testBucketKey)
+			if err != nil {
+				t.Fatalf("Failed to get bucket details: %s\n", err.Error())
+			}
+		},
+	)
 
-		if err != nil {
-			t.Fatalf("Failed to get bucket details: %s\n", err.Error())
-		}
-	})
-
-	t.Run("Delete created bucket", func(t *testing.T) {
-		err := bucketAPI.DeleteBucket(testBucketKey)
-
-		if err != nil {
-			t.Fatalf("Failed to delete bucket: %s\n", err.Error())
-		}
-	})
-
-	t.Run("Get nonexistent bucket", func(t *testing.T) {
-		_, err := bucketAPI.GetBucketDetails(testBucketKey + "30091981")
-
-		if err == nil {
-			t.Fatalf("Should fail getting getting details for non-existing bucket\n")
-		}
-	})
+	t.Cleanup(
+		func() {
+			t.Log("Cleaning up the temp bucket")
+			err := bucketAPI.DeleteBucket(bucketKey)
+			if err != nil {
+				t.Error("Could not delete temp bucket, got: ", err.Error())
+			}
+		},
+	)
 }
 
 func TestBucketAPI_ListBuckets(t *testing.T) {
 
-	// prepare the credentials
-	clientID := os.Getenv("FORGE_CLIENT_ID")
-	clientSecret := os.Getenv("FORGE_CLIENT_SECRET")
+	bucketAPI := getBucketAPI(t)
 
-	authenticator := oauth.NewTwoLegged(clientID, clientSecret)
-	bucketAPI := dm.NewBucketAPI(authenticator)
+	bucketKey := "forge_unit_testing_list_buckets"
 
-	t.Run("List available buckets", func(t *testing.T) {
-		_, err := bucketAPI.ListBuckets("", "", "")
-
-		if err != nil {
-			t.Fatalf("Failed to list buckets: %s\n", err.Error())
-		}
-	})
-
-	t.Run("Create a bucket and find it among listed", func(t *testing.T) {
-		testBucketKey := "just_for_testing"
-		_, err := bucketAPI.CreateBucket(testBucketKey, "transient")
-
-		if err != nil {
-			t.Errorf("Failed to create a bucket: %s\n", err.Error())
-		}
-
-		list, err := bucketAPI.ListBuckets("", "", "")
-
-		if err != nil {
-			t.Errorf("Failed to list buckets: %s\n", err.Error())
-		}
-
-		found := false
-
-		for _, bucket := range list.Items {
-			if bucket.BucketKey == testBucketKey {
-				found = true
-				break
+	t.Run(
+		"List available buckets", func(t *testing.T) {
+			_, err := bucketAPI.ListBuckets("", "", "")
+			if err != nil {
+				t.Fatalf("Failed to list buckets: %s\n", err.Error())
 			}
-		}
+		},
+	)
 
-		if !found {
-			t.Errorf("Could not find the %s bucket\n", testBucketKey)
-		}
+	t.Run(
+		"Create a bucket and find it among listed", func(t *testing.T) {
 
-		if err = bucketAPI.DeleteBucket(testBucketKey); err != nil {
-			t.Errorf("Failed to delete bucket: %s\n", err.Error())
-		}
-	})
+			_, err := bucketAPI.GetBucketDetails(bucketKey)
+			if err == nil {
+				t.Log("The temp bucket already exists, try to delete it.")
 
-}
+				err = bucketAPI.DeleteBucket(bucketKey)
+				if err != nil {
+					t.Error("Could not delete temp bucket, got: ", err.Error())
+				}
+			}
 
-func ExampleBucketAPI_CreateBucket() {
+			_, err = bucketAPI.CreateBucket(bucketKey, dm.PolicyTransient)
+			if err != nil {
+				t.Errorf("Failed to create a bucket: %s\n", err.Error())
+			}
 
-	// prepare the credentials
-	clientID := os.Getenv("FORGE_CLIENT_ID")
-	clientSecret := os.Getenv("FORGE_CLIENT_SECRET")
+			list, err := bucketAPI.ListBuckets("", "", "")
 
-	authenticator := oauth.NewTwoLegged(clientID, clientSecret)
-	bucketAPI := dm.NewBucketAPI(authenticator)
+			if err != nil {
+				t.Errorf("Failed to list buckets: %s\n", err.Error())
+			}
 
-	bucket, err := bucketAPI.CreateBucket("some_unique_name", "transient")
+			found := false
 
-	if err != nil {
-		log.Fatalf("Failed to create a bucket: %s\n", err.Error())
-	}
+			for _, bucket := range list {
+				if bucket.BucketKey == bucketKey {
+					found = true
+					break
+				}
+			}
 
-	fmt.Printf("Bucket %s was created with policy %s\n",
-		bucket.BucketKey,
-		bucket.PolicyKey)
+			if !found {
+				t.Errorf("Could not find the %s bucket\n", bucketKey)
+			}
+		},
+	)
+
+	t.Cleanup(
+		func() {
+			t.Log("Cleaning up the temp bucket")
+			err := bucketAPI.DeleteBucket(bucketKey)
+			if err != nil {
+				t.Error("Could not delete temp bucket, got: ", err.Error())
+			}
+		},
+	)
 
 }

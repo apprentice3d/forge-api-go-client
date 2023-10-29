@@ -1,0 +1,70 @@
+{
+  "type": "manifest",
+  "hasThumbnail": "false",
+  "status": "failed",
+  "progress": "complete",
+  "region": "US",
+  "urn": "dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6bW9kZWxkZXJpdmF0aXZlL0E1LnppcA",
+  "derivatives": [
+    {
+      "name": "A5.iam",
+      "hasThumbnail": "false",
+      "status": "failed",
+      "progress": "complete",
+      "messages": [
+        {
+          "type": "warning",
+          "message": "The drawing's thumbnails were not properly created.",
+          "code": "TranslationWorker-ThumbnailGenerationFailed"
+        }
+      ],
+      "outputType": "svf",
+      "children": [
+        {
+          "guid": "d998268f-eeb4-da87-0db4-c5dbbc4926d0",
+          "type": "geometry",
+          "role": "3d",
+          "name": "Scene",
+          "status": "success",
+          "messages": [
+            {
+              "type": "warning",
+              "code": "ATF-1023",
+              "message": [
+                "The file: {0} does not exist.",
+                "C:\\Users\\ADSK\\Documents\\A5\\Top.ipt"
+              ]
+            },
+            {
+              "type": "warning",
+              "code": "ATF-1023",
+              "message": [
+                "The file: {0} does not exist.",
+                "C:\\Users\\ADSK\\Documents\\A5\\Bottom.ipt"
+              ]
+            },
+            {
+              "type": "error",
+              "code": "ATF-1026",
+              "message": [
+                "The file: {0} is empty.",
+                "C:/worker/viewing-inventor-lmv/tmp/job-1/5/output/1/A5.svf"
+              ]
+            }
+          ],
+          "progress": "complete",
+          "hasThumbnail": "false",
+          "children": [
+            {
+              "guid": "4f981e94-8241-4eaf-b08b-cd337c6b8b1f",
+              "type": "resource",
+              "urn": "urn:adsk.viewing:fs.file:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6bW9kZWxkZXJpdmF0aXZlL0E1LnppcA/output/1/A5.svf",
+              "role": "graphics",
+              "mime": "application/autodesk-svf"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -5,14 +5,13 @@ type InfoList struct {
 	Data       []string `json:"data"`
 }
 
-
 type AliasesList struct {
 	Pagination string  `json:"paginationToken"`
 	Data       []Alias `json:"data"`
 }
 
 type VersionList struct {
-	Pagination string     `json:"paginationToken"`
+	Pagination string `json:"paginationToken"`
 	Data       []uint `json:"data"`
 }
 
